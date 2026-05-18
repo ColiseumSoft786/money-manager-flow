@@ -29,9 +29,9 @@ final FlowThemeGroup flowLights = FlowThemeGroup(
     _defaultLightBase.copyWith(
       name: "shadeOfViolet",
       iconName: "shadeOfViolet",
-      primary: const Color(0xff8600a5),
-      secondary: const Color(0xfff5ccff),
-      onSecondary: const Color(0xff33004f),
+      primary: const Color(0xff1e88ff),
+      secondary: const Color(0xffdbebff),
+      onSecondary: const Color(0xff0a000d),
     ),
     _defaultLightBase.copyWith(
       name: "blissfulBerry",

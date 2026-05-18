@@ -78,45 +78,62 @@ class ModalSheet extends StatelessWidget {
             ),
           );
 
-    return Container(
-      padding: MediaQuery.of(context).viewInsets,
-      constraints: BoxConstraints.loose(
-        Size(
-          MediaQuery.of(context).size.width,
-          MediaQuery.of(context).size.height - topMargin,
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (scrollable)
-              Container(
-                margin: const EdgeInsets.only(top: 8.0),
-                width: 30.0,
-                height: 6.0,
-                decoration: BoxDecoration(
-                  color: context.colorScheme.onSurface.withAlpha(0x80),
-                  borderRadius: .circular(24.0),
-                ),
+    final EdgeInsets viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints.loose(
+            Size(
+              MediaQuery.sizeOf(context).width,
+              MediaQuery.sizeOf(context).height - topMargin,
+            ),
+          ),
+          child: Material(
+            color: context.colorScheme.surface,
+            clipBehavior: Clip.antiAlias,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26.0)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (scrollable)
+                    Container(
+                      margin: const EdgeInsets.only(top: 8.0),
+                      width: 30.0,
+                      height: 6.0,
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.onSurface.withAlpha(0x80),
+                        borderRadius: .circular(24.0),
+                      ),
+                    ),
+                  SizedBox(height: titleSpacing),
+                  ?title,
+                  if (title != null && (leading != null || child != null))
+                    SizedBox(height: titleSpacing),
+                  if (leading != null) ...[
+                    leading!,
+                    SizedBox(height: leadingSpacing),
+                  ],
+                  if (child != null)
+                    Flexible(
+                      child: Builder(
+                        builder: (context) => buildContent(context),
+                      ),
+                    ),
+                  if (trailing != null) ...[
+                    SizedBox(height: trailingSpacing),
+                    trailing!,
+                  ],
+                ],
               ),
-            SizedBox(height: titleSpacing),
-            ?title,
-            if (title != null && (leading != null || child != null))
-              SizedBox(height: titleSpacing),
-            if (leading != null) ...[
-              leading!,
-              SizedBox(height: leadingSpacing),
-            ],
-            if (child != null)
-              Flexible(
-                child: Builder(builder: (context) => buildContent(context)),
-              ),
-            if (trailing != null) ...[
-              SizedBox(height: trailingSpacing),
-              trailing!,
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );

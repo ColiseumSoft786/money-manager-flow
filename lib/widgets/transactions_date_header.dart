@@ -8,10 +8,11 @@ import "package:flow/prefs/local_preferences.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/navigation.dart";
 import "package:flow/services/user_preferences.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/widgets/general/money_text_builder.dart";
+import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter/widgets.dart";
 import "package:moment_dart/moment_dart.dart";
 
 class TransactionListDateHeader extends StatefulWidget {
@@ -119,48 +120,81 @@ class _TransactionListDateHeaderState extends State<TransactionListDateHeader> {
           _ => "",
         };
 
+        final String countLabel = "tabs.home.transactionsCount".t(
+          context,
+          widget.transactions.renderableCount,
+        );
+
+        final bool light = Theme.of(context).brightness == Brightness.light;
+
+        final Color titleInk = light
+            ? kFlowHomeTransactionHeadingInk
+            : context.colorScheme.onSurface;
+
+        final Color countCapsColor = light
+            ? kFlowHomeTransactionCaptionMuted
+            : context.colorScheme.onSurfaceVariant;
+
+        final Color mutedFlow = showMissingExchangeRatesWarning
+            ? context.colorScheme.error
+            : light
+            ? kFlowHomeTransactionCaptionMuted
+            : context.colorScheme.onSurfaceVariant;
+
+        final TextStyle titleStyle = context.textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.w700,
+          color: titleInk,
+          height: 1.15,
+        );
+
+        final Widget countCaps = Text(
+          countLabel.toUpperCase(),
+          style: context.textTheme.labelSmall?.copyWith(
+            color: countCapsColor,
+            letterSpacing: 0.65,
+            fontWeight: FontWeight.w600,
+            fontSize:
+                (context.textTheme.labelSmall?.fontSize ?? 11.0) * 0.92,
+          ),
+          textAlign: TextAlign.end,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+
+        final Widget flowLine = MoneyTextBuilder(
+          builder: (context, formattedSum, originalSum) => Text(
+            "$formattedSum$exclamation",
+            style: context.textTheme.bodySmall?.copyWith(color: mutedFlow),
+          ),
+          money: mergedFlow.totalFlow,
+        );
+
         return Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: .spaceBetween,
-          crossAxisAlignment: .center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Flexible(
-              fit: FlexFit.tight,
+            Expanded(
               child: Column(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DefaultTextStyle(
-                    style: context.textTheme.headlineSmall!,
-                    child: title,
-                  ),
-                  MoneyTextBuilder(
-                    builder: (context, formattedSum, originalSum) => RichText(
-                      text: TextSpan(
-                        style: context.textTheme.labelMedium,
-                        children: [
-                          TextSpan(
-                            text: "$formattedSum$exclamation",
-                            style: showMissingExchangeRatesWarning
-                                ? TextStyle(color: context.colorScheme.error)
-                                : null,
-                          ),
-                          TextSpan(text: " • "),
-                          TextSpan(
-                            text: "tabs.home.transactionsCount".t(
-                              context,
-                              widget.transactions.renderableCount,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    money: mergedFlow.totalFlow,
-                  ),
+                  DefaultTextStyle(style: titleStyle, child: title),
+                  const SizedBox(height: 6.0),
+                  flowLine,
                 ],
               ),
             ),
-            if (widget.action != null) widget.action!,
+            const SizedBox(width: 12.0),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                countCaps,
+                if (widget.action != null) ...[
+                  const SizedBox(height: 6.0),
+                  widget.action!,
+                ],
+              ],
+            ),
           ],
         );
       },

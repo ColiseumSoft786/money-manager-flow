@@ -9,8 +9,14 @@ class TransactionTagAddChip extends StatelessWidget {
   final String? title;
 
   final VoidCallback? onPressed;
+  final bool compact;
 
-  const TransactionTagAddChip({super.key, this.onPressed, this.title});
+  const TransactionTagAddChip({
+    super.key,
+    this.onPressed,
+    this.title,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +28,7 @@ class TransactionTagAddChip extends StatelessWidget {
       selected: false,
       isSuggestion: false,
       onPressed: onPressed ?? () {},
+      compact: compact,
     );
   }
 }

@@ -1,5 +1,6 @@
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_toggle_row.dart";
 import "package:flow/routes/preferences_page.dart";
 import "package:flutter/material.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -20,11 +21,12 @@ class _HapticsState extends State<Haptics> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SwitchListTile(
-          secondary: const Icon(Symbols.vibration_rounded),
-          title: Text("preferences.hapticFeedback.description".t(context)),
+        PreferencesRootToggleRow(
+          icon: Symbols.vibration_rounded,
+          title: "preferences.hapticFeedback.description".t(context),
           value: enableHapticFeedback,
           onChanged: updateEnableHapticFeedback,
+          showDivider: false,
         ),
       ],
     );

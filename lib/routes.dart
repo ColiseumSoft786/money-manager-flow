@@ -1,5 +1,6 @@
 import "package:flow/data/transaction_multi_programmable_object.dart";
 import "package:flow/data/transaction_programmable_object.dart";
+import "package:flow/entity/account.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/routes/account/account_edit_page.dart";
 import "package:flow/routes/account_page.dart";
@@ -128,7 +129,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: "/transactions/pending",
       builder: (context, state) =>
-          TransactionsPage.pending(title: "transactions.pending".t(context)),
+          TransactionsPage.pending(title: "transaction.pending".t(context)),
     ),
     GoRoute(
       path: "/transactions/deleted",
@@ -154,7 +155,10 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: "/account/new",
-      builder: (context, state) => const AccountEditPage.create(),
+      builder: (context, state) {
+        final Account? template = state.extra as Account?;
+        return AccountEditPage.create(template: template);
+      },
     ),
     GoRoute(
       path: "/account/:id",
@@ -325,10 +329,7 @@ final GoRouter router = GoRouter(
             fullscreenDialog: true,
           ),
           EditMarkdownPageProps props => MaterialPage(
-            child: EditMarkdownPage(
-              initialValue: props.initialValue,
-              maxLength: props.maxLength,
-            ),
+            child: EditMarkdownPage.fromProps(props: props),
             fullscreenDialog: true,
           ),
           _ => throw const ErrorPage(

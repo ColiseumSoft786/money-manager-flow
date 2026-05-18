@@ -12,7 +12,6 @@ import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/objectbox/objectbox.g.dart";
 import "package:flow/prefs/local_preferences.dart";
-import "package:flow/routes/error_page.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/utils/utils.dart";
@@ -63,14 +62,13 @@ class _AccountPageState extends State<AccountPage> {
 
   bool busy = false;
 
-  QueryBuilder<Transaction> qb(TimeRange range) => TransactionFilter(
-    accounts: StringMultiFilter.whitelist([account!.uuid]),
-    range: TransactionFilterTimeRange.fromTimeRange(range),
-    sortBy: TransactionSortField.transactionDate,
-    sortDescending: true,
-  ).queryBuilder();
-
-  late Account? account;
+  QueryBuilder<Transaction> _qb(Account acc, TimeRange range) =>
+      TransactionFilter(
+        accounts: StringMultiFilter.whitelist([acc.uuid]),
+        range: TransactionFilterTimeRange.fromTimeRange(range),
+        sortBy: TransactionSortField.transactionDate,
+        sortDescending: true,
+      ).queryBuilder();
 
   late TimeRange range;
 
@@ -78,15 +76,22 @@ class _AccountPageState extends State<AccountPage> {
   void initState() {
     super.initState();
 
-    account = ObjectBox().box<Account>().get(widget.accountId);
     range = widget.initialRange ?? TimeRange.thisMonth();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (this.account == null) return const ErrorPage();
+    final Account? current = ObjectBox().box<Account>().get(widget.accountId);
+    if (current == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.pop();
+      });
+      return const Scaffold(
+        body: Center(child: Spinner.center()),
+      );
+    }
 
-    final Account account = this.account!;
+    final Account account = current;
     final String primaryCurrency = UserPreferencesService().primaryCurrency;
     final ExchangeRates? rates = ExchangeRatesService()
         .getPrimaryCurrencyRates();
@@ -95,7 +100,8 @@ class _AccountPageState extends State<AccountPage> {
         TransitiveLocalPreferences().usesNonPrimaryCurrency.get();
 
     return StreamBuilder<List<Transaction>>(
-      stream: qb(
+      stream: _qb(
+        account,
         range,
       ).watch(triggerImmediately: true).map((event) => event.find()),
       builder: (context, snapshot) {
@@ -268,9 +274,7 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> edit() async {
-    await context.push("/account/${account!.id}/edit");
-
-    account = ObjectBox().box<Account>().get(widget.accountId);
+    await context.push("/account/${widget.accountId}/edit");
 
     if (mounted) {
       setState(() {});

@@ -1,9 +1,13 @@
 import "dart:io";
 
 import "package:flow/constants.dart";
+import "package:flow/l10n/extensions.dart";
 import "package:flow/l10n/flow_localizations.dart";
 import "package:flow/prefs/local_preferences.dart";
 import "package:flow/routes/preferences/language_selection_sheet.dart";
+import "package:flow/routes/preferences/root/preferences_root_theme.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_accordion_section.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_nav_row.dart";
 import "package:flow/routes/preferences/sections/haptics.dart";
 import "package:flow/routes/preferences/sections/lock_app.dart";
 import "package:flow/routes/preferences/sections/privacy.dart";
@@ -16,8 +20,7 @@ import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/names.dart";
 import "package:flow/utils/extensions.dart";
 import "package:flow/widgets/animated_eny_logo.dart";
-import "package:flow/widgets/general/directional_chevron.dart";
-import "package:flow/widgets/general/list_header.dart";
+import "package:flow/widgets/general/flow_deletion_alert_dialog.dart";
 import "package:flow/widgets/sheets/select_currency_sheet.dart";
 import "package:flutter/material.dart" hide Flow;
 import "package:go_router/go_router.dart";
@@ -79,191 +82,250 @@ class PreferencesPageState extends State<PreferencesPage> {
     final String currentPrimaryCurrency =
         UserPreferencesService().primaryCurrency;
 
+    final String geoSubtitle = enableGeo
+        ? (autoAttachTransactionGeo
+              ? "preferences.transactions.geo.auto.enabled".t(context)
+              : "general.enabled".t(context))
+        : "general.disabled".t(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text("preferences".t(context))),
+      backgroundColor: PreferencesRootTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: PreferencesRootTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: PreferencesRootTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: PreferencesRootTheme.cardBorder,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
           children: [
-            ListTile(
-              title: Text("preferences.sync".t(context)),
-              leading: const Icon(Symbols.sync_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/sync"),
-              trailing: const LeChevron(),
+            PreferencesRootAccordionSection(
+              title: "preferences.general".t(context),
+              icon: Symbols.tune_rounded,
+              isInitiallyExpanded: true,
+              itemCount:
+                  6 +
+                  (flowDebugMode || NotificationsService.schedulingSupported
+                      ? 1
+                      : 0),
+              tallRows: true,
+              children: [
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.sync_rounded),
+                  title: "preferences.sync".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/sync"),
+                ),
+                if (flowDebugMode || NotificationsService.schedulingSupported)
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.notifications_rounded,
+                    ),
+                    title: "preferences.reminders".t(context),
+                    onTap: () => _pushAndRefreshAfter("/preferences/reminders"),
+                  ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.language_rounded),
+                  title: "preferences.language".t(context),
+                  subtitle: FlowLocalizations.of(context).locale.endonym,
+                  onTap: _updateLanguage,
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.universal_currency_alt_rounded,
+                  ),
+                  title: "preferences.primaryCurrency".t(context),
+                  subtitle: currentPrimaryCurrency,
+                  onTap: _updatePrimaryCurrency,
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.sync_alt_rounded),
+                  title: "preferences.transfer".t(context),
+                  subtitle: "preferences.transfer.description".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/transfer"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.delete_rounded),
+                  title: "preferences.trashBin".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/trashBin"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.numbers_rounded),
+                  title: "preferences.moneyFormatting".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/moneyFormatting"),
+                  showDivider: false,
+                ),
+              ],
             ),
-            if (flowDebugMode || NotificationsService.schedulingSupported)
-              ListTile(
-                title: Text("preferences.reminders".t(context)),
-                leading: const Icon(Symbols.notifications_rounded),
-                onTap: () => _pushAndRefreshAfter("/preferences/reminders"),
-                trailing: const LeChevron(),
-              ),
-            ListTile(
-              title: Text("preferences.language".t(context)),
-              leading: const Icon(Symbols.language_rounded),
-              onTap: () => _updateLanguage(),
-              subtitle: Text(FlowLocalizations.of(context).locale.endonym),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.integrations".t(context),
+              icon: Symbols.extension_rounded,
+              children: [
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootIconPlate(
+                    child: SizedBox(
+                      width: 24.0,
+                      height: 24.0,
+                      child: AnimatedEnyLogo(),
+                    ),
+                  ),
+                  title: "Eny",
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/integrations/eny"),
+                  showDivider: false,
+                ),
+              ],
             ),
-            ListTile(
-              title: Text("preferences.primaryCurrency".t(context)),
-
-              leading: const Icon(Symbols.universal_currency_alt_rounded),
-              onTap: () => _updatePrimaryCurrency(),
-              subtitle: Text(currentPrimaryCurrency),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.transactions".t(context),
+              icon: Symbols.receipt_long_rounded,
+              itemCount: 4,
+              tallRows: true,
+              children: [
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.search_activity_rounded,
+                  ),
+                  title: "preferences.transactions.pending".t(context),
+                  subtitle: pendingTransactionsRequireConfrimation
+                      ? "general.enabled".t(context)
+                      : "general.disabled".t(context),
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/pendingTransactions"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.location_pin_rounded,
+                  ),
+                  title: "preferences.transactions.geo".t(context),
+                  subtitle: geoSubtitle,
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/transactionGeo"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.list_rounded),
+                  title: "preferences.transactions.listTile".t(context),
+                  onTap: () => _pushAndRefreshAfter(
+                    "/preferences/transactionListItemAppearance",
+                  ),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.automation_rounded,
+                  ),
+                  title: "preferences.transactionEntryFlow".t(context),
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/transactionEntryFlow"),
+                  showDivider: false,
+                ),
+              ],
             ),
-            ListTile(
-              title: Text("preferences.transfer".t(context)),
-              leading: const Icon(Symbols.sync_alt_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/transfer"),
-              subtitle: Text(
-                "preferences.transfer.description".t(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.appearance".t(context),
+              icon: Symbols.palette_rounded,
+              itemCount: 4,
+              tallRows: true,
+              children: [
+                PreferencesRootNavRow(
+                  leading: PreferencesRootIconPlate(
+                    child: Icon(
+                      currentTheme.isDark
+                          ? Symbols.dark_mode_rounded
+                          : Symbols.light_mode_rounded,
+                      size: 24.0,
+                      color: PreferencesRootTheme.primary(context),
+                      fill: 0.0,
+                    ),
+                  ),
+                  title: "preferences.theme".t(context),
+                  subtitle: themeNames[currentTheme.name] ?? currentTheme.name,
+                  onTap: _openTheme,
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.dialpad_rounded),
+                  title: "preferences.numpad".t(context),
+                  subtitle: LocalPreferences().usePhoneNumpadLayout.get()
+                      ? "preferences.numpad.layout.modern".t(context)
+                      : "preferences.numpad.layout.classic".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/numpad"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.action_key_rounded,
+                  ),
+                  title: "preferences.transactionButtonOrder".t(context),
+                  subtitle: "preferences.transactionButtonOrder.description"
+                      .t(context),
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/transactionButtonOrder"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(Symbols.moving_rounded),
+                  title: "preferences.changeVisuals".t(context),
+                  onTap: () => _pushAndRefreshAfter("/preferences/changeVisuals"),
+                  showDivider: false,
+                ),
+              ],
             ),
-            ListTile(
-              title: Text("preferences.trashBin".t(context)),
-              leading: const Icon(Symbols.delete_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/trashBin"),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.privacy".t(context),
+              icon: Symbols.shield_rounded,
+              contentHeight: _showLockApp ? 320.0 : 180.0,
+              children: [
+                const Privacy(),
+                if (_showLockApp) const LockApp(),
+              ],
             ),
-            ListTile(
-              title: Text("preferences.moneyFormatting".t(context)),
-              leading: const Icon(Symbols.numbers_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/moneyFormatting"),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.hapticFeedback".t(context),
+              icon: Symbols.vibration_rounded,
+              itemCount: 1,
+              children: const [Haptics()],
             ),
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.integrations".t(context)),
-            const SizedBox(height: 8.0),
-            ListTile(
-              title: Text("Eny"),
-              leading: const SizedBox(
-                width: 24.0,
-                height: 24.0,
-                child: AnimatedEnyLogo(),
-              ),
-              onTap: () =>
-                  _pushAndRefreshAfter("/preferences/integrations/eny"),
-              trailing: const LeChevron(),
+            const SizedBox(height: PreferencesRootTheme.accordionSpacing),
+            PreferencesRootAccordionSection(
+              title: "preferences.feedback".t(context),
+              icon: Symbols.feedback_rounded,
+              children: [
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.cleaning_services_rounded,
+                  ),
+                  title: "fileAttachment.cleanupHangingFiles".t(context),
+                  onTap: _deleteHangingFiles,
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.bug_report_rounded,
+                  ),
+                  title: "preferences.feedback.debugLogs".t(context),
+                  onTap: () => context.push("/_debug/logs"),
+                  showDivider: false,
+                ),
+              ],
             ),
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.transactions".t(context)),
-            const SizedBox(height: 8.0),
-            ListTile(
-              title: Text("preferences.transactions.pending".t(context)),
-              subtitle: Text(
-                pendingTransactionsRequireConfrimation
-                    ? "general.enabled".t(context)
-                    : "general.disabled".t(context),
-              ),
-              leading: const Icon(Symbols.search_activity_rounded),
-              onTap: () =>
-                  _pushAndRefreshAfter("/preferences/pendingTransactions"),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              title: Text("preferences.transactions.geo".t(context)),
-              leading: const Icon(Symbols.location_pin_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/transactionGeo"),
-              subtitle: Text(
-                enableGeo
-                    ? (autoAttachTransactionGeo
-                          ? "preferences.transactions.geo.auto.enabled".t(
-                              context,
-                            )
-                          : "general.enabled".t(context))
-                    : "general.disabled".t(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              leading: const Icon(Symbols.list_rounded),
-              title: Text("preferences.transactions.listTile".t(context)),
-              onTap: () => _pushAndRefreshAfter(
-                "/preferences/transactionListItemAppearance",
-              ),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              leading: const Icon(Symbols.automation_rounded),
-              title: Text("preferences.transactionEntryFlow".t(context)),
-              onTap: () =>
-                  _pushAndRefreshAfter("/preferences/transactionEntryFlow"),
-              trailing: const LeChevron(),
-            ),
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.appearance".t(context)),
-            const SizedBox(height: 8.0),
-            ListTile(
-              title: Text("preferences.theme".t(context)),
-              leading: currentTheme.isDark
-                  ? const Icon(Symbols.dark_mode_rounded)
-                  : const Icon(Symbols.light_mode_rounded),
-              subtitle: Text(
-                themeNames[currentTheme.name] ?? currentTheme.name,
-              ),
-              onTap: _openTheme,
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              title: Text("preferences.numpad".t(context)),
-              leading: const Icon(Symbols.dialpad_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/numpad"),
-              subtitle: Text(
-                LocalPreferences().usePhoneNumpadLayout.get()
-                    ? "preferences.numpad.layout.modern".t(context)
-                    : "preferences.numpad.layout.classic".t(context),
-              ),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              title: Text("preferences.transactionButtonOrder".t(context)),
-              leading: const Icon(Symbols.action_key_rounded),
-              onTap: () =>
-                  _pushAndRefreshAfter("/preferences/transactionButtonOrder"),
-              subtitle: Text(
-                "preferences.transactionButtonOrder.description".t(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              title: Text("preferences.changeVisuals".t(context)),
-              leading: const Icon(Symbols.moving_rounded),
-              onTap: () => _pushAndRefreshAfter("/preferences/changeVisuals"),
-              trailing: const LeChevron(),
-            ),
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.privacy".t(context)),
-            const SizedBox(height: 8.0),
-            const Privacy(),
-            if (_showLockApp) ...[const SizedBox(height: 8.0), const LockApp()],
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.hapticFeedback".t(context)),
-            const SizedBox(height: 8.0),
-            const Haptics(),
-            const SizedBox(height: 24.0),
-            ListHeader("preferences.feedback".t(context)),
-            const SizedBox(height: 8.0),
-            ListTile(
-              title: Text("fileAttachment.cleanupHangingFiles".t(context)),
-              leading: const Icon(Symbols.bug_report_rounded),
-              onTap: () => _deleteHangingFiles(),
-              trailing: const LeChevron(),
-            ),
-            ListTile(
-              title: Text("preferences.feedback.debugLogs".t(context)),
-              leading: const Icon(Symbols.bug_report_rounded),
-              onTap: () => context.push("/_debug/logs"),
-              trailing: const LeChevron(),
-            ),
-            const SizedBox(height: 16.0),
           ],
         ),
       ),
@@ -303,6 +365,8 @@ class PreferencesPageState extends State<PreferencesPage> {
 
       final selected = await showModalBottomSheet<Locale>(
         context: context,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         builder: (context) => LanguageSelectionSheet(currentLocale: current),
         isScrollControlled: true,
       );
@@ -327,6 +391,8 @@ class PreferencesPageState extends State<PreferencesPage> {
 
       final selected = await showModalBottomSheet<String>(
         context: context,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         builder: (context) => SelectCurrencySheet(currentlySelected: current),
         isScrollControlled: true,
       );
@@ -367,10 +433,10 @@ class PreferencesPageState extends State<PreferencesPage> {
   }
 
   void _deleteHangingFiles() async {
-    final bool? confirmation = await context.showConfirmationSheet(
-      isDeletionConfirmation: true,
+    final bool? confirmation = await FlowDeletionAlertDialog.show(
+      context,
       title: "fileAttachment.cleanupHangingFiles".t(context),
-      child: Text("fileAttachment.cleanupHangingFiles.description".t(context)),
+      message: "fileAttachment.cleanupHangingFiles.description".t(context),
     );
 
     if (confirmation != true || !mounted) return;

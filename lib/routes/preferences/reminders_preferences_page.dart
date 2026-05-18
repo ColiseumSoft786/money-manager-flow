@@ -1,15 +1,17 @@
 import "package:flow/constants.dart";
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/reminders/reminders_preferences_theme.dart";
+import "package:flow/routes/preferences/reminders/widgets/reminder_daily_toggle_card.dart";
+import "package:flow/routes/preferences/reminders/widgets/reminder_time_picker_card.dart";
 import "package:flow/services/notifications.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/helpers.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/list_header.dart";
 import "package:flow/widgets/schdeuled_notification_permission_builder.dart";
 import "package:flow/widgets/schdeuled_notification_permission_missing_reminder.dart";
 import "package:flutter/material.dart";
-import "package:moment_dart/moment_dart.dart";
+import "package:go_router/go_router.dart";
 
 class RemindersPreferencesPage extends StatefulWidget {
   const RemindersPreferencesPage({super.key});
@@ -20,121 +22,19 @@ class RemindersPreferencesPage extends StatefulWidget {
 }
 
 class _RemindersPreferencesPageState extends State<RemindersPreferencesPage> {
-  @override
-  Widget build(BuildContext context) {
-    final Duration? remindDailyAt = UserPreferencesService().remindDailyAt;
-    final bool enabled = remindDailyAt != null;
-
-    final int h = remindDailyAt?.inHours ?? 0;
-    final int m = (remindDailyAt?.inMinutes ?? 0) % 60;
-
-    final String hhmm = DateTime(1970, 1, 1, h, m).toMoment().LT;
-
-    return Scaffold(
-      appBar: AppBar(title: Text("preferences.reminders".t(context))),
-      body: SchdeuledNotificationPermissionBuilder(
-        builder: (context, permissions, _) {
-          return SingleChildScrollView(
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: .start,
-                children: [
-                  if (!NotificationsService.schedulingSupported) ...[
-                    const SizedBox(height: 16.0),
-                    Frame(
-                      child: InfoText(
-                        child: Text(
-                          "preferences.reminders.unsupportedPlatform".t(
-                            context,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (NotificationsService.schedulingSupported &&
-                      !permissions.hasAllPermissions) ...[
-                    const SizedBox(height: 16.0),
-                    SchdeuledNotificationPermissionMissingReminder(
-                      permissions: permissions,
-                    ),
-                  ],
-                  if (flowDebugMode &&
-                      !NotificationsService.schedulingSupported) ...[
-                    const SizedBox(height: 16.0),
-                    Frame(
-                      child: InfoText(
-                        child: Text(
-                          "Debug mode - this page was shown even though Flow doesn't support notifications on this platform",
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (flowDebugMode ||
-                      NotificationsService.schedulingSupported) ...[
-                    const SizedBox(height: 16.0),
-                    SwitchListTile(
-                      title: Text(
-                        "preferences.reminders.remindDaily".t(context),
-                      ),
-                      subtitle: Text(
-                        "preferences.reminders.remindDaily.description".t(
-                          context,
-                        ),
-                      ),
-                      value: enabled,
-                      onChanged: permissions.hasAllPermissions
-                          ? toggleRemindDaily
-                          : null,
-                    ),
-                    if (permissions.hasAllPermissions && enabled) ...[
-                      const SizedBox(height: 16.0),
-                      ListHeader(
-                        "preferences.reminders.remindDaily.time".t(context),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Frame(
-                        child: InkWell(
-                          borderRadius: .circular(8.0),
-                          onTap: () => updateRemindDailyAt(h, m),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 12.0,
-                              horizontal: 16.0,
-                            ),
-                            width: double.infinity,
-                            alignment: Alignment.center,
-                            child: Text(
-                              hhmm,
-                              style: context.textTheme.displayMedium,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16.0),
-                      Frame(
-                        child: InfoText(
-                          child: Text(
-                            "preferences.reminders.remindDaily.expiryWarning".t(
-                              context,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16.0),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+  void _setRemindDailyAt(int hour, int minute) {
+    UserPreferencesService().remindDailyAt = Duration(
+      hours: hour,
+      minutes: minute,
     );
+    setState(() {});
   }
 
   void toggleRemindDaily(bool enabled) {
     if (enabled) {
-      UserPreferencesService().remindDailyAt = const Duration(hours: 20);
+      final Duration? current = UserPreferencesService().remindDailyAt;
+      UserPreferencesService().remindDailyAt =
+          current ?? const Duration(hours: 20);
     } else {
       UserPreferencesService().remindDailyAt = null;
     }
@@ -142,25 +42,140 @@ class _RemindersPreferencesPageState extends State<RemindersPreferencesPage> {
     setState(() {});
   }
 
-  void updateRemindDailyAt([int? h, int? m]) async {
-    final TimeOfDay initialTime = (h != null && m != null)
-        ? TimeOfDay(hour: h, minute: m)
-        : TimeOfDay.now();
+  @override
+  Widget build(BuildContext context) {
+    final Duration? remindDailyAt = UserPreferencesService().remindDailyAt;
+    final bool enabled = remindDailyAt != null;
 
-    final TimeOfDay? newTod = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
+    final int hour = remindDailyAt?.inHours ?? 20;
+    final int minute = (remindDailyAt?.inMinutes ?? 0) % 60;
+
+    final bool showReminderControls =
+        flowDebugMode || NotificationsService.schedulingSupported;
+
+    return Scaffold(
+      backgroundColor: RemindersPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: RemindersPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          "preferences.reminders.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: RemindersPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SchdeuledNotificationPermissionBuilder(
+        builder: (context, permissions, _) {
+          final bool interactive = permissions.hasAllPermissions;
+
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (!NotificationsService.schedulingSupported) ...[
+                        Frame(
+                          child: InfoText(
+                            child: Text(
+                              "preferences.reminders.unsupportedPlatform".t(
+                                context,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12.0),
+                      ],
+                      if (NotificationsService.schedulingSupported &&
+                          !permissions.hasAllPermissions) ...[
+                        SchdeuledNotificationPermissionMissingReminder(
+                          permissions: permissions,
+                        ),
+                        const SizedBox(height: 12.0),
+                      ],
+                      if (flowDebugMode &&
+                          !NotificationsService.schedulingSupported) ...[
+                        Frame(
+                          child: InfoText(
+                            child: Text(
+                              "Debug mode - this page was shown even though Flow doesn't support notifications on this platform",
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12.0),
+                      ],
+                      if (showReminderControls) ...[
+                        ReminderDailyToggleCard(
+                          enabled: enabled,
+                          interactive: interactive,
+                          onChanged: toggleRemindDaily,
+                        ),
+                        if (interactive && enabled) ...[
+                          const SizedBox(height: 12.0),
+                          ReminderTimePickerCard(
+                            hour: hour,
+                            minute: minute,
+                            onHourChanged: (int h) =>
+                                _setRemindDailyAt(h, minute),
+                            onMinuteChanged: (int m) =>
+                                _setRemindDailyAt(hour, m),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              if (showReminderControls)
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52.0,
+                      child: FilledButton(
+                        onPressed: () => context.pop(),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: RemindersPreferencesTheme.primary(context),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: Text(
+                          "preferences.reminders.saveChanges".t(context),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16.0,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
-
-    if (newTod == null || !mounted) {
-      return;
-    }
-
-    UserPreferencesService().remindDailyAt = Duration(
-      hours: newTod.hour,
-      minutes: newTod.minute,
-    );
-
-    setState(() {});
   }
 }

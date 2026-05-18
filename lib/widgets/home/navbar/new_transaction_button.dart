@@ -81,21 +81,46 @@ class _NewTransactionButtonState extends State<NewTransactionButton> {
               )
               .toList(),
           child: StatefulBuilder(
-            builder: (context, setState) => Tooltip(
+            builder: (context, setPieState) => Tooltip(
               message: "transaction.new".t(context),
-              child: Material(
-                color: navbarTheme.transactionButtonBackgroundColor,
-                shape: RoundedRectangleBorder(borderRadius: .circular(32.0)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: AnimatedRotation(
-                    turns: _buttonRotationTurns,
-                    duration: const Duration(milliseconds: 600),
-                    child: Icon(
-                      Symbols.add_rounded,
-                      fill: 0.0,
-                      color: navbarTheme.transactionButtonForegroundColor,
-                      weight: 600.0,
+              child: Container(
+                width: 56.0,
+                height: 56.0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navbarTheme.transactionButtonBackgroundColor.withValues(
+                        alpha: 0.38,
+                      ),
+                      blurRadius: 14.0,
+                      offset: const Offset(0.0, 6.0),
+                      spreadRadius: -2.0,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10.0,
+                      offset: const Offset(0.0, 3.0),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Material(
+                    type: MaterialType.button,
+                    color: navbarTheme.transactionButtonBackgroundColor,
+                    child: Center(
+                      child: AnimatedRotation(
+                        turns: _buttonRotationTurns,
+                        duration: const Duration(milliseconds: 600),
+                        child: Icon(
+                          Symbols.add_rounded,
+                          size: 28.0,
+                          fill: 0.0,
+                          color: navbarTheme.transactionButtonForegroundColor,
+                          weight: 600.0,
+                        ),
+                      ),
                     ),
                   ),
                 ),

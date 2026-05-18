@@ -59,7 +59,7 @@ class _TotalBalanceState extends State<TotalBalance> {
         return Padding(
           padding: EdgeInsets.only(left: 12.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(

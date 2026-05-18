@@ -184,6 +184,8 @@ class _ExportPdfPageState extends State<ExportPdfPage> {
         selectedUuids: _selectedAccounts.toList(),
       ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     if (selected == null ||
@@ -206,6 +208,8 @@ class _ExportPdfPageState extends State<ExportPdfPage> {
         selectedUuids: _selectedCategories.toList(),
       ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     if (selected == null) return;

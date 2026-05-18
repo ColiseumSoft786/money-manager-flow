@@ -71,6 +71,9 @@ class GroupedTransactionsListView extends StatefulWidget {
 
   final GroupedTransactionsListViewType listType;
 
+  /// Space after the last row (inside the list), before outer scroll bottom padding.
+  final double trailingBottomPadding;
+
   const GroupedTransactionsListView({
     super.key,
     required this.transactions,
@@ -87,6 +90,7 @@ class GroupedTransactionsListView extends StatefulWidget {
     this.mainHeaderPadding,
     this.shouldCombineTransferIfNeeded = false,
     this.listType = GroupedTransactionsListViewType.list,
+    this.trailingBottomPadding = 16.0,
   });
 
   @override
@@ -144,7 +148,10 @@ class _GroupedTransactionsListViewState
         widget.headerBuilder(false, entry.key, entry.value),
         ...entry.value,
       ],
-      Padding(padding: EdgeInsets.only(bottom: 16.0), child: SizedBox.shrink()),
+      Padding(
+        padding: EdgeInsets.only(bottom: widget.trailingBottomPadding),
+        child: const SizedBox.shrink(),
+      ),
     ];
 
     final EdgeInsets headerPadding =

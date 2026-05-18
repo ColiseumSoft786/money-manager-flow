@@ -49,7 +49,8 @@ class Surface extends StatelessWidget {
       child: Card(
         color: color,
         shadowColor: shadowColor,
-        surfaceTintColor: surfaceTintColor,
+        surfaceTintColor:
+            surfaceTintColor ?? (color != null ? Colors.transparent : null),
         elevation: elevation,
         shape: shape,
         borderOnForeground: borderOnForeground,

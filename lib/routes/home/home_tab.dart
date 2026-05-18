@@ -22,10 +22,13 @@ import "package:flow/widgets/general/pending_transactions_header.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
 import "package:flow/widgets/grouped_transactions_list_view.dart";
 import "package:flow/widgets/home/greetings_bar.dart";
-import "package:flow/widgets/home/home/flow_cards.dart";
+import "package:flow/widgets/home/home_income_expense_summary.dart";
+import "package:flow/widgets/home/home_total_balance_card.dart";
+import "package:flow/widgets/home/home_transaction_cards_scope.dart";
 import "package:flow/widgets/home/home/no_transactions.dart";
 import "package:flow/widgets/internal_notifications/internal_notification_section.dart";
 import "package:flow/widgets/rates_missing_error_box.dart";
+import "package:flow/widgets/transaction_list_tile_theme.dart";
 import "package:flow/widgets/transactions_date_header.dart";
 import "package:flutter/material.dart";
 import "package:flutter_slidable/flutter_slidable.dart";
@@ -143,9 +146,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               homeTimeRange: currentFilter.range?.range,
             );
 
+            // Pending rows come from [pendingTransactionsFilter]; the main
+            // stream must not include them again or they render twice.
             final List<Transaction> transactions = [
               ...?pendingTransactionsSnapshot.data,
-              ...?currentTransactionsSnapshot.data,
+              ...?currentTransactionsSnapshot.data?.where(
+                (transaction) => transaction.isPending != true,
+              ),
             ];
 
             if (currentFilter.range?.range?.contains(now) == true) {
@@ -156,53 +163,115 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               });
             }
 
-            final Widget header = DefaultTransactionsFilterHead(
-              defaultFilter: defaultFilter,
-              current: currentFilter,
-              onChanged: (value) {
-                setState(() {
-                  currentFilter = value;
-                });
-              },
-            );
+            final String primaryCurrency =
+                UserPreferencesService().primaryCurrency;
 
-            return CustomScrollView(
-              primary: true,
-              slivers: [
-                PinnedHeaderSliver(
-                  child: Container(
-                    color: context.colorScheme.surface,
-                    child: SafeArea(
-                      bottom: false,
-                      child: Column(
-                        children: [
-                          const Frame.standalone(
-                            withSurface: true,
-                            child: GreetingsBar(),
+            return ValueListenableBuilder(
+              valueListenable: ExchangeRatesService().exchangeRatesCache,
+              builder: (context, ratesSet, _) {
+                final ExchangeRates? rates =
+                    ratesSet?.get(primaryCurrency);
+
+                final SingleCurrencyFlow homeFlowTotals =
+                    SingleCurrencyFlow(currency: primaryCurrency)
+                      ..addAll(
+                        transactions
+                            .where((transaction) {
+                              if (transaction.isTransfer) return false;
+                              if (transaction.transactionDate.isAfter(now)) {
+                                return false;
+                              }
+                              if (transaction.isPending == true) return false;
+                              return true;
+                            })
+                            .map((t) => t.money),
+                        rates,
+                      );
+
+                final bool lightTheme =
+                    Theme.of(context).brightness == Brightness.light;
+                final Color pinnedStrip = lightTheme
+                    ? Colors.white
+                    : context.colorScheme.surface;
+                final Color listCanvas = lightTheme
+                    ? Colors.white
+                    : context.colorScheme.surface;
+
+                final Widget header = DefaultTransactionsFilterHead(
+                  defaultFilter: defaultFilter,
+                  current: currentFilter,
+                  onChanged: (value) {
+                    setState(() {
+                      currentFilter = value;
+                    });
+                  },
+                );
+
+                return ColoredBox(
+                  color: listCanvas,
+                  child: ScrollConfiguration(
+                    behavior: const _HomeScrollBehavior(),
+                    child: CustomScrollView(
+                      primary: true,
+                      slivers: [
+                      SliverToBoxAdapter(
+                        child: Container(
+                          color: pinnedStrip,
+                          child: SafeArea(
+                            bottom: false,
+                            child: Column(
+                              children: [
+                                Frame.standalone(
+                                  withSurface: false,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      const GreetingsBar(),
+                                      const SizedBox(height: 12.0),
+                                      const HomeTotalBalanceCard(),
+                                      const SizedBox(height: 12.0),
+                                      HomeIncomeExpenseSummary(
+                                        income: homeFlowTotals.totalIncome,
+                                        expense: homeFlowTotals.totalExpense,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                header,
+                              ],
+                            ),
                           ),
-                          header,
-                        ],
+                        ),
                       ),
+                      switch ((
+                        transactions.length,
+                        currentTransactionsSnapshot.hasData,
+                      )) {
+                        (0, true) => SliverFillRemaining(
+                          child: NoTransactions(
+                            isFilterModified: isFilterModified,
+                          ),
+                        ),
+                        (_, true) => buildGroupedList(
+                          context,
+                          now,
+                          transactions,
+                        ),
+                        (_, false) => const SliverFillRemaining(
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      },
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 28.0 + MediaQuery.paddingOf(context).bottom,
+                        ),
+                      ),
+                    ],
                     ),
                   ),
-                ),
-
-                switch ((
-                  transactions.length,
-                  currentTransactionsSnapshot.hasData,
-                )) {
-                  (0, true) => SliverFillRemaining(
-                    child: NoTransactions(isFilterModified: isFilterModified),
-                  ),
-                  (_, true) => buildGroupedList(context, now, transactions),
-                  (_, false) => const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                },
-                SliverToBoxAdapter(
-                  child: SafeArea(child: const SizedBox(height: 96.0)),
-                ),
-              ],
+                );
+              },
             );
           },
         );
@@ -270,75 +339,93 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               rates,
             );
 
-        return GroupedTransactionsListView(
-          listType: GroupedTransactionsListViewType.sliverReorderable,
-          mainHeader: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // TODO @sadespresso show iCloud errors if enabled, and platform is supported
-              if (_actionableNotification != null) ...[
-                SlidableAutoCloseBehavior(
-                  child: ActionableNotificationSection(
-                    notification: _actionableNotification!,
-                    onDismiss: () => setState(() {
-                      _actionableNotification = null;
-                    }),
-                  ),
+        return HomeTransactionCardsScope(
+          enabled: true,
+          child: TransactionListTileTheme(
+            data:
+                (TransactionListTileTheme.maybeOf(context)?.data ??
+                        TransactionListTileThemeData.fallback)
+                    .merge(
+              const TransactionListTileThemeData(
+                showCategory: true,
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  18.0,
+                  14.0,
+                  18.0,
+                  14.0,
                 ),
-              ],
-              if (showMissingExchangeRatesWarning) ...[
-                SizedBox(height: 8.0),
-                RatesMissingErrorBox(),
-              ],
-              // TODO @sadespresso want to analyze transactions shown in current
-              // view. For example, average amount of transaction, how often this
-              // happens, total txn count, etc
-              // if (defaultFilter != currentFilter) ...[
-              //   Text("transactions.count".t(context, transactions.length)),
-              //   const SizedBox(height: 4.0),
-              // ],
-              SizedBox(height: 8.0),
-              FlowCards(
-                totalExpense: combinedFlow.totalExpense,
-                totalIncome: combinedFlow.totalIncome,
+                spacing: 14.0,
+                titleSpacing: 8.0,
               ),
-              SizedBox(height: 8.0),
-              Align(
-                alignment: AlignmentDirectional.topStart,
-                child: Text(
-                  [
-                    combinedFlow.totalFlow.formatMoney(compact: true),
-                    "transactions.count".t(
-                      context,
-                      transactions.renderableCount,
+            ),
+            child: GroupedTransactionsListView(
+              groupHeaderPadding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 8.0),
+              trailingBottomPadding: 8.0,
+              listType: GroupedTransactionsListViewType.sliverReorderable,
+              mainHeader: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // TODO @sadespresso show iCloud errors if enabled, and platform is supported
+                  if (_actionableNotification != null) ...[
+                    SlidableAutoCloseBehavior(
+                      child: ActionableNotificationSection(
+                        notification: _actionableNotification!,
+                        onDismiss: () => setState(() {
+                          _actionableNotification = null;
+                        }),
+                      ),
                     ),
-                  ].join(" • "),
-                  style: context.textTheme.bodyMedium?.semi(context),
-                ),
+                  ],
+                  if (showMissingExchangeRatesWarning) ...[
+                    SizedBox(height: 8.0),
+                    RatesMissingErrorBox(),
+                  ],
+                  // TODO @sadespresso want to analyze transactions shown in current
+                  // view. For example, average amount of transaction, how often this
+                  // happens, total txn count, etc
+                  // if (defaultFilter != currentFilter) ...[
+                  //   Text("transactions.count".t(context, transactions.length)),
+                  //   const SizedBox(height: 4.0),
+                  // ],
+                  SizedBox(height: 8.0),
+                  Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: Text(
+                      [
+                        combinedFlow.totalFlow.formatMoney(compact: true),
+                        "transactions.count".t(
+                          context,
+                          transactions.renderableCount,
+                        ),
+                      ].join(" • "),
+                      style: context.textTheme.bodyMedium?.semi(context),
+                    ),
+                  ),
+                  SizedBox(height: 4.0),
+                ],
               ),
-              SizedBox(height: 4.0),
-            ],
-          ),
-          controller: widget.scrollController,
-          transactions: grouped,
-          groupBy: currentFilter.groupBy,
-          pendingTransactions: pendingTransactionsGrouped,
-          shouldCombineTransferIfNeeded: shouldCombineTransferIfNeeded,
-          pendingDivider: const WavyDivider(),
-          headerBuilder: (pendingGroup, range, transactions) {
-            if (pendingGroup) {
-              return PendingTransactionsHeader(
-                transactions: transactions,
-                range: range,
-                badgeCount: actionNeededCount,
-              );
-            }
+              controller: widget.scrollController,
+              transactions: grouped,
+              groupBy: currentFilter.groupBy,
+              pendingTransactions: pendingTransactionsGrouped,
+              shouldCombineTransferIfNeeded: shouldCombineTransferIfNeeded,
+              pendingDivider: const WavyDivider(),
+              headerBuilder: (pendingGroup, range, transactions) {
+                if (pendingGroup) {
+                  return PendingTransactionsHeader(
+                    transactions: transactions,
+                    range: range,
+                    badgeCount: actionNeededCount,
+                  );
+                }
 
-            return TransactionListDateHeader(
-              transactions: transactions,
-              range: range,
-            );
-          },
+                return TransactionListDateHeader(
+                  transactions: transactions,
+                  range: range,
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -375,4 +462,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
 
   @override
   bool get wantKeepAlive => true;
+}
+
+/// Unified overscroll spring for Home: feels less “sticky” than mixed platform physics.
+class _HomeScrollBehavior extends MaterialScrollBehavior {
+  const _HomeScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
 }

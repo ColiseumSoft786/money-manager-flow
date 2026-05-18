@@ -25,13 +25,19 @@ import "package:flow/providers/accounts_provider.dart";
 import "package:flow/providers/categories_provider.dart";
 import "package:flow/providers/transaction_tags_provider.dart";
 import "package:flow/routes/transaction_page/input_amount_sheet.dart";
-import "package:flow/routes/transaction_page/section.dart";
-import "package:flow/routes/transaction_page/sections/description_section.dart";
-import "package:flow/routes/transaction_page/sections/files_section.dart";
-import "package:flow/routes/transaction_page/sections/tags_section.dart";
+import "package:flow/widgets/sheets/select_file_attachment_sheet.dart";
+import "package:flow/routes/transaction_page/transaction_entry_theme.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_amount_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_attachments_section.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_note_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_picker_row.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_date_status_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_recurring_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_tags_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_type_segment.dart";
 import "package:flow/routes/transaction_page/select_account_sheet.dart";
 import "package:flow/routes/transaction_page/select_category_sheet.dart";
-import "package:flow/routes/transaction_page/select_recurrence.dart";
 import "package:flow/routes/transaction_page/select_recurrence_sheet.dart";
 import "package:flow/routes/transaction_page/select_recurring_update_mode_sheet.dart";
 import "package:flow/routes/transaction_page/title_input.dart";
@@ -43,18 +49,13 @@ import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/utils/utils.dart";
-import "package:flow/widgets/general/button.dart";
-import "package:flow/widgets/general/directional_chevron.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/form_close_button.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/money_text.dart";
 import "package:flow/widgets/location_picker_sheet.dart";
 import "package:flow/widgets/open_street_map.dart";
 import "package:flow/widgets/sheets/select_transaction_tags_sheet.dart";
 import "package:flow/widgets/transaction/imported_from_eny.dart";
 import "package:flow/widgets/transaction/imported_from_siri.dart";
-import "package:flow/widgets/transaction/type_selector.dart";
 import "package:flutter/foundation.dart" hide Category;
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
@@ -104,8 +105,6 @@ class _TransactionPageState extends State<TransactionPage> {
   final FocusNode _descriptionFocusNode = FocusNode();
   final FocusNode _selectAccountFocusNode = FocusNode();
   final FocusNode _selectAccountTransferToFocusNode = FocusNode();
-
-  final GlobalKey<FilesSectionState> _filesSectionKey = GlobalKey();
 
   Geo? _geo;
   bool _geoHandpicked = false;
@@ -157,7 +156,6 @@ class _TransactionPageState extends State<TransactionPage> {
 
     final accounts = ObjectBox().getAccounts();
     final categories = ObjectBox().getCategories();
-    final transactionEntryFlow = UserPreferencesService().transactionEntryFlow;
 
     if (widget.isNewTransaction) {
       _currentlyEditing = null;
@@ -245,10 +243,16 @@ class _TransactionPageState extends State<TransactionPage> {
     if (widget.isNewTransaction) {
       tryFetchLocation();
 
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-        _orchestrateFlow(transactionEntryFlow);
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        _presentInitialAmountPadIfNeeded();
       });
     }
+  }
+
+  /// Only the amount pad opens on create; account/category/tags open on tap.
+  Future<void> _presentInitialAmountPadIfNeeded() async {
+    if (!mounted || _amount.abs() != 0.0) return;
+    await inputAmount(true);
   }
 
   @override
@@ -263,11 +267,20 @@ class _TransactionPageState extends State<TransactionPage> {
     super.dispose();
   }
 
+  String _pageTitle(BuildContext context) => widget.isNewTransaction
+      ? "transactions.query.addTransaction".t(context)
+      : "transaction.edit".t(context);
+
+  bool get _canEditTransactionType =>
+      _currentlyEditing == null || _currentlyEditing.isTransfer == false;
+
   @override
   Widget build(BuildContext context) {
     final String primaryCurrency = UserPreferencesService().primaryCurrency;
 
     final TimeRange? startBounds = getStartBounds();
+    final bool showDateAndPending =
+        _recurrence == null || !widget.isNewTransaction;
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -286,308 +299,294 @@ class _TransactionPageState extends State<TransactionPage> {
         child: Focus(
           autofocus: true,
           child: Scaffold(
+            backgroundColor: TransactionEntryTheme.canvas,
             appBar: AppBar(
               leadingWidth: 40.0,
               leading: FormCloseButton(canPop: () => !hasChanged()),
               actions: [
-                IconButton(
-                  onPressed: () => save(),
-                  icon: const Icon(Symbols.check_rounded),
-                  tooltip: "general.save".t(context),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: Material(
+                    color: TransactionEntryTheme.saveActionFill(context),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: () => save(),
+                      customBorder: const CircleBorder(),
+                      child: const Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Icon(
+                          Symbols.check_rounded,
+                          color: Colors.white,
+                          size: 22.0,
+                          fill: 0.0,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
               actionsPadding: EdgeInsets.zero,
-              title: TypeSelector(
-                current: _transactionType,
-                onChange: updateTransactionType,
-                canEdit:
-                    _currentlyEditing == null ||
-                    _currentlyEditing.isTransfer == false,
+              title: Text(_pageTitle(context)),
+              titleTextStyle: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: TransactionEntryTheme.valueInk,
               ),
-              titleTextStyle: context.textTheme.bodyLarge,
               centerTitle: true,
-              backgroundColor: context.colorScheme.surface,
+              backgroundColor: TransactionEntryTheme.appBarFill,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(1.0),
+                child: Divider(
+                  height: 1.0,
+                  thickness: 1.0,
+                  color: TransactionEntryTheme.cardBorder,
+                ),
+              ),
             ),
             body: SingleChildScrollView(
-              padding: EdgeInsetsGeometry.symmetric(vertical: 24.0),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: TransactionEntryTheme.screenPadding,
               child: SafeArea(
                 child: Form(
                   canPop: !hasChanged(),
                   child: Column(
-                    spacing: 24.0,
+                    spacing: 12.0,
                     children: [
-                      TitleInput(
-                        key: ValueKey(_amount),
-                        focusNode: _titleFocusNode,
-                        controller: _titleController,
-                        transactionType: _transactionType,
-                        selectedAccountId: _selectedAccount?.id,
-                        selectedCategoryId: _selectedCategory?.id,
-                        amount: _amount,
-                        currency: _selectedAccount?.currency,
-                        transactionDate: _transactionDate,
-                        fallbackTitle: fallbackTitle,
-                        onSubmitted: (_) => save(),
+                      TransactionEntryTypeSegment(
+                        current: _transactionType,
+                        canEdit: _canEditTransactionType,
+                        onChange: updateTransactionType,
                       ),
-                      Center(
-                        child: InkWell(
+                      RepaintBoundary(
+                        child: TransactionEntryAmountCard(
+                          amount: _amount,
+                          currency:
+                              _selectedAccount?.currency ?? primaryCurrency,
                           onTap: inputAmount,
-                          child: Center(
-                            child: Text(
-                              Money(
-                                _amount,
-                                _selectedAccount?.currency ?? primaryCurrency,
-                              ).formatMoney(),
-                              style: context.textTheme.displayMedium,
-                            ),
+                          titleField: TitleInput(
+                            embedded: true,
+                            focusNode: _titleFocusNode,
+                            controller: _titleController,
+                            transactionType: _transactionType,
+                            selectedAccountId: _selectedAccount?.id,
+                            selectedCategoryId: _selectedCategory?.id,
+                            amount: _amount,
+                            currency: _selectedAccount?.currency,
+                            transactionDate: _transactionDate,
+                            fallbackTitle: fallbackTitle,
+                            onSubmitted: (_) => save(),
                           ),
                         ),
                       ),
-                      // From account
-                      Section(
-                        title: isTransfer
-                            ? "transaction.transfer.from".t(context)
-                            : "account".t(context),
-                        child: ListTile(
-                          leading: _selectedAccount == null
-                              ? null
-                              : FlowIcon(_selectedAccount!.icon, plated: true),
-                          title: Text(
-                            _selectedAccount?.name ??
-                                "transaction.edit.selectAccount".t(context),
-                          ),
-                          subtitle:
-                              (!widget.isNewTransaction &&
-                                  _selectedAccount != null)
-                              ? MoneyText(
-                                  _selectedAccount!.balanceAt(transactionDate),
-                                )
-                              : null,
-                          onTap: () => selectAccount(),
-                          trailing: _selectedAccount == null
-                              ? const Icon(Symbols.chevron_right)
-                              : null,
-                          focusNode: _selectAccountFocusNode,
-                        ),
-                      ),
-                      // To account
-                      if (isTransfer) ...[
-                        Section(
-                          title: "transaction.transfer.to".t(context),
-                          child: ListTile(
-                            leading: _selectedAccountTransferTo == null
-                                ? null
-                                : FlowIcon(
-                                    _selectedAccountTransferTo!.icon,
-                                    plated: true,
-                                  ),
-                            title: Text(
-                              _selectedAccountTransferTo?.name ??
-                                  "transaction.edit.selectAccount".t(context),
-                            ),
-                            subtitle:
-                                (!widget.isNewTransaction &&
-                                    _selectedAccountTransferTo != null)
-                                ? MoneyText(
-                                    _selectedAccountTransferTo!.balanceAt(
-                                      transactionDate,
-                                    ),
-                                  )
-                                : null,
-                            onTap: () => selectAccountTransferTo(),
-                            trailing: _selectedAccountTransferTo == null
-                                ? const Icon(Symbols.chevron_right)
-                                : null,
-                            focusNode: _selectAccountTransferToFocusNode,
-                          ),
-                        ),
-                        if (crossCurrencyTransfer)
-                          Section(
-                            title: "transaction.transfer.conversionRate".t(
-                              context,
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                "${Money(1.0, _selectedAccount!.currency).formatMoney()} = ${Money(_conversionRate, _selectedAccountTransferTo!.currency).formatMoney()}",
-                              ),
-                              onTap: () => inputPostConversionAmount(),
-                              trailing: _selectedAccountTransferTo == null
-                                  ? LeChevron()
-                                  : null,
-                              focusNode: _selectAccountTransferToFocusNode,
-                            ),
-                          ),
-                      ],
-                      // Category
-                      if (!isTransfer)
-                        Section(
-                          title: "category".t(context),
-                          child: ListTile(
-                            leading: _selectedCategory == null
-                                ? null
-                                : FlowIcon(
-                                    _selectedCategory!.icon,
-                                    plated: true,
-                                    colorScheme: _selectedCategory!.colorScheme,
-                                  ),
-                            title: Text(
-                              _selectedCategory?.name ??
-                                  "transaction.edit.selectCategory".t(context),
-                            ),
-                            onTap: () => selectCategory(),
-                            trailing: _selectedCategory == null
-                                ? const Icon(Symbols.chevron_right)
-                                : null,
-                          ),
-                        ),
-                      TagsSection(
-                        selectTags: selectTags,
-                        selectedTags: _selectedTags,
-                        onTagsChanged: onTagsChanged,
-                        location: _geo,
-                      ),
-                      DescriptionSection(
-                        value: _descriptionMarkdown,
-                        focusNode: _descriptionFocusNode,
-                        onChanged: (value) {
-                          setState(() {
-                            _descriptionMarkdown = value;
-                          });
-                        },
-                      ),
-                      FilesSection(
-                        key: _filesSectionKey,
-                        onAdd: addFiles,
-                        onRemove: removeFile,
-                        attachments: _attachments,
-                      ),
-                      if (_recurrence == null || !widget.isNewTransaction)
-                        Section(
-                          title: "transaction.date".t(context),
+                      RepaintBoundary(
+                        child: TransactionEntryCard(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              ListTile(
-                                title: Text(transactionDate.toMoment().LLL),
-                                onTap: () => selectTransactionDate(),
-                                leading: Icon(Symbols.calendar_month_rounded),
-                                trailing: const LeChevron(),
-                              ),
-                              SwitchListTile(
-                                title: Text("transaction.pending".t(context)),
-                                secondary: Icon(
-                                  Symbols.search_activity_rounded,
-                                ),
-                                value: _isPending,
-                                onChanged: pastDuePending
+                              TransactionEntryPickerRow(
+                                icon: Symbols.account_balance_wallet_rounded,
+                                label: isTransfer
+                                    ? "transaction.transfer.from".t(context)
+                                    : "transaction.edit.selectAccount"
+                                        .t(context),
+                                value: _selectedAccount?.name,
+                                placeholder: "transaction.edit.selectAccount"
+                                    .t(context),
+                                onTap: selectAccount,
+                                leading: _selectedAccount == null
                                     ? null
-                                    : updatePending,
+                                    : FlowIcon(
+                                        _selectedAccount!.icon,
+                                        plated: false,
+                                      ),
+                                showDivider: true,
+                              ),
+                              if (!isTransfer)
+                                TransactionEntryPickerRow(
+                                  icon: Symbols.category_rounded,
+                                  label: "transaction.edit.selectCategory"
+                                      .t(context),
+                                  value: _selectedCategory?.name,
+                                  placeholder:
+                                      "transaction.edit.selectCategory"
+                                          .t(context),
+                                  onTap: selectCategory,
+                                  leading: _selectedCategory == null
+                                      ? null
+                                      : FlowIcon(
+                                          _selectedCategory!.icon,
+                                          plated: false,
+                                          colorScheme:
+                                              _selectedCategory!.colorScheme,
+                                        ),
+                                  showDivider: true,
+                                ),
+                            if (isTransfer)
+                              TransactionEntryPickerRow(
+                                icon: Symbols.swap_horiz_rounded,
+                                label: "transaction.transfer.to".t(context),
+                                value: _selectedAccountTransferTo?.name,
+                                placeholder:
+                                    "transaction.edit.selectAccount".t(context),
+                                onTap: selectAccountTransferTo,
+                                leading: _selectedAccountTransferTo == null
+                                    ? null
+                                    : FlowIcon(
+                                        _selectedAccountTransferTo!.icon,
+                                        plated: false,
+                                      ),
+                                showDivider: crossCurrencyTransfer,
+                              ),
+                            if (crossCurrencyTransfer)
+                              TransactionEntryPickerRow(
+                                icon: Symbols.currency_exchange_rounded,
+                                label: "transaction.transfer.conversionRate".t(
+                                  context,
+                                ),
+                                value:
+                                    "${Money(1.0, _selectedAccount!.currency).formatMoney()} = ${Money(_conversionRate, _selectedAccountTransferTo!.currency).formatMoney()}",
+                                placeholder:
+                                    "transaction.transfer.conversionRate".t(
+                                  context,
+                                ),
+                                onTap: inputPostConversionAmount,
+                                showDivider: false,
+                              ),
+                              TransactionEntryTagsCard(
+                                wrapInCard: false,
+                                selectTags: selectTags,
+                                selectedTags: _selectedTags,
+                                onTagsChanged: onTagsChanged,
+                                location: _geo,
+                              ),
+                              TransactionEntryNoteCard(
+                                wrapInCard: false,
+                                value: _descriptionMarkdown,
+                                focusNode: _descriptionFocusNode,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _descriptionMarkdown = value;
+                                  });
+                                },
                               ),
                             ],
                           ),
                         ),
-
-                      Section(
-                        title: "transaction.recurring".t(context),
-                        child: AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          child: _recurrence != null
-                              ? SelectRecurrence(
-                                  initialValue: _recurrence,
-                                  onChanged: updateRecurrence,
-                                  startBounds: startBounds,
-                                )
-                              : ListTile(
-                                  leading: Icon(Symbols.repeat_rounded),
-                                  title: Text(
-                                    "transaction.recurring.setup".t(context),
-                                  ),
-                                  onTap: _setupRecurring,
-                                  trailing: const LeChevron(),
-                                ),
-                        ),
                       ),
-
-                      if (_geo != null || enableGeo)
-                        Section(
-                          title: "transaction.location".t(context),
-                          child: Padding(
-                            padding: const .all(16.0),
-                            child: _geo == null
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        image: AssetImage(
-                                          "assets/images/map_square.png",
+                      TransactionEntryAttachmentsSection(
+                        attachments: _attachments,
+                        onPickFiles: pickAttachmentFiles,
+                        onAddFiles: addFiles,
+                        onRemove: deleteAttachment,
+                      ),
+                      if (showDateAndPending)
+                        TransactionEntryDateStatusCard(
+                          dateLabel: _formatTransactionDateLabel(context),
+                          onEditDate: selectTransactionDate,
+                          isPending: _isPending,
+                          pendingEnabled: !pastDuePending,
+                          onPendingChanged: updatePending,
+                        ),
+                      TransactionEntryRecurringCard(
+                        recurrence: _recurrence,
+                        isNewTransaction: widget.isNewTransaction,
+                        onRecurrenceChanged: updateRecurrence,
+                        onSetupRecurring: _setupRecurring,
+                        startBounds: startBounds,
+                      ),
+                      if (enableGeo)
+                        RepaintBoundary(
+                          child: TransactionEntryCard(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: TransactionEntryTheme.iconPlateSize,
+                                      height:
+                                          TransactionEntryTheme.iconPlateSize,
+                                      decoration: BoxDecoration(
+                                        color: TransactionEntryTheme
+                                            .iconPlateFill(context),
+                                        borderRadius: BorderRadius.circular(
+                                          TransactionEntryTheme.iconPlateRadius,
                                         ),
                                       ),
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: .circular(8.0),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Symbols.location_on_rounded,
+                                        size: 22.0,
+                                        color: TransactionEntryTheme
+                                            .iconPlateInk(context),
+                                        fill: 0.0,
+                                      ),
                                     ),
-                                    child: AspectRatio(
-                                      aspectRatio: 1.0,
-                                      child: Center(
-                                        child: Button(
-                                          onTap: selectLocation,
-                                          trailing: const Icon(
-                                            Symbols.pin_drop_rounded,
-                                          ),
-                                          child: Text(
-                                            "transaction.location.add".t(
-                                              context,
-                                            ),
-                                          ),
+                                    const SizedBox(width: 14.0),
+                                    Expanded(
+                                      child: Text(
+                                        "transaction.location".t(context),
+                                        style: context.textTheme.titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: TransactionEntryTheme.valueInk,
                                         ),
                                       ),
                                     ),
-                                  )
-                                : Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: .circular(8.0),
-                                        child: AspectRatio(
-                                          aspectRatio: 1.0,
-                                          child: OpenStreetMap(
-                                            mapController: _mapController,
-                                            interactable: false,
-                                            onTap: (_) => selectLocation(),
-                                            center: LatLng(
-                                              _geo?.latitude ??
-                                                  sukhbaatarSquareCenterLat,
-                                              _geo?.longitude ??
-                                                  sukhbaatarSquareCenterLong,
-                                            ),
-                                          ),
+                                    if (_geo == null)
+                                      TextButton(
+                                        onPressed: selectLocation,
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              TransactionEntryTheme.primary(context),
                                         ),
-                                      ),
-                                      SizedBox(height: 8.0),
-                                      InfoText(
                                         child: Text(
-                                          "transaction.location.edit".t(
-                                            context,
-                                          ),
+                                          "transaction.location.add".t(context),
+                                        ),
+                                      )
+                                    else
+                                      TextButton(
+                                        onPressed: selectLocation,
+                                        child: Text(
+                                          "transaction.location.edit".t(context),
                                         ),
                                       ),
-                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 12.0),
+                                if (_geo == null)
+                                  _LocationPlaceholder(onTap: selectLocation)
+                                else
+                                  _LocationMapPreview(
+                                    geo: _geo!,
+                                    mapController: _mapController,
+                                    onTap: selectLocation,
                                   ),
+                              ],
+                            ),
                           ),
                         ),
-
                       if (_currentlyEditing != null)
-                        Section(
-                          title: "transaction.actions".t(context),
+                        TransactionEntryCard(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ListTile(
-                                leading: Icon(Symbols.content_copy_rounded),
+                                leading: const Icon(
+                                  Symbols.content_copy_rounded,
+                                ),
                                 title: Text("transaction.duplicate".t(context)),
                                 onTap: () => _duplicate(),
                               ),
                               if (_currentlyEditing.isDeleted == true)
                                 ListTile(
-                                  leading: Icon(Symbols.restore_page_rounded),
+                                  leading: const Icon(
+                                    Symbols.restore_page_rounded,
+                                  ),
                                   title: Text(
                                     "transaction.moveToTrashBin.restore".t(
                                       context,
@@ -597,21 +596,33 @@ class _TransactionPageState extends State<TransactionPage> {
                                 ),
                               if (_currentlyEditing.isDeleted == true)
                                 ListTile(
-                                  leading: Icon(Symbols.delete_forever_rounded),
-                                  title: Text("transaction.delete".t(context)),
+                                  leading: Icon(
+                                    Symbols.delete_forever_rounded,
+                                    color: context.flowColors.expense,
+                                  ),
+                                  title: Text(
+                                    "transaction.delete".t(context),
+                                    style: TextStyle(
+                                      color: context.flowColors.expense,
+                                    ),
+                                  ),
                                   onTap: () => _deleteTransaction(),
-                                  iconColor: context.flowColors.expense,
-                                  textColor: context.flowColors.expense,
                                 ),
                               if (_currentlyEditing.isDeleted != true)
                                 ListTile(
-                                  leading: Icon(Symbols.delete_forever_rounded),
+                                  leading: Icon(
+                                    Symbols.delete_forever_rounded,
+                                    color: context.flowColors.expense,
+                                  ),
                                   title: Text(
                                     "transaction.moveToTrashBin".t(context),
+                                    style: TextStyle(
+                                      color: context.flowColors.expense,
+                                    ),
                                   ),
                                   onTap: () => _moveToTrash(),
                                 ),
-                              SizedBox(height: 32.0),
+                              const SizedBox(height: 16.0),
                               Text(
                                 "${"transaction.createdDate".t(context)} ${_currentlyEditing.createdDate.format(payload: "LLL", forceLocal: true)}",
                                 style: context.textTheme.bodyMedium?.semi(
@@ -649,6 +660,20 @@ class _TransactionPageState extends State<TransactionPage> {
         ),
       ),
     );
+  }
+
+  String _formatTransactionDateLabel(BuildContext context) {
+    final Moment moment = transactionDate.toMoment();
+    final String formatted = moment.format("MMM D, YYYY");
+
+    final DateTime today = DateTime.now();
+    if (transactionDate.year == today.year &&
+        transactionDate.month == today.month &&
+        transactionDate.day == today.day) {
+      return "Today, $formatted";
+    }
+
+    return moment.format("dddd, $formatted");
   }
 
   void tryFetchLocation() {
@@ -786,6 +811,8 @@ class _TransactionPageState extends State<TransactionPage> {
         ? accounts.single
         : await showModalBottomSheet<Account>(
             context: context,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             builder: (context) => SelectAccountSheet(
               accounts: accounts,
               currentlySelectedAccountId: _selectedAccount?.id,
@@ -823,6 +850,8 @@ class _TransactionPageState extends State<TransactionPage> {
         ? toAccounts.single
         : await showModalBottomSheet<Account>(
             context: context,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             builder: (context) => SelectAccountSheet(
               accounts: toAccounts,
               currentlySelectedAccountId: _selectedAccountTransferTo?.id,
@@ -866,8 +895,11 @@ class _TransactionPageState extends State<TransactionPage> {
       final Optional<Category>? result =
           await showModalBottomSheet<Optional<Category>>(
             context: context,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             builder: (context) => SelectCategorySheet(
               currentlySelectedCategoryId: _selectedCategory?.id,
+              transactionType: _transactionType,
               showTrailing: widget.isNewTransaction,
             ),
             isScrollControlled: true,
@@ -1035,6 +1067,8 @@ class _TransactionPageState extends State<TransactionPage> {
     final List<TransactionTag>? tags = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => Builder(
         builder: (context) {
           final List<TransactionTag> allTags = TransactionTagsProvider.of(
@@ -1442,6 +1476,42 @@ class _TransactionPageState extends State<TransactionPage> {
     return null;
   }
 
+  Future<void> pickAttachmentFiles() async {
+    final List<XFile>? files = await showModalBottomSheet<List<XFile>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (context) => const SelectFileAttachmentSheet(),
+    );
+
+    if (files != null && files.isNotEmpty) {
+      addFiles(files);
+    }
+  }
+
+  Future<void> deleteAttachment(FileAttachment file) async {
+    final bool? confirmation = await context.showConfirmationSheet(
+      isDeletionConfirmation: true,
+      title: "fileAttachment.delete".t(context),
+      child: Text("fileAttachment.delete".t(context)),
+    );
+
+    if (confirmation != true || !mounted) return;
+
+    try {
+      await FileAttachmentService().deleteIfOrphan(file);
+      if (mounted) {
+        context.showToast(text: "fileAttachment.delete.success".t(context));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      context.showErrorToast(error: "error.sync.fileNotFound".t(context));
+    } finally {
+      removeFile(file);
+    }
+  }
+
   void removeFile(FileAttachment attachment) {
     _attachments = _attachments
         ?.where((a) => a.uuid != attachment.uuid)
@@ -1493,7 +1563,7 @@ class _TransactionPageState extends State<TransactionPage> {
     }
   }
 
-  void _orchestrateFlow(TransactionEntryFlow flow) async {
+  Future<void> _orchestrateFlow(TransactionEntryFlow flow) async {
     for (final entry in flow.actions) {
       switch (entry) {
         case TransactionEntryAction.selectAccount:
@@ -1527,11 +1597,11 @@ class _TransactionPageState extends State<TransactionPage> {
             }
           }
         case TransactionEntryAction.inputAmount:
-          if (flow.skipSelectedFields && _amount != 0.0) {
+          if (flow.skipSelectedFields && _amount.abs() != 0.0) {
             //
           } else {
             await inputAmount(true);
-            if (flow.abandonUponActionCancelled && _amount == 0.0) {
+            if (flow.abandonUponActionCancelled && _amount.abs() == 0.0) {
               return;
             }
           }
@@ -1567,7 +1637,7 @@ class _TransactionPageState extends State<TransactionPage> {
           if (flow.skipSelectedFields && _attachments?.isNotEmpty == true) {
             //
           } else {
-            await _filesSectionKey.currentState?.pickFile();
+            await pickAttachmentFiles();
           }
         case TransactionEntryAction.inputTitle:
           SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -1583,5 +1653,86 @@ class _TransactionPageState extends State<TransactionPage> {
           });
       }
     }
+  }
+}
+
+/// Static map placeholder — avoids loading [OpenStreetMap] until a pin exists.
+class _LocationPlaceholder extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _LocationPlaceholder({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.0),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.0),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/map_square.png"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Icon(
+                    Symbols.location_on_rounded,
+                    size: 36.0,
+                    color: TransactionEntryTheme.primary(context),
+                    fill: 0.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationMapPreview extends StatelessWidget {
+  final Geo geo;
+  final MapController? mapController;
+  final VoidCallback onTap;
+
+  const _LocationMapPreview({
+    required this.geo,
+    required this.mapController,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12.0),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: OpenStreetMap(
+              mapController: mapController,
+              interactable: false,
+              onTap: (_) => onTap(),
+              center: LatLng(
+                geo.latitude ?? sukhbaatarSquareCenterLat,
+                geo.longitude ?? sukhbaatarSquareCenterLong,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

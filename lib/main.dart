@@ -178,7 +178,11 @@ class FlowState extends State<Flow> {
   Locale _locale = FlowLocalizations.supportedLocales.first;
   ThemeMode _themeMode = ThemeMode.system;
 
-  ThemeFactory _themeFactory = ThemeFactory.fromThemeName(null);
+  ThemeFactory _themeFactory = ThemeFactory.fromThemeName(
+    null,
+    preferDark:
+        PlatformDispatcher.instance.platformBrightness == Brightness.dark,
+  );
 
   ThemeMode get themeMode => _themeMode;
 

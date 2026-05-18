@@ -9,15 +9,20 @@ import "package:flow/entity/transaction_tag.dart";
 import "package:flow/entity/transaction_type/payload.dart";
 import "package:flow/form_validators.dart";
 import "package:flow/l10n/flow_localizations.dart";
-import "package:flow/l10n/named_enum.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/objectbox.g.dart";
 import "package:flow/services/transactions.dart";
+import "package:flow/main.dart";
+import "package:flow/services/user_preferences.dart";
 import "package:flow/theme/color_themes/registry.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/theme/flow_theme_group.dart";
 import "package:flow/theme/helpers.dart";
+import "package:flow/theme/theme.dart";
 import "package:flow/utils/extensions/transaction_tag_type.dart";
+import "package:flow/utils/optional.dart";
 import "package:flow/utils/utils.dart";
-import "package:flow/widgets/delete_button.dart";
+import "package:flow/widgets/account/account_delete_styled_button.dart";
 import "package:flow/widgets/general/directional_chevron.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/form_close_button.dart";
@@ -25,10 +30,12 @@ import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/info_text.dart";
 import "package:flow/widgets/location_picker_sheet.dart";
 import "package:flow/widgets/open_street_map.dart";
-import "package:flow/widgets/select_color_scheme_list_tile.dart";
+import "package:flow/widgets/sheets/select_color_scheme_sheet.dart";
 import "package:flow/widgets/sheets/select_contact_sheet.dart";
-import "package:flow/widgets/sheets/select_flow_icon_sheet.dart";
-import "package:flutter/material.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_char_flow_icon_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_icon_flow_icon_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_image_flow_icon_sheet.dart";
+import "package:flutter/material.dart" hide Flow;
 import "package:flutter/scheduler.dart";
 import "package:flutter_contacts/contact.dart";
 import "package:flutter_map/flutter_map.dart";
@@ -37,6 +44,10 @@ import "package:go_router/go_router.dart";
 import "package:latlong2/latlong.dart";
 import "package:material_symbols_icons/symbols.dart";
 import "package:permission_handler/permission_handler.dart";
+
+/// Fallback accent picker plate when tag has no theme yet.
+const Color _kTagAccentPlateBgNeutral = Color(0xFFF3F4F6);
+const Color _kTagAccentPlateFgNeutral = Color(0xFF6B7280);
 
 class TransactionTagPage extends StatefulWidget {
   final int tagId;
@@ -105,9 +116,20 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
     super.dispose();
   }
 
+  String _titleText(BuildContext context) {
+    if (widget.isNewTag) {
+      return "transaction.tags.new".t(context);
+    }
+    return _currentlyEditing?.title ?? "transaction.tags.new".t(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     const EdgeInsets contentPadding = EdgeInsets.symmetric(horizontal: 16.0);
+    final FlowColorScheme? activeScheme = getThemeStrict(_colorSchemeName);
+
+    const Color screenBackground = Colors.white;
+    const Color titleInk = kFlowHomeTransactionHeadingInk;
 
     final LatLng center =
         (_type == TransactionTagType.location
@@ -116,9 +138,24 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
         sukhbaatarSquareCenter;
 
     return Scaffold(
+      backgroundColor: screenBackground,
       appBar: AppBar(
+        backgroundColor: screenBackground,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leadingWidth: 40.0,
         leading: FormCloseButton(canPop: () => !hasChanged()),
+        title: Text(
+          _titleText(context),
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: titleInk,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             onPressed: () => save(),
@@ -133,37 +170,15 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16.0),
-                FlowIcon(
-                  _iconData ?? CharacterFlowIcon("T"),
-                  size: 80.0,
-                  plated: true,
-                  onTap: selectIcon,
-                  colorScheme: getThemeStrict(_colorSchemeName),
-                ),
-                const SizedBox(height: 16.0),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: SingleChildScrollView(
-                    padding: contentPadding,
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      spacing: 12.0,
-                      mainAxisSize: MainAxisSize.min,
-                      children: TransactionTagType.values
-                          .map(
-                            (type) => FilterChip(
-                              avatar: Icon(type.icon),
-                              label: Text(type.localizedNameContext(context)),
-                              showCheckmark: false,
-                              selected: _type == type,
-                              onSelected: (selected) =>
-                                  selected ? _updateType(type) : null,
-                            ),
-                          )
-                          .toList(),
-                    ),
+                Center(
+                  child: FlowIcon(
+                    _iconData ?? CharacterFlowIcon("T"),
+                    size: 80.0,
+                    plated: true,
+                    colorScheme: activeScheme,
                   ),
                 ),
                 const SizedBox(height: 16.0),
@@ -189,30 +204,41 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-                if (_type == TransactionTagType.location)
-                  Frame(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ClipRRect(
-                          borderRadius: .circular(8.0),
-                          child: AspectRatio(
-                            aspectRatio: 1.0,
-                            child: OpenStreetMap(
-                              mapController: _mapController,
-                              interactable: false,
-                              onTap: (_) => selectLocation(center),
-                              center: center,
+                Padding(
+                  padding: contentPadding,
+                  child: _buildIconSourceSection(context, activeScheme),
+                ),
+                if (_type == TransactionTagType.location) ...[
+                  const SizedBox(height: 16.0),
+                  Padding(
+                    padding: contentPadding,
+                    child: Frame(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: AspectRatio(
+                              aspectRatio: 1.0,
+                              child: OpenStreetMap(
+                                mapController: _mapController,
+                                interactable: false,
+                                onTap: (_) => selectLocation(center),
+                                center: center,
+                              ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: 8.0),
-                        InfoText(
-                          child: Text("transaction.location.edit".t(context)),
-                        ),
-                      ],
+                          const SizedBox(height: 8.0),
+                          InfoText(
+                            child: Text(
+                              "transaction.location.edit".t(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                ],
                 if ((Platform.isIOS || Platform.isAndroid) &&
                     _type == TransactionTagType.location)
                   ListTile(
@@ -229,28 +255,36 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
                   ListTile(
                     leading: const Icon(Symbols.contact_page_rounded),
                     onTap: _selectContact,
-                    title: Text("transaction.tags.contact.select".t(context)),
+                    title: Text(
+                      "transaction.tags.contact.select".t(context),
+                    ),
                     trailing: const LeChevron(),
                   ),
-                  Frame(
-                    child: InfoText(
-                      child: Text(
-                        "preferences.transactions.tags.contactUsageDescription"
-                            .t(context),
+                  Padding(
+                    padding: contentPadding,
+                    child: Frame(
+                      child: InfoText(
+                        child: Text(
+                          "preferences.transactions.tags.contactUsageDescription"
+                              .t(context),
+                        ),
                       ),
                     ),
                   ),
                 ],
-                SelectColorSchemeListTile(
-                  colorScheme: _colorSchemeName,
-                  onChanged: (scheme) =>
-                      setState(() => _colorSchemeName = scheme?.name),
+                const SizedBox(height: 24.0),
+                Padding(
+                  padding: contentPadding,
+                  child: _buildThemeColorSection(context, activeScheme),
                 ),
                 if (_currentlyEditing != null) ...[
                   const SizedBox(height: 36.0),
-                  DeleteButton(
-                    onTap: _deleteTag,
-                    label: Text("transaction.tags.delete".t(context)),
+                  Padding(
+                    padding: contentPadding,
+                    child: AccountDeleteStyledButton(
+                      onTap: _deleteTag,
+                      label: Text("transaction.tags.delete".t(context)),
+                    ),
                   ),
                   const SizedBox(height: 16.0),
                 ],
@@ -262,31 +296,385 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
     );
   }
 
-  Future<void> selectIcon() async {
-    final result = await showModalBottomSheet<FlowIconData>(
-      context: context,
-      builder: (context) => SelectFlowIconSheet(current: _iconData),
-      isScrollControlled: true,
+  Widget _buildSectionLabel(BuildContext context, String text) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        text,
+        style: context.textTheme.titleSmall?.copyWith(
+          color: kFlowPopularCurrenciesSectionHeading,
+          fontWeight: FontWeight.w500,
+          height: 1.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _editInsetCard(BuildContext context, Widget child) {
+    const Color cardBg = Colors.white;
+    const Color borderColor = Color(0xFFE5E7EB);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: borderColor, width: 1.0),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15.0),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildIconSourceSection(
+    BuildContext context,
+    FlowColorScheme? activeScheme,
+  ) {
+    const Color dividerColor = Color(0xFFF0F0EE);
+
+    final Color symbolPlateBg = activeScheme != null
+        ? Color.alphaBlend(
+            activeScheme.primary.withValues(alpha: 0.14),
+            Colors.white,
+          )
+        : _kTagAccentPlateBgNeutral;
+    final Color symbolPlateFg =
+        activeScheme?.primary ?? _kTagAccentPlateFgNeutral;
+
+    const Color altPlateBg = Color(0xFFF5F4F2);
+    const Color altPlateFg = Color(0xFF57534E);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionLabel(context, "flowIcon.change".t(context)),
+        const SizedBox(height: 8.0),
+        _editInsetCard(
+          context,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildIconSourceTile(
+                context,
+                icon: Symbols.interests_rounded,
+                plateBg: symbolPlateBg,
+                plateFg: symbolPlateFg,
+                title: "flowIcon.type.icon".t(context),
+                subtitle: "flowIcon.type.icon.search".t(context),
+                onTap: _pickMaterialIcon,
+                dividerColor: dividerColor,
+                showDividerBelow: true,
+              ),
+              _buildIconSourceTile(
+                context,
+                icon: Symbols.glyphs_rounded,
+                plateBg: altPlateBg,
+                plateFg: altPlateFg,
+                title: "flowIcon.type.character".t(context),
+                subtitle: "flowIcon.type.character.description".t(context),
+                onTap: _pickEmojiIcon,
+                dividerColor: dividerColor,
+                showDividerBelow: true,
+              ),
+              _buildIconSourceTile(
+                context,
+                icon: Symbols.image_rounded,
+                plateBg: altPlateBg,
+                plateFg: altPlateFg,
+                title: "flowIcon.type.image".t(context),
+                subtitle: "flowIcon.type.image.description".t(context),
+                onTap: _pickImageIcon,
+                dividerColor: dividerColor,
+                showDividerBelow: false,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconSourceTile(
+    BuildContext context, {
+    required IconData icon,
+    required Color plateBg,
+    required Color plateFg,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    required Color dividerColor,
+    required bool showDividerBelow,
+  }) {
+    final Widget row = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44.0,
+                height: 44.0,
+                decoration: BoxDecoration(
+                  color: plateBg,
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 22.0, color: plateFg, fill: 0.0),
+              ),
+              const SizedBox(width: 14.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: kFlowAccountEditTitleColor,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      subtitle,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: kFlowPopularCurrenciesSectionHeading,
+                        height: 1.35,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Symbols.chevron_right_rounded,
+                size: 20.0,
+                color: kFlowPopularCurrenciesSectionHeading.withValues(
+                  alpha: 0.55,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
 
-    if (result != null) {
-      _iconData = result;
+    if (!showDividerBelow) return row;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        row,
+        Divider(
+          height: 1.0,
+          thickness: 1.0,
+          indent: 72.0,
+          color: dividerColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeColorSection(
+    BuildContext context,
+    FlowColorScheme? activeScheme,
+  ) {
+    final Color plateBg = activeScheme != null
+        ? Color.alphaBlend(
+            activeScheme.primary.withValues(alpha: 0.14),
+            Colors.white,
+          )
+        : _kTagAccentPlateBgNeutral;
+    final Color plateFg = activeScheme?.primary ?? _kTagAccentPlateFgNeutral;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionLabel(context, "account.themeColor".t(context)),
+        const SizedBox(height: 8.0),
+        _editInsetCard(
+          context,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _selectColorScheme,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14.0,
+                  vertical: 14.0,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 44.0,
+                      height: 44.0,
+                      decoration: BoxDecoration(
+                        color: plateBg,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Symbols.palette_rounded,
+                        size: 22.0,
+                        color: plateFg,
+                        fill: 0.0,
+                      ),
+                    ),
+                    const SizedBox(width: 14.0),
+                    Expanded(
+                      child: DefaultTextStyle.merge(
+                        style: context.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: kFlowAccountEditTitleColor,
+                          height: 1.25,
+                        ),
+                        child: _buildThemeColorValue(context, activeScheme),
+                      ),
+                    ),
+                    Icon(
+                      Symbols.chevron_right_rounded,
+                      size: 20.0,
+                      color: kFlowPopularCurrenciesSectionHeading.withValues(
+                        alpha: 0.55,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeColorValue(
+    BuildContext context,
+    FlowColorScheme? scheme,
+  ) {
+    if (scheme == null) {
+      return Text("select.color.none".t(context));
     }
 
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 11.0,
+          height: 11.0,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.06),
+              width: 1.0,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10.0),
+        Flexible(
+          child: Text(
+            scheme.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectColorScheme() async {
+    final FlowColorScheme theme = getTheme(
+      UserPreferencesService().themeNameRaw,
+      preferDark: Flow.of(context).useDarkTheme,
+    );
+
+    final FlowThemeGroup group = getGroupByTheme(theme.name);
+
+    final Optional<FlowColorScheme>? result =
+        await showModalBottomSheet<Optional<FlowColorScheme>>(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => SelectColorSchemeSheet(
+            group: group,
+            initialScheme: _colorSchemeName,
+          ),
+        );
+
+    if (result == null) return;
+
+    setState(() {
+      _colorSchemeName = result.value?.name;
+    });
+  }
+
+  void _updateIcon(FlowIconData? data) {
+    _iconData = data;
     if (mounted) setState(() {});
   }
 
-  void _updateType(TransactionTagType newType) {
-    if (newType == _type) return;
+  Future<void> _pickMaterialIcon() async {
+    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SelectIconFlowIconSheet(initialValue: _iconData),
+    );
 
-    if (_iconData == null ||
-        FlowIconData.icon(_type.icon).toString() == _iconData.toString()) {
-      _iconData = FlowIconData.icon(newType.icon);
+    if (result != null) {
+      _updateIcon(result);
     }
-    _type = newType;
-
-    setState(() {});
   }
+
+  Future<void> _pickEmojiIcon() async {
+    const double pickerIconSize = 88.0;
+    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SelectCharFlowIconSheet(
+        iconSize: pickerIconSize,
+        initialValue: _iconData,
+      ),
+    );
+
+    if (result != null) {
+      _updateIcon(result);
+    }
+  }
+
+  Future<void> _pickImageIcon() async {
+    const double pickerIconSize = 88.0;
+    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SelectImageFlowIconSheet(
+        iconSize: pickerIconSize,
+        initialValue: _iconData,
+      ),
+    );
+
+    if (result != null) {
+      _updateIcon(result);
+    }
+  }
+
+  // Used by the hidden Generic / Location / Person chips above.
+  // void _updateType(TransactionTagType newType) {
+  //   if (newType == _type) return;
+  //
+  //   if (_iconData == null ||
+  //       FlowIconData.icon(_type.icon).toString() == _iconData.toString()) {
+  //     _iconData = FlowIconData.icon(newType.icon);
+  //   }
+  //   _type = newType;
+  //
+  //   setState(() {});
+  // }
 
   void _updatePayloadLocation(LatLng point) {
     _payload = (_payload ?? const TransactionTagPayload()).copyWith(

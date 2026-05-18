@@ -37,6 +37,12 @@ class TransactionsService {
     }
   }
 
+  /// Call after account (or other non-transaction) DB writes so UI that listens
+  /// via [addListener] — e.g. [AccountsProviderScope] — rebuilds.
+  void notifyDataChanged() {
+    _onChange();
+  }
+
   factory TransactionsService() =>
       _instance ??= TransactionsService._internal();
 

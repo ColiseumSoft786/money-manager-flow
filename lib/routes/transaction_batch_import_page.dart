@@ -196,6 +196,8 @@ class _TransactionBatchImportPageState
         accounts.singleOrNull ??
         await showModalBottomSheet<Account>(
           context: context,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           builder: (context) => SelectAccountSheet(
             accounts: accounts,
             currentlySelectedAccountId: selectedAccountId,
@@ -230,6 +232,8 @@ class _TransactionBatchImportPageState
         accounts.singleOrNull ??
         await showModalBottomSheet<Account>(
           context: context,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           builder: (context) => SelectAccountSheet(
             accounts: accounts,
             currentlySelectedAccountId: selectedAccountId,

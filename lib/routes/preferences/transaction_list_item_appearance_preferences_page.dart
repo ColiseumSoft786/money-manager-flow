@@ -1,18 +1,12 @@
-import "dart:math";
-
-import "package:flow/data/flow_icon.dart";
-import "package:flow/entity/account.dart";
-import "package:flow/entity/category.dart";
-import "package:flow/entity/transaction.dart";
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/list_tile_appearance/list_tile_appearance_theme.dart";
+import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_display_settings_card.dart";
+import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_leading_segment.dart";
+import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_preview_section.dart";
+import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/list_header.dart";
-import "package:flow/widgets/transaction_list_tile.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
-import "package:material_symbols_icons/symbols.dart";
-import "package:moment_dart/moment_dart.dart";
-import "package:simple_icons/simple_icons.dart";
 
 class TransactionListItemAppearancePreferencesPage extends StatefulWidget {
   const TransactionListItemAppearancePreferencesPage({super.key});
@@ -22,182 +16,116 @@ class TransactionListItemAppearancePreferencesPage extends StatefulWidget {
       _TransactionListItemAppearancePreferencesPageState();
 }
 
+
 class _TransactionListItemAppearancePreferencesPageState
     extends State<TransactionListItemAppearancePreferencesPage> {
   @override
   Widget build(BuildContext context) {
-    final bool useCategoryNameForUntitledTransactions =
-        UserPreferencesService().useCategoryNameForUntitledTransactions;
-    final bool transactionListTileShowCategoryName =
-        UserPreferencesService().transactionListTileShowCategoryName;
-    final bool transactionListTileShowExternalSource =
-        UserPreferencesService().transactionListTileShowExternalSource;
-    final bool transactionListTileShowAccountForLeading =
-        UserPreferencesService().transactionListTileShowAccountForLeading;
-    final bool transactionListTileRelaxedDensity =
-        UserPreferencesService().transactionListTileRelaxedDensity;
+    return ValueListenableBuilder(
+      valueListenable: UserPreferencesService().valueNotifier,
+      builder: (context, _, __) {
+        final bool useCategoryNameForUntitledTransactions =
+            UserPreferencesService().useCategoryNameForUntitledTransactions;
+        final bool transactionListTileShowCategoryName =
+            UserPreferencesService().transactionListTileShowCategoryName;
+        final bool transactionListTileShowExternalSource =
+            UserPreferencesService().transactionListTileShowExternalSource;
+        final bool transactionListTileShowAccountForLeading =
+            UserPreferencesService().transactionListTileShowAccountForLeading;
+        final bool transactionListTileRelaxedDensity =
+            UserPreferencesService().transactionListTileRelaxedDensity;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("preferences.transactions.listTile".t(context)),
-      ),
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: .start,
-            children: [
-              ListHeader(
-                "preferences.transactions.listTile.preview".t(context),
+        return Scaffold(
+          backgroundColor: ListTileAppearanceTheme.canvas,
+          appBar: AppBar(
+            backgroundColor: ListTileAppearanceTheme.cardFill,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: false,
+            title: Text(
+              "preferences.transactions.listTile".t(context),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 17.0,
+                color: ListTileAppearanceTheme.titleInk,
               ),
-              const SizedBox(height: 8.0),
-              ...getExampleTransactions().map(
-                (transaction) => IgnorePointer(
-                  child: TransactionListTile(
-                    transaction: transaction,
-                    recoverFromTrashFn: null,
-                    moveToTrashFn: null,
-                    combineTransfers: false,
-                  ),
-                ),
+            ),
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(1.0),
+              child: Divider(
+                height: 1.0,
+                thickness: 1.0,
+                color: kFlowAccountRowDividerLight,
               ),
-              const SizedBox(height: 16.0),
-              const Divider(),
-              const SizedBox(height: 16.0),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactions.listTile.fallbackToCategoryName".t(
-                    context,
-                  ),
-                ),
-                value: useCategoryNameForUntitledTransactions,
-                onChanged: (bool newValue) {
-                  UserPreferencesService()
-                          .useCategoryNameForUntitledTransactions =
-                      newValue;
-                  setState(() {});
-                },
-              ),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactions.listTile.showCategoryInList".t(
-                    context,
-                  ),
-                ),
-                value: transactionListTileShowCategoryName,
-                onChanged: (bool newValue) {
-                  UserPreferencesService().transactionListTileShowCategoryName =
-                      newValue;
-                  setState(() {});
-                },
-              ),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactions.listTile.transactionListTileShowExternalSource"
-                      .t(context),
-                ),
-                value: transactionListTileShowExternalSource,
-                onChanged: (bool newValue) {
-                  UserPreferencesService()
-                          .transactionListTileShowExternalSource =
-                      newValue;
-                  setState(() {});
-                },
-              ),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactions.listTile.relaxedDensity".t(context),
-                ),
-                value: transactionListTileRelaxedDensity,
-                onChanged: (bool newValue) {
-                  UserPreferencesService().transactionListTileRelaxedDensity =
-                      newValue;
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: 8.0),
-              ListHeader(
-                "preferences.transactions.listTile.leading".t(context),
-              ),
-              const SizedBox(height: 8.0),
-              Frame(
-                child: SegmentedButton<bool>(
-                  selected: {transactionListTileShowAccountForLeading},
-                  onSelectionChanged: (newSelection) {
-                    final bool newValue = newSelection.first;
-                    UserPreferencesService()
-                            .transactionListTileShowAccountForLeading =
-                        newValue;
-                    setState(() {});
-                  },
-                  segments: [
-                    ButtonSegment<bool>(
-                      value: false,
-                      icon: Icon(Symbols.category_rounded),
-                      label: Text(
-                        "preferences.transactions.listTile.leading.category".t(
-                          context,
-                        ),
-                      ),
-                    ),
-                    ButtonSegment<bool>(
-                      value: true,
-                      icon: Icon(Symbols.person_rounded),
-                      label: Text(
-                        "preferences.transactions.listTile.leading.account".t(
-                          context,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTileSectionHeader(
+                    first: true,
+                    label: "preferences.transactions.listTile.preview".t(
+                      context,
+                    ),
+                  ),
+                  const ListTilePreviewSection(),
+                  ListTileSectionHeader(
+                    label: "preferences.transactions.listTile.leading".t(
+                      context,
+                    ),
+                  ),
+                  ListTileLeadingSegment(
+                    showAccountForLeading: transactionListTileShowAccountForLeading,
+                    onChanged: (bool value) {
+                      UserPreferencesService()
+                              .transactionListTileShowAccountForLeading =
+                          value;
+                      setState(() {});
+                    },
+                  ),
+                  ListTileSectionHeader(
+                    label: "preferences.transactions.listTile.section.display"
+                        .t(context),
+                  ),
+                  ListTileDisplaySettingsCard(
+                    showCategoryInList: transactionListTileShowCategoryName,
+                    useCategoryNameForUntitled:
+                        useCategoryNameForUntitledTransactions,
+                    relaxedDensity: transactionListTileRelaxedDensity,
+                    showExternalSource: transactionListTileShowExternalSource,
+                    onShowCategoryInListChanged: (bool value) {
+                      UserPreferencesService().transactionListTileShowCategoryName =
+                          value;
+                      setState(() {});
+                    },
+                    onUseCategoryNameForUntitledChanged: (bool value) {
+                      UserPreferencesService()
+                              .useCategoryNameForUntitledTransactions =
+                          value;
+                      setState(() {});
+                    },
+                    onRelaxedDensityChanged: (bool value) {
+                      UserPreferencesService().transactionListTileRelaxedDensity =
+                          value;
+                      setState(() {});
+                    },
+                    onShowExternalSourceChanged: (bool value) {
+                      UserPreferencesService()
+                              .transactionListTileShowExternalSource =
+                          value;
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
-  }
-
-  List<Transaction> getExampleTransactions() {
-    final Account payPalExample = Account.preset(
-      iconCode: FlowIconData.icon(SimpleIcons.paypal).toString(),
-      uuid: "f38c7ea5-1726-4557-800d-d445bd30745f",
-      name: "PayPal",
-      currency: "USD",
-    );
-
-    final Category coffeeExample = Category.preset(
-      iconCode: FlowIconData.icon(Symbols.local_cafe_rounded).toString(),
-      name: "setup.categories.preset.drinks".t(context),
-      uuid: "21702c36-3597-4a0c-b09c-5f01ddf52805",
-    );
-
-    return <Transaction>[
-      Transaction(
-          uuid: "71011fa3-c2c5-4767-962a-b965873e6acc",
-          transactionDate:
-              DateTime.now() - Duration(days: Random().nextInt(1000)),
-          amount: -6.99,
-          currency: "USD",
-        )
-        ..setAccount(payPalExample)
-        ..setCategory(coffeeExample),
-      Transaction(
-        uuid: "8fea726e-997f-4e19-8012-75d8f9920a33",
-        title: "Adbasoi ",
-        transactionDate:
-            DateTime.now() - Duration(days: Random().nextInt(1000)),
-        amount: -1.27,
-        currency: "USD",
-      )..setAccount(payPalExample),
-    ];
-
-    //   return Transaction(
-    //   uuid: "3953dd66-d770-4426-9e96-d9c93707a200",
-    //   title: "",
-    //   transactionDate: DateTime.now(),
-    //   amount: -6.7,
-    //   currency: "EUR",
-    // )..setAccount()..setCategory();
   }
 }

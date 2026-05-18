@@ -1,4 +1,5 @@
 import "package:flow/theme/color_themes/registry.dart";
+import "package:flow/theme/flow_accent_colors.dart";
 import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/navbar_theme.dart";
 import "package:flow/theme/pie_theme_extension.dart";
@@ -89,6 +90,7 @@ class ThemeFactory {
       ),
       extensions: [
         flowColorScheme.customColors,
+        FlowAccentColors.fromColorScheme(colorScheme),
         PieThemeExtension(pieTheme: pieTheme),
         NavbarTheme(
           backgroundColor: colorScheme.secondary,

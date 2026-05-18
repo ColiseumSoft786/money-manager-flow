@@ -6,6 +6,7 @@ import "package:flow/data/exchange_rates.dart";
 import "package:flow/data/flow_analytics.dart";
 import "package:flow/data/money.dart";
 import "package:flow/data/multi_currency_flow.dart";
+import "package:flow/data/single_currency_flow.dart";
 import "package:flow/data/prefs/frecency_group.dart";
 import "package:flow/data/transaction_filter.dart";
 import "package:flow/data/transaction_programmable_object.dart";
@@ -106,6 +107,91 @@ extension MainActions on ObjectBox {
     }
 
     return total;
+  }
+
+  /// Primary-currency transactions only — lifetime income + expenses (−),
+  /// excluding transfers, deleted/pending transactions, and future-dated postings.
+  /// Used when FX totals are unavailable.
+  Money getLifetimeFlowsNetPrimaryCurrencyOnly() {
+    final String primaryCurrency = UserPreferencesService().primaryCurrency;
+
+    final SingleCurrencyFlow flow = SingleCurrencyFlow(currency: primaryCurrency);
+    final DateTime now = Moment.now().startOfNextMinute();
+
+    final Query<Transaction> q = box<Transaction>()
+        .query(
+          Transaction_.isDeleted.isNull().or(Transaction_.isDeleted.notEquals(true)).and(
+            Transaction_.isPending.isNull().or(Transaction_.isPending.notEquals(true)),
+          ).and(Transaction_.currency.equals(primaryCurrency)),
+        )
+        .build();
+
+    try {
+      for (final Transaction t in q.find()) {
+        if (t.isTransfer) continue;
+        if (t.transactionDate.isAfter(now)) continue;
+        flow.add(t.money, null);
+      }
+    } finally {
+      q.close();
+    }
+
+    return flow.totalFlow;
+  }
+
+  /// Lifetime net remainder from income minus expenses (−/+ amounts) converted
+  /// to [primary currency], across all qualifying transactions (no transfers).
+  ///
+  /// Returns `null` if foreign-currency postings exist but exchange rates cannot
+  /// be fetched for conversion ([SingleCurrencyFlow.hasMissingData]).
+  Future<Money?> getLifetimeFlowsNetGrandTotal() async {
+    final String primaryCurrency = UserPreferencesService().primaryCurrency;
+
+    final Query<Transaction> foreignProbe = box<Transaction>()
+        .query(
+          Transaction_.isDeleted.isNull().or(Transaction_.isDeleted.notEquals(true)).and(
+            Transaction_.currency.notEquals(primaryCurrency),
+          ),
+        )
+        .build();
+
+    final bool hasForeignCurrency = foreignProbe.findFirst() != null;
+    foreignProbe.close();
+
+    final ExchangeRates? rates =
+        await ExchangeRatesService().tryFetchRates(primaryCurrency);
+
+    if (hasForeignCurrency && rates == null) {
+      return null;
+    }
+
+    final SingleCurrencyFlow flow = SingleCurrencyFlow(currency: primaryCurrency);
+
+    final Query<Transaction> q = box<Transaction>()
+        .query(
+          Transaction_.isDeleted.isNull().or(Transaction_.isDeleted.notEquals(true)).and(
+            Transaction_.isPending.isNull().or(Transaction_.isPending.notEquals(true)),
+          ),
+        )
+        .build();
+
+    try {
+      final DateTime now = Moment.now().startOfNextMinute();
+
+      for (final Transaction t in q.find()) {
+        if (t.isTransfer) continue;
+        if (t.transactionDate.isAfter(now)) continue;
+        flow.add(t.money, rates);
+      }
+    } finally {
+      q.close();
+    }
+
+    if (flow.hasMissingData) {
+      return null;
+    }
+
+    return flow.totalFlow;
   }
 
   List<Account> getAccounts([bool sortByFrecency = true]) {

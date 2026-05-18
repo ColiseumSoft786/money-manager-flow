@@ -1,7 +1,11 @@
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
-import "package:flow/widgets/home/preferences/numpad_preferences/numpad_selector_radio.dart";
-import "package:flow/widgets/general/list_header.dart";
+import "package:flow/routes/preferences/numpad/numpad_preferences_theme.dart";
+import "package:flow/routes/preferences/numpad/widgets/numpad_info_banner.dart";
+import "package:flow/routes/preferences/numpad/widgets/numpad_layout_option_card.dart";
+import "package:flow/routes/preferences/numpad/widgets/numpad_preview_hero.dart";
+import "package:flow/routes/preferences/numpad/widgets/numpad_section_header.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 class NumpadPreferencesPage extends StatefulWidget {
@@ -14,45 +18,66 @@ class NumpadPreferencesPage extends StatefulWidget {
 class _NumpadPreferencesPageState extends State<NumpadPreferencesPage> {
   @override
   Widget build(BuildContext context) {
-    final bool usePhoneNumpadLayout = LocalPreferences().usePhoneNumpadLayout
-        .get();
+    final bool usePhoneNumpadLayout =
+        LocalPreferences().usePhoneNumpadLayout.get();
 
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.numpad".t(context))),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      backgroundColor: NumpadPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: NumpadPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.numpad.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: NumpadPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16.0),
-              ListHeader("preferences.numpad.layout".t(context)),
-              const SizedBox(height: 8.0),
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 600.0),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      spacing: 16.0,
-                      children: [
-                        Expanded(
-                          child: NumpadSelectorRadio.classic(
-                            onTap: () => updateLayoutPreference(false),
-                            currentlyUsingPhoneLayout: usePhoneNumpadLayout,
-                          ),
-                        ),
-                        Expanded(
-                          child: NumpadSelectorRadio.phone(
-                            onTap: () => updateLayoutPreference(true),
-                            currentlyUsingPhoneLayout: usePhoneNumpadLayout,
-                          ),
-                        ),
-                      ],
+              const NumpadPreviewHero(),
+              NumpadSectionHeader(
+                label: "preferences.numpad.layout".t(context),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: NumpadLayoutOptionCard(
+                      isPhoneLayout: false,
+                      selected: !usePhoneNumpadLayout,
+                      onTap: () => updateLayoutPreference(false),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: NumpadLayoutOptionCard(
+                      isPhoneLayout: true,
+                      selected: usePhoneNumpadLayout,
+                      onTap: () => updateLayoutPreference(true),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16.0),
+              const NumpadInfoBanner(),
             ],
           ),
         ),

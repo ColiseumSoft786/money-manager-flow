@@ -1,15 +1,18 @@
 import "dart:developer";
 
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/trash_bin/trash_bin_preferences_theme.dart";
+import "package:flow/routes/preferences/trash_bin/widgets/trash_bin_section_header.dart";
+import "package:flow/routes/preferences/trash_bin/widgets/trash_empty_button.dart";
+import "package:flow/routes/preferences/trash_bin/widgets/trash_info_banner.dart";
+import "package:flow/routes/preferences/trash_bin/widgets/trash_retention_period_card.dart";
+import "package:flow/routes/preferences/trash_bin/widgets/trash_view_deleted_card.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/helpers.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions.dart";
-import "package:flow/widgets/general/list_header.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
-import "package:material_symbols_icons/symbols.dart";
-import "package:moment_dart/moment_dart.dart";
 
 class TrashBinPreferencesPage extends StatefulWidget {
   const TrashBinPreferencesPage({super.key});
@@ -31,10 +34,42 @@ class TrashBinPreferencesPage extends StatefulWidget {
 class _TrashBinPreferencesPageState extends State<TrashBinPreferencesPage> {
   bool busy = false;
 
+  int _deletedItemCount() {
+    final query = TransactionsService().deletedTransactionsQb().build();
+    try {
+      return query.count();
+    } finally {
+      query.close();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.trashBin".t(context))),
+      backgroundColor: TrashBinPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: TrashBinPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.trashBin.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: TrashBinPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
       body: ValueListenableBuilder(
         valueListenable: UserPreferencesService().valueNotifier,
         builder: (context, snapshot, _) {
@@ -51,62 +86,35 @@ class _TrashBinPreferencesPageState extends State<TrashBinPreferencesPage> {
             if (isCustomPeriod) Duration(days: trashBinRetentionDays),
           ]..sort((a, b) => a.inDays.compareTo(b.inDays));
 
-          return SingleChildScrollView(
-            child: SafeArea(
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
               child: Column(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ListHeader("preferences.trashBin.retention".t(context)),
-                  const SizedBox(height: 8.0),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Wrap(
-                      spacing: 12.0,
-                      runSpacing: 8.0,
-                      children: [
-                        ...choices.map(
-                          (value) => FilterChip(
-                            showCheckmark: false,
-                            key: ValueKey(value),
-                            label: Text(
-                              value.toDurationString(
-                                format: DurationFormat([DurationUnit.day]),
-                                dropPrefixOrSuffix: true,
-                              ),
-                            ),
-                            onSelected: (bool selected) => selected
-                                ? updateTrashBinRetentionDays(value.inDays)
-                                : null,
-                            selected: value.inDays == trashBinRetentionDays,
-                          ),
-                        ),
-                        FilterChip(
-                          label: Text(
-                            "preferences.trashBin.retention.forever".t(context),
-                          ),
-                          onSelected: (bool selected) => selected
-                              ? updateTrashBinRetentionDays(null)
-                              : null,
-                          selected: trashBinRetentionDays == null,
-                        ),
-                      ],
-                    ),
+                  TrashBinSectionHeader(
+                    first: true,
+                    label: "preferences.trashBin.section.retention".t(context),
                   ),
-                  const SizedBox(height: 16.0),
-                  ListTile(
-                    title: Text("preferences.trashBin.seeItems".t(context)),
-                    trailing: Icon(Symbols.chevron_right_rounded),
+                  TrashRetentionPeriodCard(
+                    choices: choices,
+                    selectedDays: trashBinRetentionDays,
+                    onSelected: updateTrashBinRetentionDays,
+                  ),
+                  TrashBinSectionHeader(
+                    label: "preferences.trashBin.section.management".t(context),
+                  ),
+                  TrashViewDeletedCard(
+                    itemCount: _deletedItemCount(),
                     onTap: () => context.push("/transactions/deleted"),
                   ),
-                  ListTile(
-                    title: Text("preferences.trashBin.emptyBin".t(context)),
-                    trailing: Icon(Symbols.delete_sweep_rounded),
-                    enabled: !busy,
-                    onTap: emptyTrashBin,
-                    textColor: context.colorScheme.error,
-                    iconColor: context.colorScheme.error,
-                  ),
                   const SizedBox(height: 16.0),
+                  const TrashInfoBanner(),
+                  const SizedBox(height: 20.0),
+                  TrashEmptyButton(
+                    enabled: !busy,
+                    onPressed: emptyTrashBin,
+                  ),
                 ],
               ),
             ),
@@ -116,7 +124,7 @@ class _TrashBinPreferencesPageState extends State<TrashBinPreferencesPage> {
     );
   }
 
-  void updateTrashBinRetentionDays(int? days) async {
+  void updateTrashBinRetentionDays(int? days) {
     UserPreferencesService().trashBinRetentionDays = days;
   }
 

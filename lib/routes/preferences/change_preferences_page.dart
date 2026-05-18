@@ -1,18 +1,17 @@
 import "package:flow/constants.dart";
-import "package:flow/data/money.dart";
 import "package:flow/data/prefs/change_visuals.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/change_visuals/change_visuals_preferences_theme.dart";
+import "package:flow/routes/preferences/change_visuals/change_visuals_trend_data.dart";
+import "package:flow/routes/preferences/change_visuals/widgets/change_visuals_debug_panel.dart";
+import "package:flow/routes/preferences/change_visuals/widgets/change_visuals_growth_card.dart";
+import "package:flow/routes/preferences/change_visuals/widgets/change_visuals_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/helpers.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/list_header.dart";
-import "package:flow/widgets/trend.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:material_symbols_icons/symbols.dart";
 
 class ChangeVisualsPreferencesPage extends StatefulWidget {
   const ChangeVisualsPreferencesPage({super.key});
@@ -24,215 +23,122 @@ class ChangeVisualsPreferencesPage extends StatefulWidget {
 
 class _ChangeVisualsPreferencesPageState
     extends State<ChangeVisualsPreferencesPage> {
+  ChangeVisualsTrendData _trendData = ChangeVisualsTrendData.empty;
+  bool _loadingTrends = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTrendData();
+  }
+
+  Future<void> _loadTrendData() async {
+    final ChangeVisualsTrendData data = await ChangeVisualsTrendLoader.load();
+    if (!mounted) return;
+    setState(() {
+      _trendData = data;
+      _loadingTrends = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final ChangeVisuals changeVisuals = UserPreferencesService().changeVisuals;
 
-    final double size = IconTheme.of(context).size ?? 24.0;
-
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.changeVisuals".t(context))),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      backgroundColor: ChangeVisualsPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: ChangeVisualsPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.changeVisuals.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: ChangeVisualsPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ListHeader("preferences.changeVisuals.incomeIncrease".t(context)),
-              const SizedBox(height: 8.0),
-              Frame(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 600.0),
-                  child: Row(
-                    spacing: 12.0,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            update(
-                              changeVisuals.copyWith(
-                                incomeIncreaseUpArrow:
-                                    !changeVisuals.incomeIncreaseUpArrow,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: .circular(8.0),
-                              color: context.colorScheme.surfaceContainer,
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Icon(
-                                  changeVisuals.incomeIncreaseUpArrow
-                                      ? Symbols.stat_1_rounded
-                                      : Symbols.stat_minus_1_rounded,
-                                  size: size,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            update(
-                              changeVisuals.copyWith(
-                                incomeIncreaseGreen:
-                                    !changeVisuals.incomeIncreaseGreen,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: .circular(8.0),
-                              color: context.colorScheme.surfaceContainer,
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Container(
-                                  width: size,
-                                  height: size,
-                                  decoration: BoxDecoration(
-                                    color: changeVisuals.incomeIncreaseGreen
-                                        ? context.flowColors.income
-                                        : context.flowColors.expense,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              ChangeVisualsSectionHeader(
+                first: true,
+                label: "preferences.changeVisuals.section.growthTrends".t(
+                  context,
                 ),
               ),
-              const SizedBox(height: 24.0),
-              ListHeader(
-                "preferences.changeVisuals.expenseIncrease".t(context),
-              ),
-              const SizedBox(height: 8.0),
-              Frame(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 600.0),
-                  child: Row(
-                    spacing: 12.0,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            update(
-                              changeVisuals.copyWith(
-                                expenseIncreaseUpArrow:
-                                    !changeVisuals.expenseIncreaseUpArrow,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: .circular(8.0),
-                              color: context.colorScheme.surfaceContainer,
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Icon(
-                                  changeVisuals.expenseIncreaseUpArrow
-                                      ? Symbols.stat_1_rounded
-                                      : Symbols.stat_minus_1_rounded,
-                                  size: size,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+              if (_loadingTrends)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                ChangeVisualsGrowthCard(
+                  kind: ChangeVisualsGrowthKind.income,
+                  changeVisuals: changeVisuals,
+                  trendData: _trendData,
+                  onToggleArrow: () {
+                    update(
+                      changeVisuals.copyWith(
+                        incomeIncreaseUpArrow:
+                            !changeVisuals.incomeIncreaseUpArrow,
                       ),
-                      Expanded(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            update(
-                              changeVisuals.copyWith(
-                                expenseIncreaseRed:
-                                    !changeVisuals.expenseIncreaseRed,
-                              ),
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: .circular(8.0),
-                              color: context.colorScheme.surfaceContainer,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Center(
-                                child: Container(
-                                  width: size,
-                                  height: size,
-                                  decoration: BoxDecoration(
-                                    color: changeVisuals.expenseIncreaseRed
-                                        ? context.flowColors.expense
-                                        : context.flowColors.income,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                    );
+                  },
+                  onToggleColor: () {
+                    update(
+                      changeVisuals.copyWith(
+                        incomeIncreaseGreen: !changeVisuals.incomeIncreaseGreen,
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              ),
-              Frame.standalone(
-                child: InfoText(
-                  child: Text(
-                    "preferences.changeVisuals.clickToChange".t(context),
-                  ),
+                const SizedBox(height: 12.0),
+                ChangeVisualsGrowthCard(
+                  kind: ChangeVisualsGrowthKind.expense,
+                  changeVisuals: changeVisuals,
+                  trendData: _trendData,
+                  onToggleArrow: () {
+                    update(
+                      changeVisuals.copyWith(
+                        expenseIncreaseUpArrow:
+                            !changeVisuals.expenseIncreaseUpArrow,
+                      ),
+                    );
+                  },
+                  onToggleColor: () {
+                    update(
+                      changeVisuals.copyWith(
+                        expenseIncreaseRed: !changeVisuals.expenseIncreaseRed,
+                      ),
+                    );
+                  },
                 ),
-              ),
+              ],
               if (flowDebugMode || kDebugMode) ...[
-                const SizedBox(height: 24.0),
-                ListHeader("Debug"),
-                const SizedBox(height: 8.0),
-                Frame(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 12.0,
-                    crossAxisAlignment: .start,
-                    children: [
-                      Text(changeVisuals.serialize()),
-                      ListHeader("Income Increase"),
-                      Trend.fromMoney(
-                        previous: Money(100, "USD"),
-                        current: Money(200, "USD"),
-                      ),
-                      ListHeader("Income Decrease"),
-                      Trend.fromMoney(
-                        previous: Money(100, "USD"),
-                        current: Money(50, "USD"),
-                      ),
-                      ListHeader("Expense Increase"),
-                      Trend.fromMoney(
-                        previous: Money(-100, "USD"),
-                        current: Money(-200, "USD"),
-                      ),
-                      ListHeader("Expense Decrease"),
-                      Trend.fromMoney(
-                        previous: Money(-100, "USD"),
-                        current: Money(-50, "USD"),
-                      ),
-                    ],
+                ChangeVisualsSectionHeader(
+                  label: "preferences.changeVisuals.section.debugStatistics".t(
+                    context,
                   ),
+                ),
+                ChangeVisualsDebugPanel(
+                  serializedVisuals: changeVisuals.serialize(),
+                  trendData: _trendData,
                 ),
               ],
             ],

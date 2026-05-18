@@ -2,6 +2,7 @@ import "dart:io";
 
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_toggle_row.dart";
 import "package:flow/routes/preferences_page.dart";
 import "package:flow/services/local_auth.dart";
 import "package:flow/utils/utils.dart";
@@ -32,19 +33,18 @@ class _LockAppState extends State<LockApp> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SwitchListTile(
-          secondary: const Icon(Symbols.lock_rounded),
-          title: Text("preferences.privacy.appLock".t(context)),
+        PreferencesRootToggleRow(
+          icon: Symbols.lock_rounded,
+          title: "preferences.privacy.appLock".t(context),
           value: requireLocalAuth,
           onChanged: updateRequireLocalAuth,
         ),
-        SwitchListTile(
-          secondary: const Icon(Symbols.lock_rounded),
-          title: Text(
-            "preferences.privacy.appLock.lockAfterClosing".t(context),
-          ),
+        PreferencesRootToggleRow(
+          icon: Symbols.lock_rounded,
+          title: "preferences.privacy.appLock.lockAfterClosing".t(context),
           value: requireLocalAuthOnBlur,
           onChanged: requireLocalAuth ? updateRequireLocalAuthOnBlur : null,
+          showDivider: false,
         ),
         if (Platform.isLinux) ...[
           const SizedBox(height: 8.0),

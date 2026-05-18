@@ -11,6 +11,8 @@ import "package:flow/theme/theme.dart";
 import "package:flow/utils/extensions/transaction.dart";
 import "package:flow/widgets/general/directional_slidable.dart";
 import "package:flow/widgets/general/flow_icon.dart";
+import "package:flow/widgets/general/money_text_builder.dart";
+import "package:flow/widgets/home/home_transaction_cards_scope.dart";
 import "package:flow/widgets/general/money_text.dart";
 import "package:flow/widgets/transaction_list_tile/transaction_subtitle.dart";
 import "package:flow/widgets/transaction_list_tile_theme.dart";
@@ -67,6 +69,8 @@ class TransactionListTile extends StatelessWidget {
         TransactionListTileTheme.maybeOf(context)?.data.merge(theme) ??
         theme ??
         TransactionListTileThemeData.fallback;
+
+    final bool cardChrome = HomeTransactionCardsScope.enabledIn(context);
 
     final bool showPendingConfirmation =
         confirmFn != null && transaction.confirmable();
@@ -154,24 +158,21 @@ class TransactionListTile extends StatelessWidget {
                 )
               : null);
 
-    final Widget listTile = Material(
-      type: MaterialType.card,
-      color: kTransparent,
-      child: InkWell(
-        onTap: () => context.push("/transaction/${transaction.id}"),
-        child: Padding(
-          padding: effectiveTheme.paddingOrDefault,
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: .start,
+    final Widget inner = Padding(
+      padding: effectiveTheme.paddingOrDefault,
+      child: Column(
+        children: [
+          Row(
+                crossAxisAlignment: cardChrome
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
                 spacing: effectiveTheme.spacingOrDefault,
                 children: [
-                  buildLeading(context, effectiveTheme),
+                  buildLeading(context, effectiveTheme, cardChrome),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: effectiveTheme.titleSpacingOrDefault,
                       children: [
                         RichText(
@@ -183,29 +184,67 @@ class TransactionListTile extends StatelessWidget {
                               ],
                               TextSpan(text: resolvedTitle),
                             ],
-                            style: context.textTheme.bodyMedium,
+                            style: cardChrome
+                                ? context.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? kFlowHomeTransactionHeadingInk
+                                        : context.colorScheme.onSurface,
+                                  )
+                                : context.textTheme.bodyMedium,
                           ),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        TransactionSubtitle(components: subtitleComponents),
+                        if (cardChrome)
+                          _buildHomeStackedMeta(
+                            context,
+                            effectiveTheme,
+                            combineTransfers,
+                            resolvedTitle,
+                          )
+                        else
+                          TransactionSubtitle(
+                            components: subtitleComponents,
+                            foregroundColor: null,
+                          ),
                       ],
                     ),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: .end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     spacing: effectiveTheme.titleSpacingOrDefault,
                     children: [
-                      MoneyText(
-                        transaction.money,
+                      MoneyTextBuilder(
+                        money: transaction.money,
                         displayAbsoluteAmount:
                             transaction.isTransfer && combineTransfers,
-                        style: context.textTheme.bodyLarge?.copyWith(
-                          color: transaction.type.color(context),
-                          fontWeight: FontWeight.bold,
-                        ),
                         overrideObscure: overrideObscure,
+                        builder: (context, text, money) {
+                          String displayText = text;
+                          if (cardChrome &&
+                              !transaction.isTransfer &&
+                              money != null &&
+                              money.amount > 0 &&
+                              !displayText.trimLeft().startsWith("+")) {
+                            displayText = "+$displayText";
+                          }
+                          return Text(
+                            displayText,
+                            style: cardChrome
+                                ? context.textTheme.titleSmall?.copyWith(
+                                    color: transaction.type.color(context),
+                                    fontWeight: FontWeight.w700,
+                                  )
+                                : context.textTheme.bodyLarge?.copyWith(
+                                    color: transaction.type.color(context),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                          );
+                        },
                       ),
                       if (combineTransfers &&
                           AccountsProvider.of(context).ready &&
@@ -244,7 +283,7 @@ class TransactionListTile extends StatelessWidget {
               if (showPendingConfirmation) ...[
                 SizedBox(height: effectiveTheme.spacingOrDefault),
                 Row(
-                  mainAxisAlignment: .end,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
                       onPressed: () => confirmFn!(),
@@ -255,11 +294,56 @@ class TransactionListTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 12.0),
               ],
-            ],
-          ),
-        ),
+        ],
       ),
     );
+
+    final BorderRadius cardRadius = BorderRadius.circular(18.0);
+
+    final Widget listTile = cardChrome
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(14.0, 6.0, 14.0, 6.0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.white
+                    : context.colorScheme.surfaceContainerHigh,
+                borderRadius: cardRadius,
+                border: Border.all(
+                  width: 1.0,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? kFlowHomeTransactionCardBorder
+                      : context.colorScheme.outline.withValues(alpha: 0.22),
+                ),
+                boxShadow: Theme.of(context).brightness == Brightness.light
+                    ? const [
+                        BoxShadow(
+                          offset: Offset(0.0, 1.0),
+                          blurRadius: 2.0,
+                          spreadRadius: 0.0,
+                          color: kFlowHomeTransactionCardShadowColor,
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.push("/transaction/${transaction.id}"),
+                  borderRadius: cardRadius,
+                  child: inner,
+                ),
+              ),
+            ),
+          )
+        : Material(
+            type: MaterialType.card,
+            color: kTransparent,
+            child: InkWell(
+              onTap: () => context.push("/transaction/${transaction.id}"),
+              child: inner,
+            ),
+          );
 
     final List<SlidableAction> startActions = [
       if (showDuplicateButton)
@@ -310,9 +394,124 @@ class TransactionListTile extends StatelessWidget {
     );
   }
 
+  /// Home elevated cards: account, category, time on separate lines (no • run-on).
+  Widget _buildHomeStackedMeta(
+    BuildContext context,
+    TransactionListTileThemeData effectiveTheme,
+    bool combineTransfers,
+    String resolvedTitle,
+  ) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final Color captionColor = light
+        ? kFlowHomeTransactionCaptionMuted
+        : context.colorScheme.onSurfaceVariant;
+
+    final TextStyle lineStyle = context.textTheme.bodySmall!.copyWith(
+      color: captionColor,
+      height: 1.45,
+      fontWeight: FontWeight.w500,
+    );
+
+    final List<Widget> lines = <Widget>[];
+
+    void pushLine(Widget line) {
+      if (lines.isNotEmpty) {
+        lines.add(const SizedBox(height: 4.0));
+      }
+      lines.add(line);
+    }
+
+    final Transfer? xfer =
+        transaction.isTransfer ? transaction.extensions.transfer : null;
+
+    final String accountLabel =
+        (transaction.isTransfer && combineTransfers && xfer != null)
+        ? "${AccountsProvider.of(context).getName(xfer.fromAccountUuid) ?? ""} → ${AccountsProvider.of(context).getName(xfer.toAccountUuid) ?? ""}"
+        : (AccountsProvider.of(context).getName(transaction.accountUuid) ??
+              transaction.account.target?.name ??
+              "");
+
+    if (accountLabel.isNotEmpty) {
+      pushLine(
+        Text(
+          accountLabel,
+          style: lineStyle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
+
+    if (effectiveTheme.showCategoryOrDefault &&
+        transaction.category.target != null) {
+      final String cat = transaction.category.target!.name;
+      if (cat.toLowerCase() != resolvedTitle.trim().toLowerCase()) {
+        pushLine(
+          Text(
+            cat,
+            style: lineStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }
+    }
+
+    if (effectiveTheme.showExternalSourceOrDefault &&
+        transaction.externalProviderName != null) {
+      final String externalProviderName = transaction.externalProviderName!;
+      pushLine(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (externalProviderName == "Siri")
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 6.0),
+                child: Image.asset("assets/images/siri.png", height: 12.0),
+              ),
+            if (externalProviderName == "Eny")
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 6.0),
+                child: Image.network(enyLogoUrl, height: 12.0),
+              ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: Text(
+                externalProviderName,
+                style: lineStyle.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final String pendingPiece = transaction.transactionDate.isFuture
+        ? " · ${transaction.isPending == true ? "transaction.pending".t(context) : "transaction.pending.preapproved".t(context)}"
+        : "";
+
+    pushLine(
+      Text(
+        "${dateString}$pendingPiece",
+        style: lineStyle,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: lines,
+    );
+  }
+
   FlowIcon buildLeading(
     BuildContext context,
     TransactionListTileThemeData theme,
+    bool cardChrome,
   ) {
     late final FlowIconData iconData;
     FlowColorScheme? colorScheme;
@@ -337,6 +536,11 @@ class TransactionListTile extends StatelessWidget {
       fill: transaction.category.target != null ? 1.0 : 0.0,
       color: colorScheme?.primary,
       plateColor: colorScheme?.secondary,
+      platePadding:
+          cardChrome ? const EdgeInsets.all(12.0) : const EdgeInsets.all(8.0),
+      borderRadius: cardChrome
+          ? BorderRadius.circular(8.0)
+          : const BorderRadius.all(Radius.circular(16.0)),
     );
   }
 

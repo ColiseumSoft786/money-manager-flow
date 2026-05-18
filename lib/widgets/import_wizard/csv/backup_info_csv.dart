@@ -135,6 +135,8 @@ class _BackupInfoCSVState extends State<BackupInfoCSV> {
   void _setCurrencyFor(String name) async {
     final currency = await showModalBottomSheet<String>(
       context: context,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => const SelectCurrencySheet(),
       isScrollControlled: true,
     );

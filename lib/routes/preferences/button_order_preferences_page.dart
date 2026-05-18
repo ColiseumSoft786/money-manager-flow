@@ -1,309 +1,192 @@
-import "dart:developer";
-
-import "package:dashed_border/dashed_border.dart";
 import "package:flow/data/flow_button_type.dart";
 import "package:flow/l10n/extensions.dart";
+import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/button_order/button_order_preferences_theme.dart";
+import "package:flow/routes/preferences/button_order/widgets/button_order_info_banner.dart";
+import "package:flow/routes/preferences/button_order/widgets/button_order_reorder_tile.dart";
 import "package:flow/services/integrations/eny.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/home/preferences/button_order_preferences/transaction_type_button.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 class ButtonOrderPreferencesPage extends StatefulWidget {
-  final Radius radius;
-
-  const ButtonOrderPreferencesPage({
-    super.key,
-    this.radius = const Radius.circular(16.0),
-  });
+  const ButtonOrderPreferencesPage({super.key});
 
   @override
   State<ButtonOrderPreferencesPage> createState() =>
       ButtonOrderPreferencesPageState();
 }
 
-class ButtonOrderPreferencesPageState
-    extends State<ButtonOrderPreferencesPage> {
-  bool busy = false;
-
-  List<FlowButtonType>? _animationData;
-
-  bool _dragging = false;
+class ButtonOrderPreferencesPageState extends State<ButtonOrderPreferencesPage> {
+  late List<FlowButtonType> _buttonOrder;
 
   @override
-  Widget build(BuildContext context) {
-    final List<FlowButtonType> transactionButtonOrder = List.from(
+  void initState() {
+    super.initState();
+    _buttonOrder = _visibleButtonOrder();
+  }
+
+  List<FlowButtonType> _visibleButtonOrder() {
+    final List<FlowButtonType> order = List<FlowButtonType>.from(
       UserPreferencesService().transactionButtonOrder,
     );
 
     if (EnyService().apiKey.value?.startsWith("eny") != true) {
-      transactionButtonOrder.remove(FlowButtonType.eny);
+      order.remove(FlowButtonType.eny);
     }
 
-    final int count = transactionButtonOrder.length;
-    final Size size = _calculateTotalSize(count);
+    return order;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: ButtonOrderPreferencesTheme.canvas,
       appBar: AppBar(
-        title: Text("preferences.transactionButtonOrder".t(context)),
-      ),
-      body: SingleChildScrollView(
-        padding: const .all(16.0),
-        child: SafeArea(
-          child: Column(
-            spacing: 16.0,
-            crossAxisAlignment: .start,
-            children: [
-              InfoText(
-                child: Text(
-                  "preferences.transactionButtonOrder.guide".t(context),
-                ),
-              ),
-              Center(
-                child: SizedBox(
-                  width: size.width,
-                  height: size.height,
-                  child: Stack(
-                    alignment: .center,
-                    children: [
-                      for (int i = 0; i < count; i++)
-                        _buildDropZone(
-                          context,
-                          index: i,
-                          count: count,
-                          transactionButtonOrder: transactionButtonOrder,
-                        ),
-                      ...transactionButtonOrder.map(
-                        (transactionType) => _buildButton(
-                          context,
-                          transactionButtonOrder: transactionButtonOrder,
-                          transactionType: transactionType,
-                          count: count,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              InfoText(
-                child: Text(
-                  "preferences.transactionButtonOrder.widgetDescription".t(
-                    context,
-                  ),
-                ),
-              ),
-            ],
+        backgroundColor: ButtonOrderPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.transactionButtonOrder".t(context),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: ButtonOrderPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
           ),
         ),
       ),
-    );
-  }
-
-  double _calculatePadding(int count) => count == 3 ? 16.0 : 6.0;
-  double _calculateItemSize(int count) => 56.0 + _calculatePadding(count) * 2;
-
-  Offset _resolvePosition(int index, int count) {
-    final double itemSize = _calculateItemSize(count);
-
-    final double x = 8.0 + (index * (itemSize + 16.0));
-
-    final double y = switch ((count, index)) {
-      (3, 1) => 2.0,
-      (3, _) => 66.0,
-      (4, 0 || 3) => 66.0,
-      _ => 2.0,
-    };
-
-    return Offset(x, y);
-  }
-
-  Size _calculateTotalSize(int count) {
-    final double itemSize = _calculateItemSize(count);
-
-    final double width = (itemSize + 16.0) * count + 8.0;
-    final double height = 72.0 + itemSize;
-
-    return Size(width, height);
-  }
-
-  Positioned _buildDropZone(
-    BuildContext context, {
-    required List<FlowButtonType> transactionButtonOrder,
-    required int index,
-    required int count,
-  }) {
-    final FlowButtonType transactionType = transactionButtonOrder[index];
-    final Offset position = _resolvePosition(index, count);
-    final double size = _calculateItemSize(count);
-
-    return Positioned(
-      left: position.dx,
-      top: position.dy,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: .all(widget.radius),
-          border: DashedBorder(
-            color: Theme.of(context).dividerColor.withAlpha(0x80),
-            width: 4.0,
-            borderRadius: BorderRadius.all(widget.radius),
-            dashLength: 6.0,
-            dashGap: 10.0,
-            style: .dashed,
-          ),
-        ),
-        clipBehavior: .none,
-        child: SizedBox.square(
-          dimension: size,
-          child: DragTarget<FlowButtonType>(
-            onWillAcceptWithDetails: (details) =>
-                details.data != transactionType,
-            onAcceptWithDetails: (details) =>
-                swap(transactionButtonOrder, details.data, transactionType),
-            onMove: (details) => updateAnimationData(
-              transactionButtonOrder,
-              details.data,
-              transactionType,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "preferences.transactionButtonOrder.section.reorder".t(
+                      context,
+                    ),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.0,
+                      color: ButtonOrderPreferencesTheme.titleInk,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    "preferences.transactionButtonOrder.section.reorderDescription"
+                        .t(context),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: ButtonOrderPreferencesTheme.subtitleInk,
+                      fontSize: 13.5,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            builder:
-                (
-                  BuildContext context,
-                  List<FlowButtonType?> candidateData,
-                  List<dynamic> rejectedData,
-                ) {
-                  return SizedBox.shrink();
+            const SizedBox(height: 16.0),
+            Expanded(
+              child: ReorderableListView.builder(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 8.0),
+                buildDefaultDragHandles: false,
+                proxyDecorator:
+                    (Widget child, int index, Animation<double> animation) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, _) {
+                          return Material(
+                            elevation: 4.0 * animation.value,
+                            color: Colors.transparent,
+                            shadowColor: Colors.black.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              ButtonOrderPreferencesTheme.cardRadius,
+                            ),
+                            child: child,
+                          );
+                        },
+                      );
+                    },
+                onReorder: _handleReorder,
+                itemCount: _buttonOrder.length,
+                itemBuilder: (context, int index) {
+                  final FlowButtonType type = _buttonOrder[index];
+
+                  return Padding(
+                    key: ValueKey<FlowButtonType>(type),
+                    padding: EdgeInsets.only(
+                      bottom: index < _buttonOrder.length - 1 ? 10.0 : 0.0,
+                    ),
+                    child: ButtonOrderReorderTile(
+                      type: type,
+                      index: index,
+                    ),
+                  );
                 },
-          ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
+              child: ButtonOrderInfoBanner(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  AnimatedPositioned _buildButton(
-    BuildContext context, {
-    required List<FlowButtonType> transactionButtonOrder,
-    required FlowButtonType transactionType,
-    required int count,
-  }) {
-    final int index = transactionButtonOrder.indexOf(transactionType);
-
-    final int? animatedIndex = _dragging
-        ? _animationData?.indexOf(transactionType)
-        : null;
-
-    final double padding = _calculatePadding(count);
-    final Offset position =
-        _resolvePosition(animatedIndex ?? index, count) + Offset(2.0, 2.0);
-
-    return AnimatedPositioned(
-      left: position.dx,
-      top: position.dy,
-      key: ValueKey<FlowButtonType>(transactionType),
-      duration: const Duration(milliseconds: 120),
-      child: IgnorePointer(
-        ignoring: _dragging,
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child: Draggable<FlowButtonType>(
-            data: transactionType,
-            childWhenDragging: TransactionTypeButton(
-              type: transactionType,
-              opacity: 0.0,
-            ),
-            onDragStarted: () {
-              setState(() {
-                _dragging = true;
-                _animationData = transactionButtonOrder;
-              });
-            },
-            onDragEnd: (details) {
-              setState(() {
-                _dragging = false;
-                _animationData = null;
-              });
-            },
-            feedback: TransactionTypeButton(type: transactionType),
-            child: TransactionTypeButton(
-              type: transactionType,
-              opacity: 1.0,
-              // opacity: candidates.isNotEmpty ? 0.5 : 1.0,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void updateAnimationData(
-    List<FlowButtonType> order,
-    FlowButtonType dragging,
-    FlowButtonType target,
-  ) {
-    if (!_dragging) return;
-    if (_animationData == null) return;
-
-    final List<FlowButtonType> copiedOrder = List.from(order);
-
-    final int indexA = copiedOrder.indexOf(dragging);
-    final int indexB = copiedOrder.indexOf(target);
-
-    copiedOrder[indexA] = target;
-    copiedOrder[indexB] = dragging;
-
-    setState(() {
-      _animationData = copiedOrder;
-    });
-  }
-
-  void swap(
-    List<FlowButtonType> order,
-    FlowButtonType a,
-    FlowButtonType b,
-  ) async {
-    if (busy) return;
-
-    setState(() {
-      busy = true;
-    });
-
-    try {
-      final List<FlowButtonType> copiedOrder = List.from(order);
-
-      final int indexA = copiedOrder.indexOf(a);
-      final int indexB = copiedOrder.indexOf(b);
-
-      copiedOrder[indexA] = b;
-      copiedOrder[indexB] = a;
-
-      _animationData = List.from(copiedOrder);
-
-      UserPreferencesService().transactionButtonOrder = copiedOrder;
-    } catch (e) {
-      log("An error was occured while swapping transaction button order: $e");
-    } finally {
-      busy = false;
-
-      if (mounted) {
-        setState(() {});
-      }
-    }
-  }
-
-  void onReorder(
-    List<FlowButtonType> transactionButtonOrder,
-    int oldIndex,
-    int newIndex,
-  ) async {
+  void _handleReorder(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
 
-    final FlowButtonType removed = transactionButtonOrder.removeAt(oldIndex);
-    transactionButtonOrder.insert(newIndex, removed);
+    final FlowButtonType moved = _buttonOrder.removeAt(oldIndex);
+    final List<FlowButtonType> nextOrder = List<FlowButtonType>.from(_buttonOrder)
+      ..insert(newIndex, moved);
 
-    UserPreferencesService().transactionButtonOrder = transactionButtonOrder;
+    setState(() {
+      _buttonOrder = nextOrder;
+    });
 
-    if (mounted) {
-      setState(() {});
+    UserPreferencesService().transactionButtonOrder = _mergeWithHiddenEny(nextOrder);
+
+    if (LocalPreferences().enableHapticFeedback.value == true) {
+      HapticFeedback.lightImpact();
     }
+  }
+
+  /// Keeps [FlowButtonType.eny] in stored order when it is hidden in this UI.
+  List<FlowButtonType> _mergeWithHiddenEny(List<FlowButtonType> visibleOrder) {
+    if (EnyService().apiKey.value?.startsWith("eny") == true) {
+      return visibleOrder;
+    }
+
+    final List<FlowButtonType> stored = List<FlowButtonType>.from(
+      UserPreferencesService().transactionButtonOrder,
+    );
+
+    if (!stored.contains(FlowButtonType.eny)) {
+      return visibleOrder;
+    }
+
+    final List<FlowButtonType> merged = List<FlowButtonType>.from(visibleOrder);
+    final int enyIndex = stored.indexOf(FlowButtonType.eny);
+    merged.insert(enyIndex.clamp(0, merged.length), FlowButtonType.eny);
+    return merged;
   }
 }

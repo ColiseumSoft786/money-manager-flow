@@ -1,26 +1,30 @@
 import "dart:io";
 
 import "package:flow/entity/account.dart";
-import "package:flow/l10n/flow_localizations.dart";
+import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/providers/accounts_provider.dart";
+import "package:flow/utils/optional.dart";
+import "package:flow/routes/home/accounts/accounts_tab_theme.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/theme.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/account_card.dart";
 import "package:flow/widgets/account_card_skeleton.dart";
-import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/spinner.dart";
+import "package:flow/widgets/home/accounts/accounts_hero_balance.dart";
+import "package:flow/widgets/home/accounts/accounts_search_field.dart";
 import "package:flow/widgets/home/home/account/no_accounts.dart";
-import "package:flow/widgets/home/home/account/total_balance.dart";
 import "package:flow/widgets/home/privacy_toggler.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
 
 class AccountsTab extends StatefulWidget {
-  const AccountsTab({super.key});
+  /// When false (user switched to another bottom tab), reorder mode is cleared.
+  final bool isActive;
+
+  const AccountsTab({super.key, this.isActive = true});
 
   @override
   State<AccountsTab> createState() => _AccountsTabState();
@@ -56,23 +60,56 @@ class _AccountsTabState extends State<AccountsTab>
   }
 
   @override
+  void didUpdateWidget(AccountsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.isActive && oldWidget.isActive && _reordering) {
+      setState(() => _reordering = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    final List<Account> accounts = AccountsProvider.of(context).activeAccounts;
-    final bool ready = AccountsProvider.of(context).ready;
+    final AccountsProvider accountsProvider = AccountsProvider.of(context);
+    final List<Account> activeAccounts = accountsProvider.activeAccounts;
+    final List<Account> archivedSorted = accountsProvider.allAccounts.inactives
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final bool ready = accountsProvider.ready;
 
     if (!ready) {
-      return const Spinner();
+      return const ColoredBox(
+        color: AccountsTabTheme.canvas,
+        child: Spinner.center(),
+      );
     }
 
-    return switch (accounts.length) {
-      0 => const NoAccounts(),
-      _ => Column(
-        spacing: 16.0,
+    if (activeAccounts.isEmpty && archivedSorted.isEmpty) {
+      return const ColoredBox(
+        color: AccountsTabTheme.canvas,
+        child: SafeArea(child: NoAccounts()),
+      );
+    }
+
+    final int accountCountForSearchBar =
+        activeAccounts.length + archivedSorted.length;
+
+    return ColoredBox(
+      color: AccountsTabTheme.canvas,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox.shrink(),
-          Frame(child: buildHeader(context, hasSearchBar: accounts.length > 4)),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
+              child: _buildHeader(
+                context,
+                hasSearchBar: accountCountForSearchBar > 4,
+              ),
+            ),
+          ),
           ValueListenableBuilder(
             valueListenable: UserPreferencesService().valueNotifier,
             builder: (context, userPreferences, child) {
@@ -81,43 +118,70 @@ class _AccountsTabState extends State<AccountsTab>
 
               final bool hasQuery = !_reordering && _searchQuery.isNotEmpty;
 
-              final List<Account> searchResult = hasQuery
-                  ? simpleSortByQuery(accounts, _searchQuery)
-                  : accounts;
+              final List<Account> displayedActive = hasQuery
+                  ? simpleSortByQuery(activeAccounts, _searchQuery)
+                  : activeAccounts;
+
+              final List<Account> displayedArchived = hasQuery
+                  ? simpleSortByQuery(archivedSorted, _searchQuery)
+                  : archivedSorted;
 
               return Expanded(
                 child: _reordering
-                    ? Frame(
-                        child: ReorderableListView.builder(
-                          padding: const EdgeInsets.only(bottom: 96.0),
-                          itemBuilder: (context, index) => Padding(
-                            key: ValueKey(accounts[index].uuid),
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: AccountCard(
-                              account: accounts[index],
-                              useCupertinoContextMenu: false,
-                              primary:
-                                  accounts[index].uuid == primaryAccountUuid,
-                              excludeTransfersInTotal:
-                                  excludeTransfersInTotal == true,
-                            ),
-                          ),
-                          proxyDecorator: proxyDecorator,
-                          itemCount: accounts.length,
-                          onReorder: (oldIndex, newIndex) =>
-                              onReorder(accounts, oldIndex, newIndex),
+                    ? ReorderableListView.builder(
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          12.0,
+                          16.0,
+                          96.0,
                         ),
+                        itemBuilder: (context, index) => Padding(
+                          key: ValueKey(activeAccounts[index].uuid),
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: AccountCard(
+                            account: activeAccounts[index],
+                            useCupertinoContextMenu: false,
+                            style: AccountCardStyle.accountsTab,
+                            primary:
+                                activeAccounts[index].uuid == primaryAccountUuid,
+                            excludeTransfersInTotal:
+                                excludeTransfersInTotal == true,
+                          ),
+                        ),
+                        proxyDecorator: proxyDecorator,
+                        itemCount: activeAccounts.length,
+                        onReorder: (oldIndex, newIndex) =>
+                            onReorder(activeAccounts, oldIndex, newIndex),
                       )
                     : ListView(
-                        padding: const EdgeInsets.all(16.0).copyWith(top: 0.0),
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          12.0,
+                          16.0,
+                          96.0,
+                        ),
                         children: [
-                          ...searchResult.map(
+                          if (displayedActive.isNotEmpty)
+                            Text(
+                              "accounts".t(context).toUpperCase(),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: AccountsTabTheme.sectionLabel,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.6,
+                                    fontSize: 11.0,
+                                  ),
+                            ),
+                          if (displayedActive.isNotEmpty)
+                            const SizedBox(height: 8.0),
+                          ...displayedActive.map(
                             (account) => Padding(
                               key: ValueKey("account-card-${account.uuid}"),
-                              padding: const EdgeInsets.only(bottom: 16.0),
+                              padding: const EdgeInsets.only(bottom: 12.0),
                               child: AccountCard(
                                 account: account,
                                 useCupertinoContextMenu: Platform.isIOS,
+                                style: AccountCardStyle.accountsTab,
                                 primary: account.uuid == primaryAccountUuid,
                                 excludeTransfersInTotal:
                                     excludeTransfersInTotal == true,
@@ -128,11 +192,44 @@ class _AccountsTabState extends State<AccountsTab>
                               ),
                             ),
                           ),
+                          if (!_reordering && displayedArchived.isNotEmpty) ...[
+                            const SizedBox(height: 8.0),
+                            Text(
+                              "account.archived".t(context).toUpperCase(),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: AccountsTabTheme.sectionLabel,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.6,
+                                    fontSize: 11.0,
+                                  ),
+                            ),
+                            const SizedBox(height: 8.0),
+                            ...displayedArchived.map(
+                              (account) => Padding(
+                                key: ValueKey(
+                                  "account-card-archived-${account.uuid}",
+                                ),
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: AccountCard(
+                                  account: account,
+                                  useCupertinoContextMenu: Platform.isIOS,
+                                  style: AccountCardStyle.accountsTab,
+                                  primary: account.uuid == primaryAccountUuid,
+                                  excludeTransfersInTotal:
+                                      excludeTransfersInTotal == true,
+                                  onTapOverride: Optional(() async {
+                                    await context.push("/account/${account.id}");
+                                    setState(() {});
+                                  }),
+                                ),
+                              ),
+                            ),
+                          ],
                           AccountCardSkeleton(
                             onTap: () => context.push("/account/new"),
+                            style: AccountCardSkeletonStyle.accountsTab,
                           ),
-                          const SizedBox(height: 16.0),
-                          const SizedBox(height: 64.0),
                         ],
                       ),
               );
@@ -140,53 +237,91 @@ class _AccountsTabState extends State<AccountsTab>
           ),
         ],
       ),
-    };
+    );
   }
 
-  Widget buildHeader(BuildContext context, {bool hasSearchBar = false}) {
+  Widget _buildHeader(BuildContext context, {bool hasSearchBar = false}) {
+    final ThemeData theme = Theme.of(context);
+
     return Column(
-      crossAxisAlignment: .start,
-      spacing: 16.0,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Text(
-              (_reordering && !isDesktop())
-                  ? "tabs.accounts.reorder.guide".t(context)
-                  : "tabs.accounts".t(context),
-              style: context.textTheme.titleSmall,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "tabs.accounts".t(context),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 26.0,
+                      color: AccountsTabTheme.titleInk,
+                    ),
+                  ),
+                  if (_reordering && !isDesktop())
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        "tabs.accounts.reorder.guide".t(context),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AccountsTabTheme.subtitleInk,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-            const Spacer(),
-            IconButton(
-              onPressed: toggleReorderMode,
-              tooltip: _reordering
-                  ? "general.done".t(context)
-                  : "tabs.accounts.reorder".t(context),
-              icon: _reordering
-                  ? const Icon(Symbols.check_rounded)
-                  : const Icon(Symbols.reorder_rounded),
+            Material(
+              color: AccountsTabTheme.cardFill,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                side: const BorderSide(color: AccountsTabTheme.cardBorder),
+              ),
+              child: IconButton(
+                onPressed: toggleReorderMode,
+                tooltip: _reordering
+                    ? "general.done".t(context)
+                    : "tabs.accounts.reorder".t(context),
+                icon: Icon(
+                  _reordering ? Symbols.check_rounded : Symbols.reorder_rounded,
+                  color: _reordering
+                      ? AccountsTabTheme.primary(context)
+                      : AccountsTabTheme.titleInk,
+                ),
+              ),
             ),
-            const PrivacyToggler(),
+            const SizedBox(width: 8.0),
+            Material(
+              color: AccountsTabTheme.cardFill,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                side: const BorderSide(color: AccountsTabTheme.cardBorder),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(2.0),
+                child: PrivacyToggler(),
+              ),
+            ),
           ],
         ),
-        TotalBalance(),
-        if (hasSearchBar)
-          TextField(
+        const SizedBox(height: 16.0),
+        if (!_reordering) const AccountsHeroBalance(),
+        if (hasSearchBar) ...[
+          const SizedBox(height: 12.0),
+          AccountsSearchField(
             controller: _searchController,
-            onChanged: (value) => setState(() {}),
+            hintText: "general.search".t(context),
             enabled: !_reordering,
-            decoration: InputDecoration(
-              hintText: "general.search".t(context),
-              prefixIcon: const Icon(Symbols.search_rounded),
-              suffixIcon: (_searchQuery.isNotEmpty)
-                  ? IconButton(
-                      onPressed: () =>
-                          setState(() => _searchController.clear()),
-                      icon: const Icon(Symbols.close_rounded),
-                    )
-                  : null,
-            ),
+            onClear: _searchQuery.isNotEmpty
+                ? () => setState(() => _searchController.clear())
+                : null,
           ),
+        ],
       ],
     );
   }

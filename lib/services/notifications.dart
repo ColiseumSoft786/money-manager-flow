@@ -93,7 +93,7 @@ class NotificationsService {
 
       final WindowsInitializationSettings initializationSettingsWindows =
           WindowsInitializationSettings(
-            appName: "Flow",
+            appName: "CashPilot",
             appUserModelId: "TODO @sadespresso",
             guid: windowsNotificationGuid,
           );

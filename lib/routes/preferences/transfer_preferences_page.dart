@@ -1,10 +1,14 @@
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/transfer/transfer_preferences_theme.dart";
+import "package:flow/routes/preferences/transfer/widgets/transfer_accounting_card.dart";
+import "package:flow/routes/preferences/transfer/widgets/transfer_hero_illustration.dart";
+import "package:flow/routes/preferences/transfer/widgets/transfer_info_banner.dart";
+import "package:flow/routes/preferences/transfer/widgets/transfer_layout_options_card.dart";
+import "package:flow/routes/preferences/transfer/widgets/transfer_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/list_header.dart";
-import "package:flow/widgets/home/preferences/transfer_preferences/combine_transfer_radio.dart.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
+import "package:go_router/go_router.dart";
 
 class TransferPreferencesPage extends StatefulWidget {
   const TransferPreferencesPage({super.key});
@@ -23,59 +27,76 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
         UserPreferencesService().combineTransfers;
 
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.transfer".t(context))),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      backgroundColor: TransferPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: TransferPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          "preferences.transfer.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: TransferPreferencesTheme.titleInk,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              "general.save".t(context),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: TransferPreferencesTheme.primary(context),
+                fontWeight: FontWeight.w700,
+                fontSize: 16.0,
+              ),
+            ),
+          ),
+        ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const TransferHeroIllustration(),
               const SizedBox(height: 16.0),
-              ListHeader(
-                "preferences.transfer.combineTransferTransaction".t(context),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CombineTransferRadio.combine(
-                        currentlyUsingCombineMode: combineTransferTransactions,
-                        onTap: () => updateCombineTransferTransactions(true),
-                      ),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: CombineTransferRadio.separate(
-                        currentlyUsingCombineMode: combineTransferTransactions,
-                        onTap: () => updateCombineTransferTransactions(false),
-                      ),
-                    ),
-                  ],
+              Text(
+                "preferences.transfer.heroDescription".t(context),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: TransferPreferencesTheme.subtitleInk,
+                  fontSize: 14.0,
+                  height: 1.45,
                 ),
               ),
-              const SizedBox(height: 8.0),
-              Frame(
-                child: InfoText(
-                  child: Text(
-                    "preferences.transfer.combineTransferTransaction.combineSupportDisclaimer"
-                        .t(context),
-                  ),
-                ),
+              TransferSectionHeader(
+                label: "preferences.transfer.section.layout".t(context),
               ),
-              const SizedBox(height: 24.0),
-              CheckboxListTile(
-                title: Text(
-                  "preferences.transfer.excludeTransferFromFlow".t(context),
-                ),
-                value: excludeTransferFromFlow,
-                onChanged: updateExcludeTransferFromFlow,
-                subtitle: Text(
-                  "preferences.transfer.excludeTransferFromFlow.description".t(
-                    context,
-                  ),
-                ),
+              TransferLayoutOptionsCard(
+                combineSelected: combineTransferTransactions,
+                onCombine: () => updateCombineTransferTransactions(true),
+                onSeparate: () => updateCombineTransferTransactions(false),
               ),
-              const SizedBox(height: 16.0),
+              TransferSectionHeader(
+                label: "preferences.transfer.section.accounting".t(context),
+              ),
+              TransferAccountingCard(
+                excludeFromTotals: excludeTransferFromFlow,
+                onChanged: (bool value) => updateExcludeTransferFromFlow(value),
+              ),
+              const SizedBox(height: 20.0),
+              const TransferInfoBanner(),
             ],
           ),
         ),
@@ -83,7 +104,7 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
     );
   }
 
-  void updateExcludeTransferFromFlow(bool? excludeFromFlow) async {
+  void updateExcludeTransferFromFlow(bool? excludeFromFlow) {
     if (excludeFromFlow == null) return;
 
     UserPreferencesService().excludeTransfersFromFlow = excludeFromFlow;
@@ -91,7 +112,7 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
     if (mounted) setState(() {});
   }
 
-  void updateCombineTransferTransactions(bool? combine) async {
+  void updateCombineTransferTransactions(bool? combine) {
     if (combine == null) return;
 
     UserPreferencesService().combineTransfers = combine;

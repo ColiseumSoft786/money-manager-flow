@@ -16,7 +16,6 @@ import "package:flow/services/notifications.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/utils/shortcut.dart";
 import "package:flow/widgets/external_toasts_handler.dart";
-import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/home/navbar.dart";
 import "package:flow/widgets/home/navbar/new_transaction_button.dart";
 import "package:flutter/material.dart" hide Flow;
@@ -139,41 +138,27 @@ class _HomePageState extends State<HomePage>
           autofocus: true,
           child: PieCanvas(
             theme: context.pieTheme,
-            child: Stack(
-              children: [
-                Scaffold(
-                  body: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      HomeTab(scrollController: _homeTabScrollController),
-                      const StatsTab(),
-                      const SafeArea(child: AccountsTab()),
-                      const SafeArea(child: ProfileTab()),
-                    ],
+            child: Scaffold(
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  HomeTab(scrollController: _homeTabScrollController),
+                  StatsTab(onBackToHome: () => _navigateTo(0)),
+                  SafeArea(
+                    child: AccountsTab(isActive: _currentIndex == 2),
                   ),
-                ),
-                Positioned(
-                  bottom: 16.0,
-                  left: 0.0,
-                  right: 0.0,
-                  child: SafeArea(
-                    child: Frame(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Navbar(
-                            onTap: (i) => _navigateTo(i),
-                            activeIndex: _currentIndex,
-                          ),
-                          NewTransactionButton(
-                            onActionTap: (type) => _newTransactionPage(type),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                  const SafeArea(child: ProfileTab()),
+                ],
+              ),
+              floatingActionButton: NewTransactionButton(
+                onActionTap: (type) => _newTransactionPage(type),
+              ),
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+              bottomNavigationBar: Navbar(
+                onTap: (i) => _navigateTo(i),
+                activeIndex: _currentIndex,
+              ),
             ),
           ),
         ),

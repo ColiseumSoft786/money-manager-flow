@@ -1,11 +1,15 @@
 import "package:flow/entity/transaction_tag.dart";
-import "package:flow/l10n/flow_localizations.dart";
+import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/objectbox.g.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/theme/theme.dart";
+import "package:flow/widgets/general/button.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/spinner.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
+import "package:material_symbols_icons/symbols.dart";
 
 class TransactionTagsPage extends StatefulWidget {
   const TransactionTagsPage({super.key});
@@ -22,8 +26,40 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Figma calls for a pure-white canvas; pin ink tokens to the light palette
+    // so text and icons stay readable on the forced-white surface.
+    const Color screenBackground = Colors.white;
+    const Color titleInk = kFlowHomeTransactionHeadingInk;
+    const Color subtitleInk = kFlowAccountRowBalanceInkLight;
+    const Color chevronInk = kFlowMonthSelectorChevronInkLight;
+    const Color cardShadow = Color.fromRGBO(0, 0, 0, 0.08);
+    const Color iconPlateFill = kFlowSetupAddCategoryIconPlateFill;
+    const Color iconPlateInk = kFlowSetupPrimaryCurrencyInfoTitle;
+
     return Scaffold(
-      appBar: AppBar(title: Text("transaction.tags".t(context))),
+      backgroundColor: screenBackground,
+      appBar: AppBar(
+        backgroundColor: screenBackground,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          "transaction.tags".t(context),
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: titleInk,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: StreamBuilder<List<TransactionTag>>(
           stream: qb()
@@ -36,26 +72,336 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
 
             final List<TransactionTag> tags = snapshot.requireData;
 
-            return ListView.builder(
-              itemCount: tags.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return ListTile(
-                    title: Text("transaction.tags.new".t(context)),
-                    leading: const Icon(Icons.add),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0),
+                  child: _NewTagCard(
+                    titleInk: titleInk,
+                    subtitleInk: subtitleInk,
+                    chevronInk: chevronInk,
+                    cardShadow: cardShadow,
+                    iconPlateFill: iconPlateFill,
+                    iconPlateInk: iconPlateInk,
                     onTap: () => context.push("/transactionTags/new"),
-                  );
-                }
-
-                final tag = tags[index - 1];
-                return ListTile(
-                  leading: FlowIcon(tag.icon, colorScheme: tag.colorScheme),
-                  title: Text(tag.title),
-                  onTap: () => context.push("/transactionTags/${tag.id}"),
-                );
-              },
+                  ),
+                ),
+                if (tags.isEmpty)
+                  Expanded(
+                    child: _EmptyTagsState(
+                      titleInk: titleInk,
+                      subtitleInk: subtitleInk,
+                      cardShadow: cardShadow,
+                      iconPlateFill: iconPlateFill,
+                      iconPlateInk: iconPlateInk,
+                      onCreate: () => context.push("/transactionTags/new"),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        16.0,
+                        16.0,
+                        16.0,
+                        24.0,
+                      ),
+                      itemCount: tags.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10.0),
+                      itemBuilder: (context, index) {
+                        final TransactionTag tag = tags[index];
+                        return _TagRow(
+                          tag: tag,
+                          titleInk: titleInk,
+                          chevronInk: chevronInk,
+                          cardShadow: cardShadow,
+                          onTap: () =>
+                              context.push("/transactionTags/${tag.id}"),
+                        );
+                      },
+                    ),
+                  ),
+              ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Top action card — circular blue “+” plate, title, subtitle, chevron.
+class _NewTagCard extends StatelessWidget {
+  final Color titleInk;
+  final Color subtitleInk;
+  final Color chevronInk;
+  final Color cardShadow;
+  final Color iconPlateFill;
+  final Color iconPlateInk;
+  final VoidCallback onTap;
+
+  const _NewTagCard({
+    required this.titleInk,
+    required this.subtitleInk,
+    required this.chevronInk,
+    required this.cardShadow,
+    required this.iconPlateFill,
+    required this.iconPlateInk,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final BorderRadius radius = BorderRadius.circular(16.0);
+
+    return Material(
+      color: Colors.white,
+      elevation: 0,
+      shadowColor: cardShadow,
+      shape: RoundedRectangleBorder(borderRadius: radius),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: cardShadow,
+              blurRadius: 12.0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14.0, 14.0, 12.0, 14.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44.0,
+                  height: 44.0,
+                  decoration: BoxDecoration(
+                    color: iconPlateFill,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Symbols.add_rounded,
+                    size: 24.0,
+                    color: iconPlateInk,
+                    fill: 0.0,
+                  ),
+                ),
+                const SizedBox(width: 14.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "transaction.tags.new".t(context),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15.0,
+                          color: titleInk,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        "transaction.tags.newCardSubtitle".t(context),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: subtitleInk,
+                          fontSize: 12.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                Icon(
+                  Symbols.chevron_right_rounded,
+                  size: 22.0,
+                  color: chevronInk,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Centered empty state: elevated icon tile, copy, primary CTA.
+class _EmptyTagsState extends StatelessWidget {
+  final Color titleInk;
+  final Color subtitleInk;
+  final Color cardShadow;
+  final Color iconPlateFill;
+  final Color iconPlateInk;
+  final VoidCallback onCreate;
+
+  const _EmptyTagsState({
+    required this.titleInk,
+    required this.subtitleInk,
+    required this.cardShadow,
+    required this.iconPlateFill,
+    required this.iconPlateInk,
+    required this.onCreate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    const Color primaryAccent = kFlowSetupAccountsContinueButtonFill;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: cardShadow,
+                    blurRadius: 18.0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Icon(
+                  Symbols.label_off_rounded,
+                  size: 56.0,
+                  color: iconPlateInk,
+                  fill: 0.0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 28.0),
+            Text(
+              "transaction.tags.emptyTitle".t(context),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 20.0,
+                color: titleInk,
+              ),
+            ),
+            const SizedBox(height: 12.0),
+            Text(
+              "transaction.tags.emptyDescription".t(context),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: subtitleInk,
+                fontSize: 14.0,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28.0),
+            Button(
+              onTap: onCreate,
+              padding: const EdgeInsets.symmetric(
+                vertical: 14.0,
+                horizontal: 28.0,
+              ),
+              borderRadius: BorderRadius.circular(100.0),
+              backgroundColor: primaryAccent,
+              foregroundColor: Colors.white,
+              elevation: 3.0,
+              shadowColor: primaryAccent.withValues(alpha: 0.35),
+              child: Text(
+                "transaction.tags.createFirst".t(context),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Existing tag row — white card with icon, title, chevron (when list is non-empty).
+class _TagRow extends StatelessWidget {
+  final TransactionTag tag;
+  final Color titleInk;
+  final Color chevronInk;
+  final Color cardShadow;
+  final VoidCallback onTap;
+
+  const _TagRow({
+    required this.tag,
+    required this.titleInk,
+    required this.chevronInk,
+    required this.cardShadow,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final BorderRadius radius = BorderRadius.circular(14.0);
+
+    return Material(
+      color: Colors.white,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: cardShadow,
+              blurRadius: 10.0,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12.0, 12.0, 10.0, 12.0),
+            child: Row(
+              children: [
+                FlowIcon(tag.icon, size: 22.0, plated: true, colorScheme: tag.colorScheme),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Text(
+                    tag.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15.0,
+                      color: titleInk,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                Icon(
+                  Symbols.chevron_right_rounded,
+                  size: 20.0,
+                  color: chevronInk,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

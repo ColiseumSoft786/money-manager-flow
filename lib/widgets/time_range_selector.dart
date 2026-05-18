@@ -1,6 +1,8 @@
 import "package:flow/l10n/flow_localizations.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/helpers.dart";
 import "package:flow/widgets/general/button.dart";
+import "package:flow/widgets/sheets/select_custom_date_range_sheet.dart";
 import "package:flow/utils/time_and_range.dart";
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
@@ -13,10 +15,14 @@ class TimeRangeSelector extends StatefulWidget {
 
   final Function(TimeRange) onChanged;
 
+  /// When set, used instead of [ColorScheme.surface] for the selector bar.
+  final Color? backgroundColor;
+
   const TimeRangeSelector({
     super.key,
     required this.initialValue,
     required this.onChanged,
+    this.backgroundColor,
   });
 
   @override
@@ -57,9 +63,16 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
     }.t(context);
 
     final TextDirection textDirection = Directionality.of(context);
+    final ThemeData theme = Theme.of(context);
+    final Color barColor =
+        widget.backgroundColor ?? context.colorScheme.surface;
+    final bool onLightBar = widget.backgroundColor != null;
+    const Color barSubtitleInk = kFlowAccountRowBalanceInkLight;
+    const Color barActionInk = kFlowSetupAccountsContinueButtonFill;
 
     return Container(
-      color: context.colorScheme.surface,
+      width: double.infinity,
+      color: barColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -100,14 +113,15 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
                           }
                         },
                         child: switch (_timeRange) {
-                          LocalWeekTimeRange localWeekTimeRange => Button(
-                            onTap: selectRange,
-                            child: Text(
-                              "${localWeekTimeRange.from.toMoment().ll} -> ${localWeekTimeRange.to.toMoment().ll}",
-                              textAlign: TextAlign.center,
+                          LocalWeekTimeRange localWeekTimeRange =>
+                            _rangeButton(
+                              onTap: selectRange,
+                              child: Text(
+                                "${localWeekTimeRange.from.toMoment().ll} -> ${localWeekTimeRange.to.toMoment().ll}",
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                          ),
-                          MonthTimeRange monthTimeRange => Button(
+                          MonthTimeRange monthTimeRange => _rangeButton(
                             onTap: pickMonth,
                             child: Text(
                               monthTimeRange.from.format(
@@ -121,14 +135,14 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          YearTimeRange yearTimeRange => Button(
+                          YearTimeRange yearTimeRange => _rangeButton(
                             onTap: selectRange,
                             child: Text(
                               yearTimeRange.year.toString(),
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          _ => Button(
+                          _ => _rangeButton(
                             onTap: pickRange,
                             child: Text(
                               (_timeRange.from <= Moment.minValue &&
@@ -156,15 +170,39 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
             crossAxisAlignment: .center,
             mainAxisAlignment: .spaceBetween,
             children: [
-              Text(modeLabel),
+              Text(
+                modeLabel,
+                style: onLightBar
+                    ? theme.textTheme.bodyMedium?.copyWith(
+                        color: barSubtitleInk,
+                      )
+                    : null,
+              ),
               TextButton(
                 onPressed: changeMode,
+                style: onLightBar
+                    ? TextButton.styleFrom(foregroundColor: barActionInk)
+                    : null,
                 child: Text("select.timeRange.changeMode".t(context)),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _rangeButton({required VoidCallback? onTap, required Widget child}) {
+    final Color? bar = widget.backgroundColor;
+    return Button(
+      onTap: onTap,
+      backgroundColor: bar,
+      foregroundColor: bar != null ? kFlowHomeTransactionHeadingInk : null,
+      surfaceTintColor: bar != null ? Colors.transparent : null,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(14.0)),
+      child: child,
     );
   }
 
@@ -183,16 +221,19 @@ class _TimeRangeSelectorState extends State<TimeRangeSelector> {
   }
 
   Future<CustomTimeRange?> selectRange() async {
-    final range = await showDateRangePicker(
+    final DateTimeRange? range = await showModalBottomSheet<DateTimeRange>(
       context: context,
-      firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
-      lastDate: DateTime(4000),
-      initialDateRange: _timeRange is CustomTimeRange
-          ? DateTimeRange(
-              start: (_timeRange as CustomTimeRange).from,
-              end: (_timeRange as CustomTimeRange).to,
-            )
-          : null,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (BuildContext context) => SelectCustomDateRangeSheet(
+        initialValue: _timeRange is CustomTimeRange
+            ? DateTimeRange(
+                start: (_timeRange as CustomTimeRange).from,
+                end: (_timeRange as CustomTimeRange).to,
+              )
+            : null,
+      ),
     );
 
     if (range != null) {

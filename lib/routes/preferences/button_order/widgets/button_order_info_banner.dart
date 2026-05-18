@@ -1,0 +1,46 @@
+import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/button_order/button_order_preferences_theme.dart";
+import "package:flutter/material.dart";
+import "package:material_symbols_icons/symbols.dart";
+
+class ButtonOrderInfoBanner extends StatelessWidget {
+  const ButtonOrderInfoBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: ButtonOrderPreferencesTheme.infoFill,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: ButtonOrderPreferencesTheme.infoBorder),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Symbols.info_rounded,
+              size: 20.0,
+              color: ButtonOrderPreferencesTheme.primary(context),
+              fill: 0.0,
+            ),
+            const SizedBox(width: 10.0),
+            Expanded(
+              child: Text(
+                "preferences.transactionButtonOrder.widgetDescription".t(
+                  context,
+                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: ButtonOrderPreferencesTheme.infoText,
+                  fontSize: 13.0,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

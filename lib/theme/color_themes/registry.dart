@@ -68,14 +68,19 @@ FlowColorScheme? getThemeStrict(String? themeName) {
   return allThemes[themeName ?? ""];
 }
 
+FlowColorScheme _defaultThemeForBrightness({required bool preferDark}) =>
+    preferDark ? flowDarks.schemes.first : flowLights.schemes.first;
+
 FlowColorScheme getTheme(String? themeName, {bool preferDark = false}) {
-  final FlowColorScheme? scheme = themeName == null
-      ? null
-      : allThemes[themeName];
+  if (themeName == null) {
+    return _defaultThemeForBrightness(preferDark: preferDark);
+  }
+
+  final FlowColorScheme? scheme = allThemes[themeName];
 
   if (scheme == null) {
     themeLogger.warning("Unknown theme: $themeName", StackTrace.current);
-    return preferDark ? flowDarks.schemes.first : flowDarks.schemes.first;
+    return _defaultThemeForBrightness(preferDark: preferDark);
   }
 
   return scheme;

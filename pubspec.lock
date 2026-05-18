@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "10.0.1"
+  animated_accordion:
+    dependency: "direct main"
+    description:
+      name: animated_accordion
+      sha256: "107078cf20f42a152c52adc1dcc01a812b8693d3beb6575f953046beea4f93dc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   app_links:
     dependency: "direct main"
     description:
@@ -197,10 +205,10 @@ packages:
     dependency: transitive
     description:
       name: characters
-      sha256: f71061c654a3380576a52b451dd5532377954cf9dbd272a78fc8479606670803
+      sha256: faf38497bda5ead2a8c7615f4f7939df04333478bf32e4173fcb06d428b5716b
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.0"
+    version: "1.4.1"
   charcode:
     dependency: transitive
     description:
@@ -297,6 +305,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  country_flags:
+    dependency: "direct main"
+    description:
+      name: country_flags
+      sha256: f022d18337f3861f1f4e319b936cb53920de9259f38cb09e169eace9942e2b79
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.2"
   coverage:
     dependency: transitive
     description:
@@ -566,6 +582,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  flutter_globe_3d:
+    dependency: "direct main"
+    description:
+      name: flutter_globe_3d
+      sha256: "6401e83ba21324a7dbfb95a87a71717ea243eec36d95c837c8925552006e0eba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.5"
   flutter_keyboard_visibility_linux:
     dependency: transitive
     description:
@@ -1013,6 +1037,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  jovial_misc:
+    dependency: transitive
+    description:
+      name: jovial_misc
+      sha256: "065b5240badae6b13472efdea28fffe8baf914a7831361469a95c6456d9b8dc8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
+  jovial_svg:
+    dependency: transitive
+    description:
+      name: jovial_svg
+      sha256: "99e9c3afcf7371ae38083ad52de23677d6d751f46150c3c6ae842e009e84d9f0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.29"
   json_annotation:
     dependency: "direct main"
     description:
@@ -1161,10 +1201,10 @@ packages:
     dependency: "direct main"
     description:
       name: lottie
-      sha256: "8ae0be46dbd9e19641791dc12ee480d34e1fd3f84c749adc05f3ad9342b71b95"
+      sha256: "8b6359a7422167014aa73ce763fa133fb832065dcc0ac4d1dec1f603a5cef7d0"
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.2"
+    version: "3.3.3"
   markdown:
     dependency: "direct main"
     description:
@@ -1185,18 +1225,18 @@ packages:
     dependency: transitive
     description:
       name: matcher
-      sha256: dc58c723c3c24bf8d3e2d3ad3f2f9d7bd9cf43ec6feaa64181775e60190153f2
+      sha256: dc0b7dc7651697ea4ff3e69ef44b0407ea32c487a39fff6a4004fa585e901861
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.17"
+    version: "0.12.19"
   material_color_utilities:
     dependency: transitive
     description:
       name: material_color_utilities
-      sha256: f7142bb1154231d7ea5f96bc7bde4bda2a0945d2806bb11670e30b850d56bdec
+      sha256: "9c337007e82b1889149c82ed242ed1cb24a66044e30979c44912381e9be4c48b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.1"
+    version: "0.13.0"
   material_symbols_icons:
     dependency: "direct main"
     description:

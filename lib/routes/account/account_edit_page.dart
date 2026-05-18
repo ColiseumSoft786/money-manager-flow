@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:developer";
+import "dart:math" as math;
 
 import "package:flow/data/flow_icon.dart";
 import "package:flow/data/money.dart";
@@ -17,23 +18,23 @@ import "package:flow/routes/transaction_page/input_amount_sheet.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/sync/export.dart";
+import "package:flow/main.dart";
 import "package:flow/theme/color_themes/registry.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/theme/flow_theme_group.dart";
 import "package:flow/theme/theme.dart";
+import "package:flow/utils/optional.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/account/update_balance_options_sheet.dart";
-import "package:flow/widgets/delete_button.dart";
-import "package:flow/widgets/general/directional_chevron.dart";
-import "package:flow/widgets/general/flow_icon.dart";
+import "package:flow/widgets/account/account_delete_styled_button.dart";
 import "package:flow/widgets/general/form_close_button.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
 import "package:flow/widgets/general/money_text.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
-import "package:flow/widgets/select_color_scheme_list_tile.dart";
 import "package:flow/widgets/sheets/select_account_type_sheet.dart";
+import "package:flow/widgets/sheets/select_color_scheme_sheet.dart";
 import "package:flow/widgets/sheets/select_currency_sheet.dart";
 import "package:flow/widgets/sheets/select_flow_icon_sheet.dart";
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Flow;
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
 
@@ -41,16 +42,28 @@ class AccountEditPage extends StatefulWidget {
   /// Account Object ID
   final int accountId;
 
+  /// When [isNewAccount], seeds the form (e.g. a setup preset passed via `/account/new` [extra]).
+  final Account? createTemplate;
+
   bool get isNewAccount => accountId == 0;
 
-  const AccountEditPage({super.key, required this.accountId});
-  const AccountEditPage.create({super.key}) : accountId = 0;
+  AccountEditPage({
+    super.key,
+    required this.accountId,
+    this.createTemplate,
+  }) : assert(createTemplate == null || accountId == 0);
+
+  factory AccountEditPage.create({Key? key, Account? template}) =>
+      AccountEditPage(key: key, accountId: 0, createTemplate: template);
 
   @override
   State<AccountEditPage> createState() => _AccountEditPageState();
 }
 
 class _AccountEditPageState extends State<AccountEditPage> {
+  /// Wallet art always shown in the hero; account’s real icon is chosen via [selectIcon].
+  static const String _walletHeroLineArtAsset = "assets/images/walletIcon.png";
+
   final GlobalKey<FormState> _formKey = GlobalKey();
 
   late final TextEditingController _nameTextController;
@@ -67,11 +80,7 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   late double _balance;
 
-  /// Transaction date of the diff transaction is to be inserted with [_balance]
-  ///
-  /// If null, the transaction will be inserted with the current date
-  ///
-  /// This allows users to update their balance at a specific date
+  
   DateTime? _updateBalanceAt;
 
   String? _colorSchemeName;
@@ -80,6 +89,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   bool _editingName = false;
   bool _archived = false;
+
+  /// True while confirmed account deletion runs (export + DB). Blocks save to avoid races.
+  bool _accountDeleteInProgress = false;
 
   String get iconCodeOrError =>
       _iconData?.toString() ??
@@ -100,20 +112,20 @@ class _AccountEditPageState extends State<AccountEditPage> {
     if (!widget.isNewAccount && _currentlyEditing == null) {
       error = "Account with id ${widget.accountId} was not found";
     } else {
+      final Account? seed = _currentlyEditing ?? widget.createTemplate;
       _nameTextController = TextEditingController(
-        text: _currentlyEditing?.name,
+        text: seed?.name,
       );
-      _balance = _currentlyEditing?.balance.amount ?? 0.0;
-      _creditLimit = _currentlyEditing?.creditLimit ?? 0.0;
+      _balance = seed?.balance.amount ?? 0.0;
+      _creditLimit = seed?.creditLimit ?? 0.0;
       _currency =
-          _currentlyEditing?.currency ??
-          UserPreferencesService().primaryCurrency;
-      _iconData = _currentlyEditing?.icon;
+          seed?.currency ?? UserPreferencesService().primaryCurrency;
+      _iconData = seed?.icon;
       _excludeFromTotalBalance =
-          _currentlyEditing?.excludeFromTotalBalance ?? false;
-      _archived = _currentlyEditing?.archived ?? false;
-      _accountType = _currentlyEditing?.accountType ?? _accountType;
-      _colorSchemeName = _currentlyEditing?.colorSchemeName;
+          seed?.excludeFromTotalBalance ?? false;
+      _archived = seed?.archived ?? false;
+      _accountType = seed?.accountType ?? _accountType;
+      _colorSchemeName = seed?.colorSchemeName;
     }
 
     _editNameFocusNode.addListener(() {
@@ -133,204 +145,219 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    const contentPadding = EdgeInsets.symmetric(horizontal: 16.0);
+    final FlowColorScheme? activeScheme = getThemeStrict(_colorSchemeName);
+    final bool light = Theme.of(context).brightness == Brightness.light;
+
+    final Color titleColor = light
+        ? kFlowAccountEditTitleColor
+        : context.colorScheme.onSurface;
+
+    final Color screenBackground =
+        light ? Colors.white : context.colorScheme.surface;
+
+    final String titleText = widget.isNewAccount
+        ? "account.new".t(context)
+        : "account.edit".t(context);
 
     return Scaffold(
+      backgroundColor: screenBackground,
       appBar: AppBar(
+        backgroundColor: screenBackground,
+        surfaceTintColor: light ? Colors.transparent : null,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
         leadingWidth: 40.0,
-        leading: FormCloseButton(canPop: () => !hasChanged()),
-        actions: [
-          IconButton(
-            onPressed: () => save(),
-            icon: const Icon(Symbols.check_rounded),
-            tooltip: "general.save".t(context),
+        leading: _accountDeleteInProgress
+            ? Center(
+                child: IconButton(
+                  onPressed: null,
+                  icon: Icon(
+                    Symbols.close_rounded,
+                    color: context.colorScheme.onSurface.withValues(alpha: 0.38),
+                    fill: 0.0,
+                  ),
+                ),
+              )
+            : FormCloseButton(
+                canPop: () => !hasChanged(),
+              ),
+        title: Text(
+          titleText,
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: titleColor,
           ),
+        ),
+        actions: [
+          if (_accountDeleteInProgress)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 16.0),
+              child: Center(
+                child: SizedBox(
+                  width: 24.0,
+                  height: 24.0,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: context.colorScheme.primary,
+                  ),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              onPressed: () => save(),
+              icon: Icon(
+                Symbols.check_rounded,
+                color: context.colorScheme.primary,
+                fill: 0.0,
+              ),
+              tooltip: "general.save".t(context),
+            ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 16.0),
-                FlowIcon(
-                  _iconData ?? FlowIconData.icon(Symbols.wallet_rounded),
-                  size: 96.0,
-                  plated: true,
-                  onTap: selectIcon,
-                  colorScheme: getThemeStrict(_colorSchemeName),
-                ),
-                const SizedBox(height: 24.0),
-                ConstrainedBox(
-                  constraints: BoxConstraints.loose(
-                    Size(320.0, double.infinity),
-                  ),
-                  child: TextFormField(
-                    controller: _nameTextController,
-                    focusNode: _editNameFocusNode,
-                    maxLength: Account.maxNameLength,
-                    decoration: InputDecoration(
-                      focusColor: context.colorScheme.secondary,
-                      counter: const SizedBox.shrink(),
-                      hintText: "account.name".t(context),
-                      hintStyle: context.textTheme.headlineMedium?.copyWith(
-                        color: context.textTheme.headlineMedium?.color
-                            ?.withAlpha(0x80),
-                      ),
-                      border: UnderlineInputBorder(),
-                    ),
-                    style: context.textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                    onTap: () => toggleEditName(true),
-                    onFieldSubmitted: (_) => toggleEditName(false),
-                    readOnly: !_editingName,
-                    validator: validateNameField,
-                  ),
-                ),
-                const SizedBox(height: 48.0),
-                InkWell(
-                  borderRadius: .circular(16.0),
-                  onTap: updateBalance,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+      body: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 32.0),
+                child: SafeArea(
+                  top: false,
+                  child: Form(
+                    key: _formKey,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Padding(
-                          padding: contentPadding,
-                          child: Text(
-                            Money(_balance, _currency).formatMoney(),
-                            style: context.textTheme.displayMedium,
-                          ),
-                        ),
-                        const SizedBox(height: 8.0),
-                        Text(
-                          "account.updateBalance".t(context),
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: context.colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                _buildHeroIcon(context, activeScheme),
+                const SizedBox(height: 20.0),
+                _buildCurrentBalance(context),
+                const SizedBox(height: 28.0),
+                _buildSectionLabel(
+                  context,
+                  "account.name".t(context).toUpperCase(),
+                  
                 ),
-                const SizedBox(height: 48.0),
-                ListTile(
-                  leading: Icon(Symbols.attach_money_rounded),
-                  title: Text("currency".t(context)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_currency, style: context.textTheme.labelLarge),
-                      if (widget.isNewAccount) ...[
-                        const SizedBox(width: 8.0),
-                        const LeChevron(),
-                      ],
-                    ],
-                  ),
+                const SizedBox(height: 10.0),
+                _buildNameField(context),
+                const SizedBox(height: 20.0),
+                _AccountSettingRow(
+                  plateBg: kFlowAccountEditCurrencyPlateBg,
+                  plateFg: kFlowAccountEditCurrencyPlateFg,
+                  icon: Symbols.payments_rounded,
+                  label: "currency".t(context),
+                  value: _currency,
                   onTap: widget.isNewAccount ? selectCurrency : null,
+                  showChevron: widget.isNewAccount,
                 ),
-                ListTile(
-                  leading: Icon(Symbols.category_rounded),
-                  title: Text("account.type".t(context)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _accountType.localizedNameContext(context),
-                        style: context.textTheme.labelLarge,
-                      ),
-                      const SizedBox(width: 8.0),
-                      const LeChevron(),
-                    ],
-                  ),
+                const SizedBox(height: 12.0),
+                _AccountSettingRow(
+                  plateBg: kFlowAccountEditTypePlateBg,
+                  plateFg: kFlowAccountEditTypePlateFg,
+                  icon: Symbols.category_rounded,
+                  label: "account.type".t(context),
+                  value: _accountType.localizedNameContext(context),
                   onTap: selectAccountType,
                 ),
-                if (_accountType.showCreditLimit)
-                  ListTile(
-                    leading: Icon(Symbols.credit_card_rounded),
-                    title: Text("account.creditLimit".t(context)),
-                    trailing: MoneyText(
+                if (_accountType.showCreditLimit) ...[
+                  const SizedBox(height: 12.0),
+                  _AccountSettingRow(
+                    plateBg: kFlowAccountEditTypePlateBg,
+                    plateFg: kFlowAccountEditTypePlateFg,
+                    icon: Symbols.credit_card_rounded,
+                    label: "account.creditLimit".t(context),
+                    valueWidget: MoneyText(
                       Money(_creditLimit, _currency),
-                      style: context.textTheme.labelLarge,
+                      style: _settingValueStyle(context),
                     ),
                     onTap: inputCreditLimit,
                   ),
-                SelectColorSchemeListTile(
-                  colorScheme: _colorSchemeName,
-                  onChanged: (scheme) {
-                    setState(() {
-                      _colorSchemeName = scheme?.name;
-                    });
-                  },
+                ],
+                const SizedBox(height: 12.0),
+                _AccountSettingRow(
+                  plateBg: kFlowAccountEditColorPlateBg,
+                  plateFg: kFlowAccountEditColorPlateFg,
+                  icon: Symbols.palette_rounded,
+                  label: "account.themeColor".t(context),
+                  valueWidget: _buildThemeColorValue(context, activeScheme),
+                  onTap: _selectColorScheme,
                 ),
-                if (!_archived && _currentlyEditing?.uuid != null)
-                  ValueListenableBuilder(
-                    valueListenable: UserPreferencesService().valueNotifier,
-                    builder: (context, value, _) {
-                      final bool isPrimary =
-                          value.primaryAccountUuid == _currentlyEditing?.uuid;
-
-                      if (isPrimary) {
-                        return Column(
-                          children: [
-                            ListTile(
-                              leading: Icon(Symbols.star_rounded),
-                              title: Text("account.primaryAccount".t(context)),
-                            ),
-                            Frame(
-                              child: InfoText(
-                                child: Text(
-                                  "account.primaryAccount.changeDescription".t(
-                                    context,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-
-                      return SwitchListTile(
-                        secondary: Icon(Symbols.star_rounded),
-                        title: Text(
-                          "account.primaryAccount.notPrimary".t(context),
-                        ),
-                        selected: false,
-                        value: false,
-                        onChanged: (_) => setAsPrimaryAccount(),
-                      );
-                    },
-                  ),
-                const SizedBox(height: 24.0),
-                const WavyDivider(),
-                const SizedBox(height: 24.0),
-                SwitchListTile(
-                  secondary: Icon(Symbols.playlist_remove_rounded),
+                const SizedBox(height: 20.0),
+                _AccountToggleRow(
+                  plateBg: kFlowPopularCurrencySymbolPlate,
+                  plateFg: kFlowAccountEditExcludePlateFg,
+                  icon: Symbols.visibility_off_rounded,
+                  title: "account.excludeFromTotalBalance".t(context),
+                  subtitle:
+                      "account.excludeFromTotalBalance.shortDescription".t(
+                        context,
+                      ),
                   value: _excludeFromTotalBalance,
                   onChanged: updateBalanceExclusion,
-                  title: Text("account.excludeFromTotalBalance".t(context)),
+                  titleUsesLabelSmall: true,
+                  useExcludeBalanceCardStyle: true,
                 ),
-                if (!widget.isNewAccount)
-                  SwitchListTile(
-                    secondary: const Icon(Symbols.block_rounded, fill: 0.0),
+                // if (!_archived && _currentlyEditing?.uuid != null) ...[
+                //   const SizedBox(height: 12.0),
+                //   ValueListenableBuilder(
+                //     valueListenable: UserPreferencesService().valueNotifier,
+                //     builder: (context, value, _) {
+                //       final bool isPrimary =
+                //           value.primaryAccountUuid == _currentlyEditing?.uuid;
+
+                //       if (isPrimary) {
+                //         return Column(
+                //           crossAxisAlignment: CrossAxisAlignment.stretch,
+                //           children: [
+                //             _AccountSettingRow(
+                //               plateBg: kFlowAccountEditColorPlateBg,
+                //               plateFg: kFlowAccountEditColorPlateFg,
+                //               icon: Symbols.star_rounded,
+                //               label: "account.primaryAccount".t(context),
+                //               value: "",
+                //               showChevron: false,
+                //             ),
+                //             const SizedBox(height: 8.0),
+                //             Frame(
+                //               child: InfoText(
+                //                 child: Text(
+                //                   "account.primaryAccount.changeDescription"
+                //                       .t(context),
+                //                 ),
+                //               ),
+                //             ),
+                //           ],
+                //         );
+                //       }
+
+                //       return _AccountToggleRow(
+                //         plateBg: kFlowAccountEditColorPlateBg,
+                //         plateFg: kFlowAccountEditColorPlateFg,
+                //         icon: Symbols.star_rounded,
+                //         title: "account.primaryAccount.notPrimary".t(context),
+                //         subtitle:
+                //             "account.primaryAccount.description".t(context),
+                //         value: false,
+                //         onChanged: (_) => setAsPrimaryAccount(),
+                //       );
+                //     },
+                //   ),
+                // ],
+                if (!widget.isNewAccount) ...[
+                  const SizedBox(height: 24.0),
+                  const WavyDivider(),
+                  const SizedBox(height: 16.0),
+                  _AccountToggleRow(
+                    plateBg: kFlowPopularCurrencySymbolPlate,
+                    plateFg: kFlowAccountEditExcludePlateFg,
+                    icon: Symbols.block_rounded,
+                    title: "account.archive".t(context),
+                    subtitle: "account.archive.description".t(context),
                     value: _archived,
                     onChanged: updateArchived,
-                    title: Text("account.archive".t(context)),
-                  ),
-                if (!widget.isNewAccount) ...[
-                  const SizedBox(height: 8.0),
-                  Frame(
-                    child: InfoText(
-                      child: Text("account.archive.description".t(context)),
-                    ),
                   ),
                 ],
                 if (_currentlyEditing != null && _archived) ...[
-                  const SizedBox(height: 80.0),
-                  DeleteButton(
+                  const SizedBox(height: 32.0),
+                  AccountDeleteStyledButton(
                     onTap: _deleteAccount,
                     label: Text("account.delete".t(context)),
                   ),
@@ -341,7 +368,307 @@ class _AccountEditPageState extends State<AccountEditPage> {
           ),
         ),
       ),
+              if (_accountDeleteInProgress)
+                Positioned.fill(
+                  child: AbsorbPointer(
+                    child: ColoredBox(
+                      color: const Color.fromRGBO(15, 23, 42, 0.35),
+                      child: Center(
+                        child: Material(
+                          color: context.colorScheme.surface,
+                          elevation: 3.0,
+                          borderRadius: BorderRadius.circular(16.0),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28.0,
+                              vertical: 24.0,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 36.0,
+                                  height: 36.0,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3.0,
+                                    color: context.colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 16.0),
+                                Text(
+                                  "account.delete.inProgress".t(context),
+                                  textAlign: TextAlign.center,
+                                  style: context.textTheme.bodyLarge?.copyWith(
+                                    color: titleColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
     );
+  }
+
+  Widget _buildHeroIcon(BuildContext context, FlowColorScheme? scheme) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    const double outerSide = 140.0;
+    final double innerDiameter =
+        outerSide * kFlowAccountEditHeroInnerCircleScale;
+
+    final Color outerFill = light
+        ? kFlowAccountEditHeroFill
+        : context.colorScheme.surfaceContainerHighest;
+    final Color innerFill =
+        scheme?.primary ?? kFlowAccountEditHeroInnerBlue;
+
+    final double glyphSize = innerDiameter * 0.46;
+
+    return Center(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: selectIcon,
+        child: Container(
+          width: outerSide,
+          height: outerSide,
+          decoration: BoxDecoration(
+            color: outerFill,
+            borderRadius: BorderRadius.circular(24.0),
+          ),
+          alignment: Alignment.center,
+          child: Container(
+            width: innerDiameter,
+            height: innerDiameter,
+            decoration: BoxDecoration(
+              color: innerFill,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: _buildHeroWalletAsset(glyphSize),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroWalletAsset(double size) {
+    return Image.asset(
+      _walletHeroLineArtAsset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      excludeFromSemantics: true,
+    );
+  }
+
+  Widget _buildCurrentBalance(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16.0),
+      onTap: updateBalance,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "account.currentBalance".t(context).toUpperCase(),
+              textAlign: TextAlign.center,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: kFlowPopularCurrenciesSectionHeading,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+              ),
+            ),
+             
+            const SizedBox(height: 8.0),
+            Text(
+              Money(_balance, _currency).formatMoney(),
+              textAlign: TextAlign.center,
+              style: context.textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: light
+                    ? kFlowAccountEditTitleColor
+                    : context.colorScheme.onSurface,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 10.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Symbols.edit_rounded,
+                  size: 16.0,
+                  color: context.colorScheme.primary,
+                  fill: 0.0,
+                ),
+                const SizedBox(width: 6.0),
+                Text(
+                  "account.updateBalance".t(context),
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(BuildContext context, String text) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        text,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: kFlowPopularCurrenciesSectionHeading,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameField(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final double maxWidth = math.min(
+      kFlowAccountEditNameFieldMaxWidth,
+      MediaQuery.sizeOf(context).width - 40.0,
+    );
+
+    final Color fill = light
+        ? kFlowAccountEditFieldFill
+        : context.colorScheme.surfaceContainerHighest;
+    final Color borderColor = light
+        ? kFlowAccountEditNameFieldBorder
+        : context.colorScheme.outlineVariant;
+
+    final OutlineInputBorder shape = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12.0),
+      borderSide: BorderSide(color: borderColor, width: 1.0),
+    );
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: SizedBox(
+          height: kFlowAccountEditNameFieldHeight,
+          child: TextFormField(
+            controller: _nameTextController,
+            focusNode: _editNameFocusNode,
+            maxLength: Account.maxNameLength,
+            textAlignVertical: TextAlignVertical.center,
+            style: context.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+              color: light
+                  ? kFlowAccountEditTitleColor
+                  : context.colorScheme.onSurface,
+            ),
+            decoration: InputDecoration(
+              counter: const SizedBox.shrink(),
+              hintText: "account.name".t(context),
+              hintStyle: context.textTheme.titleMedium?.copyWith(
+                color: kFlowPopularCurrenciesSectionHeading,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+              filled: true,
+              fillColor: fill,
+              isDense: true,
+              contentPadding: const EdgeInsets.fromLTRB(16.0, 17.0, 16.0, 17.0),
+              border: shape,
+              enabledBorder: shape,
+              disabledBorder: shape,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: BorderSide(
+                  color: context.colorScheme.primary,
+                  width: 1.0,
+                ),
+              ),
+            ),
+            onTap: () => toggleEditName(true),
+            onFieldSubmitted: (_) => toggleEditName(false),
+            validator: validateNameField,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeColorValue(
+    BuildContext context,
+    FlowColorScheme? scheme,
+  ) {
+    if (scheme == null) {
+      return Text(
+        "select.color.none".t(context),
+        style: _settingValueStyle(context),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10.0,
+          height: 10.0,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8.0),
+        Text(scheme.name, style: _settingValueStyle(context)),
+      ],
+    );
+  }
+
+  TextStyle? _settingValueStyle(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    return context.textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: light
+          ? kFlowAccountEditTitleColor
+          : context.colorScheme.onSurface,
+    );
+  }
+
+  Future<void> _selectColorScheme() async {
+    final FlowColorScheme theme = getTheme(
+      UserPreferencesService().themeNameRaw,
+      preferDark: Flow.of(context).useDarkTheme,
+    );
+
+    final FlowThemeGroup group = getGroupByTheme(theme.name);
+
+    final Optional<FlowColorScheme>? result =
+        await showModalBottomSheet<Optional<FlowColorScheme>>(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => SelectColorSchemeSheet(
+            group: group,
+            initialScheme: _colorSchemeName,
+          ),
+        );
+
+    if (result == null) return;
+
+    setState(() {
+      _colorSchemeName = result.value?.name;
+    });
   }
 
   void inputCreditLimit() async {
@@ -437,6 +764,8 @@ class _AccountEditPageState extends State<AccountEditPage> {
   void selectCurrency() async {
     final result = await showModalBottomSheet<String>(
       context: context,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => const SelectCurrencySheet(),
       isScrollControlled: true,
     );
@@ -449,7 +778,8 @@ class _AccountEditPageState extends State<AccountEditPage> {
   void selectAccountType() async {
     final result = await showModalBottomSheet<AccountType>(
       context: context,
-      builder: (context) => const SelectAccountTypeSheet(),
+      builder: (context) =>
+          SelectAccountTypeSheet(currentlySelected: _accountType),
       isScrollControlled: true,
     );
 
@@ -460,6 +790,15 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   void update({required String formattedName}) async {
     if (_currentlyEditing == null) return;
+
+    final Account? persisted =
+        ObjectBox().box<Account>().get(_currentlyEditing!.id);
+    if (persisted == null) {
+      if (mounted) {
+        context.pop();
+      }
+      return;
+    }
 
     _currentlyEditing!.name = formattedName;
     _currentlyEditing!.currency = _currency;
@@ -472,7 +811,21 @@ class _AccountEditPageState extends State<AccountEditPage> {
     _currentlyEditing!.excludeFromTotalBalance = _excludeFromTotalBalance;
     _currentlyEditing!.archived = _archived;
 
-    ObjectBox().box<Account>().put(_currentlyEditing!, mode: PutMode.update);
+    try {
+      ObjectBox()
+          .box<Account>()
+          .put(_currentlyEditing!, mode: PutMode.update);
+    } catch (e, st) {
+      log(
+        "[AccountEditPage] Failed to save account ${_currentlyEditing!.id}: $e\n$st",
+      );
+      if (mounted) {
+        context.pop();
+      }
+      return;
+    }
+
+    TransactionsService().notifyDataChanged();
 
     if (_archived) {
       try {
@@ -489,10 +842,19 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   void save() async {
     if (_formKey.currentState?.validate() != true) return;
+    if (_accountDeleteInProgress) return;
 
     final String trimmed = _nameTextController.text.trim();
 
     if (_currentlyEditing != null) {
+      final Account? persisted =
+          ObjectBox().box<Account>().get(_currentlyEditing!.id);
+      if (persisted == null) {
+        if (mounted) {
+          context.pop();
+        }
+        return;
+      }
       return update(formattedName: trimmed);
     }
 
@@ -522,11 +884,15 @@ class _AccountEditPageState extends State<AccountEditPage> {
                 transactionDate: _updateBalanceAt,
               );
               ObjectBox().box<Account>().putAsync(value);
+              TransactionsService().notifyDataChanged();
             }),
       );
     } else {
       unawaited(
-        ObjectBox().box<Account>().putAsync(account, mode: PutMode.insert),
+        ObjectBox()
+            .box<Account>()
+            .putAsync(account, mode: PutMode.insert)
+            .then((_) => TransactionsService().notifyDataChanged()),
       );
     }
 
@@ -654,12 +1020,23 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
     if (!mounted) return;
 
-    if (confirmation == true) {
+    if (confirmation != true) {
+      return;
+    }
+
+    setState(() {
+      _accountDeleteInProgress = true;
+    });
+
+    bool accountRemoved = false;
+    try {
       await export(
         showShareDialog: false,
         subfolder: "anti-blunder",
         type: BackupEntryType.preAccountDeletion,
       );
+
+      if (!mounted) return;
 
       try {
         await TransactionsService().deleteMany(filter);
@@ -671,10 +1048,19 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
       try {
         await ObjectBox().box<Account>().removeAsync(_currentlyEditing!.id);
+        accountRemoved = true;
       } catch (e) {
         log(
           "[Account Page] Failed to delete account ${_currentlyEditing!.name} (${_currentlyEditing!.uuid}) due to:\n$e",
         );
+      }
+
+      TransactionsService().notifyDataChanged();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _accountDeleteInProgress = false;
+        });
       }
     }
 
@@ -684,10 +1070,341 @@ class _AccountEditPageState extends State<AccountEditPage> {
       //
     }
 
-    if (!mounted) return;
+    if (!mounted || !accountRemoved) {
+      return;
+    }
+
     context.pop();
     GoRouter.of(context).popUntil((route) {
       return route.path != "/account/:id";
     });
+  }
+}
+
+/// One row in the redesigned [AccountEditPage] settings list.
+///
+/// Renders a soft-grey rounded card with a tinted icon plate (24×24 icon in a
+/// 40×40 rounded square), a small label above a bold value, and a trailing
+/// chevron when [onTap] is interactive.
+class _AccountSettingRow extends StatelessWidget {
+  final Color plateBg;
+  final Color plateFg;
+  final IconData icon;
+  final String label;
+  final String? value;
+  final Widget? valueWidget;
+  final VoidCallback? onTap;
+  final bool showChevron;
+
+  const _AccountSettingRow({
+    required this.plateBg,
+    required this.plateFg,
+    required this.icon,
+    required this.label,
+    this.value,
+    this.valueWidget,
+    this.onTap,
+    this.showChevron = true,
+  }) : assert(value != null || valueWidget != null);
+
+  @override
+  Widget build(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final ColorScheme scheme = context.colorScheme;
+    final Color rowFill =
+        light ? kFlowAccountEditRowFill : scheme.surfaceContainerHighest;
+    final Color titleColor =
+        light ? kFlowAccountEditTitleColor : scheme.onSurface;
+
+    return Material(
+      color: rowFill,
+      borderRadius: BorderRadius.circular(16.0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16.0),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14.0,
+            vertical: 12.0,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40.0,
+                height: 40.0,
+                decoration: BoxDecoration(
+                  color: plateBg,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 22.0, color: plateFg, fill: 0.0),
+              ),
+              const SizedBox(width: 14.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: kFlowPopularCurrenciesSectionHeading,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2.0),
+                    DefaultTextStyle.merge(
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: titleColor,
+                      ),
+                      child: valueWidget ?? Text(value ?? ""),
+                    ),
+                  ],
+                ),
+              ),
+              if (showChevron && onTap != null)
+                Icon(
+                  Symbols.chevron_right_rounded,
+                  size: 22.0,
+                  color: kFlowPopularCurrenciesSectionHeading,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Toggle row used for "Exclude from balance" / "Deactivate" in the
+/// redesigned [AccountEditPage].
+class _AccountToggleRow extends StatelessWidget {
+  final Color plateBg;
+  final Color plateFg;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  /// When true, [title] uses [TextTheme.labelSmall] instead of [TextTheme.titleSmall].
+  final bool titleUsesLabelSmall;
+
+  /// Figma card: max width [kFlowAccountEditNameFieldMaxWidth], height [kFlowAccountEditExcludeCardHeight], `16` padding, `12` radius, fill [kFlowAccountEditFieldFill], border [kFlowPopularCurrencySymbolPlate].
+  final bool useExcludeBalanceCardStyle;
+
+  const _AccountToggleRow({
+    required this.plateBg,
+    required this.plateFg,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.titleUsesLabelSmall = false,
+    this.useExcludeBalanceCardStyle = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (useExcludeBalanceCardStyle) {
+      return _buildExcludeBalanceCard(context);
+    }
+    return _buildStandardToggleRow(context);
+  }
+
+  Widget _buildExcludeBalanceCard(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final ColorScheme scheme = context.colorScheme;
+    final Color titleColor =
+        light ? kFlowAccountEditTitleColor : scheme.onSurface;
+
+    final double maxWidth = math.min(
+      kFlowAccountEditNameFieldMaxWidth,
+      MediaQuery.sizeOf(context).width - 40.0,
+    );
+
+    final Color fill =
+        light ? kFlowAccountEditFieldFill : scheme.surfaceContainerHighest;
+    final Color borderColor =
+        light ? kFlowPopularCurrencySymbolPlate : scheme.outlineVariant;
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          minHeight: kFlowAccountEditExcludeCardHeight,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(color: borderColor, width: 1.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8.0),
+                      onTap: () => onChanged(!value),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 40.0,
+                            height: 40.0,
+                            decoration: BoxDecoration(
+                              color: plateBg,
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              icon,
+                              size: 22.0,
+                              color: plateFg,
+                              fill: 0.0,
+                            ),
+                          ),
+                          const SizedBox(width: 14.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  title,
+                                  style: (titleUsesLabelSmall
+                                          ? context.textTheme.labelSmall
+                                          : context.textTheme.titleSmall)
+                                      ?.copyWith(
+                                    fontWeight: titleUsesLabelSmall
+                                        ? FontWeight.w600
+                                        : FontWeight.w700,
+                                    color: titleColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 2.0),
+                                Text(
+                                  subtitle,
+                                  style: context.textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: kFlowPopularCurrenciesSectionHeading,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: value,
+                    onChanged: onChanged,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStandardToggleRow(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final ColorScheme scheme = context.colorScheme;
+    final Color rowFill =
+        light ? kFlowAccountEditRowFill : scheme.surfaceContainerHighest;
+    final Color titleColor =
+        light ? kFlowAccountEditTitleColor : scheme.onSurface;
+
+    return Material(
+      color: rowFill,
+      borderRadius: BorderRadius.circular(16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16.0),
+              onTap: () => onChanged(!value),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14.0,
+                  vertical: 12.0,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.0,
+                      height: 40.0,
+                      decoration: BoxDecoration(
+                        color: plateBg,
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(icon, size: 22.0, color: plateFg, fill: 0.0),
+                    ),
+                    const SizedBox(width: 14.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: (titleUsesLabelSmall
+                                    ? context.textTheme.labelSmall
+                                    : context.textTheme.titleSmall)
+                                ?.copyWith(
+                              fontWeight: titleUsesLabelSmall
+                                  ? FontWeight.w600
+                                  : FontWeight.w700,
+                              color: titleColor,
+                            ),
+                          ),
+                          const SizedBox(height: 2.0),
+                          Text(
+                            subtitle,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: kFlowPopularCurrenciesSectionHeading,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              end: 10.0,
+              top: 12.0,
+              bottom: 12.0,
+            ),
+            child: Switch(
+              value: value,
+              onChanged: onChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

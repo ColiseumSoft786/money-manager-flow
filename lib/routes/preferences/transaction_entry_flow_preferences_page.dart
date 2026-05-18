@@ -1,13 +1,13 @@
 import "package:flow/entity/user_preferences/transaction_entry_flow.dart";
-import "package:flow/l10n/flow_localizations.dart";
-import "package:flow/l10n/named_enum.dart";
+import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/transaction_entry_flow/transaction_entry_flow_preferences_theme.dart";
+import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_action_tile.dart";
+import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_add_actions_section.dart";
+import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_hero_card.dart";
+import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_settings_card.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/theme.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/wavy_divider.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
-import "package:material_symbols_icons/symbols.dart";
 
 class TransactionEntryFlowPreferencesPage extends StatefulWidget {
   const TransactionEntryFlowPreferencesPage({super.key});
@@ -45,128 +45,127 @@ class _TransactionEntryFlowPreferencesPageState
     super.dispose();
   }
 
+  List<TransactionEntryAction> get _availableActions =>
+      TransactionEntryAction.values
+          .where((action) => !_actions.contains(action))
+          .toList();
+
   @override
   Widget build(BuildContext context) {
-    int actionOrder = 1;
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: TransactionEntryFlowPreferencesTheme.canvas,
       appBar: AppBar(
-        title: Text("preferences.transactionEntryFlow".t(context)),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: .start,
-            children: [
-              Frame(
-                child: InfoText(
-                  child: Text(
-                    "preferences.transactionEntryFlow.description".t(context),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactionEntryFlow.skipSelectedFields".t(
-                    context,
-                  ),
-                ),
-                value: _skipSelectedFields,
-                onChanged: (bool newValue) {
-                  _skipSelectedFields = newValue;
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: 16.0),
-              SwitchListTile(
-                title: Text(
-                  "preferences.transactionEntryFlow.abandonUponCancelForm".t(
-                    context,
-                  ),
-                ),
-                value: _abandonUponActionCancelled,
-                onChanged: (bool newValue) {
-                  _abandonUponActionCancelled = newValue;
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: 16.0),
-              const WavyDivider(),
-              const SizedBox(height: 16.0),
-              Frame(
-                child: InfoText(
-                  child: Text(
-                    "preferences.transactionEntryFlow.actions.description".t(
-                      context,
-                    ),
-                  ),
-                ),
-              ),
-              ReorderableListView(
-                shrinkWrap: true,
-                onReorder: onReorder,
-                proxyDecorator: proxyDecorator,
-                physics: NeverScrollableScrollPhysics(),
-                children: _actions
-                    .map(
-                      (action) => ListTile(
-                        leading: Text(
-                          (actionOrder++).toString(),
-                          style: context.textTheme.labelLarge?.bold,
-                        ),
-                        key: ValueKey(action.value),
-                        title: Text(action.localizedNameContext(context)),
-                        subtitle: action == .inputTitle
-                            ? Text(
-                                "preferences.transactionEntryFlow.actions.lastItem"
-                                    .t(context),
-                              )
-                            : null,
-                        trailing: IconButton(
-                          onPressed: () {
-                            _actions.remove(action);
-                            setState(() {});
-                          },
-                          icon: const Icon(Symbols.delete_forever_rounded),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 16.0),
-              const WavyDivider(),
-              const SizedBox(height: 16.0),
-              Column(
-                mainAxisSize: .min,
-                children: TransactionEntryAction.values
-                    .where((action) => !_actions.contains(action))
-                    .map((action) {
-                      return ListTile(
-                        trailing: const Icon(Symbols.add_rounded),
-                        title: Text(action.localizedNameContext(context)),
-                        onTap: () {
-                          _actions.add(action);
-                          setState(() {});
-                        },
-                      );
-                    })
-                    .toList(),
-              ),
-            ],
+        backgroundColor: TransactionEntryFlowPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.transactionEntryFlow.settingsTitle".t(context),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: TransactionEntryFlowPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
           ),
         ),
       ),
-    );
-  }
-
-  Widget proxyDecorator(Widget child, int index, Animation<double> animation) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (BuildContext context, Widget? child) {
-        return Material(elevation: 0, color: Colors.transparent, child: child);
-      },
-      child: child,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        const EntryFlowHeroCard(),
+                        const SizedBox(height: 16.0),
+                        EntryFlowSettingsCard(
+                          skipSelectedFields: _skipSelectedFields,
+                          abandonUponActionCancelled: _abandonUponActionCancelled,
+                          onSkipSelectedFieldsChanged: (bool value) {
+                            setState(() => _skipSelectedFields = value);
+                          },
+                          onAbandonUponActionCancelledChanged: (bool value) {
+                            setState(
+                              () => _abandonUponActionCancelled = value,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20.0),
+                        _SequenceHeader(),
+                        const SizedBox(height: 10.0),
+                      ]),
+                    ),
+                  ),
+                  if (_actions.isEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(
+                          "preferences.transactionEntryFlow.actions.description"
+                              .t(context),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: TransactionEntryFlowPreferencesTheme.subtitleInk,
+                            fontSize: 13.0,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      sliver: SliverReorderableList(
+                        itemBuilder: (context, int index) {
+                          final TransactionEntryAction action = _actions[index];
+                          return Padding(
+                            key: ValueKey(action.value),
+                            padding: EdgeInsets.only(
+                              bottom: index < _actions.length - 1 ? 10.0 : 0.0,
+                            ),
+                            child: EntryFlowActionTile(
+                              action: action,
+                              stepNumber: index + 1,
+                              listIndex: index,
+                              onDelete: () {
+                                setState(() => _actions.remove(action));
+                              },
+                            ),
+                          );
+                        },
+                        itemCount: _actions.length,
+                        onReorder: onReorder,
+                      ),
+                    ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
+                    sliver: SliverToBoxAdapter(
+                      child: EntryFlowAddActionsSection(
+                        availableActions: _availableActions,
+                        onAdd: (TransactionEntryAction action) {
+                          setState(() => _actions.add(action));
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -174,15 +173,55 @@ class _TransactionEntryFlowPreferencesPageState
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    final removed = _actions.removeAt(oldIndex);
+    final TransactionEntryAction removed = _actions.removeAt(oldIndex);
     _actions.insert(newIndex, removed);
 
-    /// If there's input title, force it to be the last action
     if (_actions.contains(TransactionEntryAction.inputTitle)) {
       _actions.remove(TransactionEntryAction.inputTitle);
       _actions.add(TransactionEntryAction.inputTitle);
     }
 
     setState(() {});
+  }
+}
+
+class _SequenceHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            "preferences.transactionEntryFlow.section.entrySequence"
+                .t(context)
+                .toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: TransactionEntryFlowPreferencesTheme.sectionLabel,
+              fontWeight: FontWeight.w700,
+              fontSize: 11.0,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: TransactionEntryFlowPreferencesTheme.dragChipFill,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+            child: Text(
+              "preferences.transactionEntryFlow.dragToReorder".t(context),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: TransactionEntryFlowPreferencesTheme.subtitleInk,
+                fontWeight: FontWeight.w700,
+                fontSize: 10.0,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

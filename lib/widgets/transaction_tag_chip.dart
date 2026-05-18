@@ -16,12 +16,16 @@ class TransactionTagChip extends StatelessWidget {
 
   final VoidCallback? onPressed;
 
+  /// Smaller chip for dense forms (e.g. transaction entry).
+  final bool compact;
+
   const TransactionTagChip({
     super.key,
     required this.tag,
     this.selected = false,
     this.isSuggestion = false,
     this.onPressed,
+    this.compact = false,
   });
 
   @override
@@ -54,13 +58,28 @@ class TransactionTagChip extends StatelessWidget {
                 )
               : Border.all(color: borderColor, width: 1.0),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10.0 : 12.0,
+          vertical: compact ? 6.0 : 8.0,
+        ),
         child: Row(
-          spacing: 8.0,
+          spacing: compact ? 6.0 : 8.0,
           mainAxisSize: .min,
           children: [
-            FlowIcon(tag.icon, colorScheme: colorScheme, size: 16.0),
-            Text(tag.title, style: context.textTheme.labelLarge),
+            FlowIcon(
+              tag.icon,
+              colorScheme: colorScheme,
+              size: compact ? 14.0 : 16.0,
+            ),
+            Text(
+              tag.title,
+              style: compact
+                  ? context.textTheme.labelMedium?.copyWith(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w600,
+                    )
+                  : context.textTheme.labelLarge,
+            ),
           ],
         ),
       ),

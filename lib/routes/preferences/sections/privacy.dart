@@ -1,4 +1,5 @@
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_toggle_row.dart";
 import "package:flow/routes/preferences_page.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flutter/material.dart";
@@ -15,19 +16,20 @@ class _PrivacyState extends State<Privacy> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: .min,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SwitchListTile(
-          secondary: const Icon(Symbols.password_rounded),
-          title: Text("preferences.privacy.maskAtStartup".t(context)),
+        PreferencesRootToggleRow(
+          icon: Symbols.password_rounded,
+          title: "preferences.privacy.maskAtStartup".t(context),
           value: UserPreferencesService().privacyModeUponLaunch,
           onChanged: updatePrivacyMode,
         ),
-        SwitchListTile(
-          secondary: const Icon(Symbols.earthquake_rounded),
-          title: Text("preferences.privacy.maskAtShake".t(context)),
+        PreferencesRootToggleRow(
+          icon: Symbols.earthquake_rounded,
+          title: "preferences.privacy.maskAtShake".t(context),
           value: UserPreferencesService().privacyModeUponShaking,
           onChanged: updatePrivacyModeUponShaking,
+          showDivider: false,
         ),
       ],
     );

@@ -7,7 +7,6 @@ import "package:flow/widgets/setup/welcome_slide.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
-import "package:smooth_page_indicator/smooth_page_indicator.dart";
 
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key});
@@ -21,18 +20,12 @@ class _SetupPageState extends State<SetupPage> {
 
   static const int slideCount = 3;
 
-  bool lastSlide = false;
+  int _currentPageIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-
-    _pageController.addListener(() {
-      lastSlide =
-          _pageController.hasClients && _pageController.page == slideCount - 1;
-      setState(() {});
-    });
   }
 
   @override
@@ -46,44 +39,62 @@ class _SetupPageState extends State<SetupPage> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        children: const [WelcomeSlide(), FossSlide(), PrivacySlide()],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              SmoothPageIndicator(
-                controller: _pageController, // PageController
-                count: slideCount,
-                effect: WormEffect(
-                  dotColor: context.flowColors.semi,
-                  activeDotColor: context.colorScheme.primary,
-                  dotWidth: 12.0,
-                  dotHeight: 12.0,
-                  radius: 12.0,
-                  spacing: 6.0,
-                ),
-                onDotClicked: (index) => _pageController.animateToPage(
-                  index,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                ),
-              ),
-              const Spacer(),
-              Button(
-                onTap: next,
-                trailing: const Icon(Symbols.chevron_right_rounded),
-                child: Text(
-                  lastSlide
-                      ? "setup.getStarted".t(context)
-                      : "setup.next".t(context),
-                ),
-              ),
-            ],
+        onPageChanged: (index) {
+          setState(() => _currentPageIndex = index);
+        },
+        children: [
+          WelcomeSlide(
+            pageController: _pageController,
+            slideCount: slideCount,
+            currentPageIndex: _currentPageIndex,
           ),
-        ),
+          FossSlide(
+            pageController: _pageController,
+            slideCount: slideCount,
+            currentPageIndex: _currentPageIndex,
+            onContinue: next,
+          ),
+          PrivacySlide(
+            pageController: _pageController,
+            slideCount: slideCount,
+            currentPageIndex: _currentPageIndex,
+            onGetStarted: next,
+          ),
+        ],
       ),
+      bottomNavigationBar: (_currentPageIndex == 1 || _currentPageIndex == 2)
+          ? null
+          : Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      const Spacer(),
+                      _primarySetupActionButton(context),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
+  String _nextButtonLabel(BuildContext context) =>
+      _currentPageIndex == slideCount - 1
+      ? "setup.getStarted".t(context)
+      : "setup.next".t(context);
+
+  Widget _primarySetupActionButton(BuildContext context) {
+    return Button(
+      onTap: next,
+      backgroundColor: context.colorScheme.primary,
+      foregroundColor: Colors.white,
+      borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
+      trailing: const Icon(Symbols.arrow_forward_rounded),
+      child: Text(_nextButtonLabel(context)),
     );
   }
 

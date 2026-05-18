@@ -59,22 +59,19 @@ class _ProfilePictureState extends State<ProfilePicture> {
 
     return MouseRegion(
       onEnter: widget.showOverlayUponHover
-          ? (event) =>
-                setState(() => showOverlay = event.distance <= widget.size)
+          ? (_) => setState(() => showOverlay = true)
           : null,
       onExit: widget.showOverlayUponHover
-          ? (event) => setState(() => showOverlay = false)
+          ? (_) => setState(() => showOverlay = false)
           : null,
       child: Stack(
         children: [
           child,
           InkWell(
             onTap: widget.onTap,
-            borderRadius: .circular(999.9),
+            borderRadius: BorderRadius.circular(999.9),
             child: AnimatedOpacity(
-              opacity: widget.showOverlayUponHover
-                  ? (showOverlay ? 1.0 : 0.5)
-                  : 0.0,
+              opacity: widget.showOverlayUponHover && showOverlay ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 200),
               child: DecoratedBox(
                 decoration: const BoxDecoration(

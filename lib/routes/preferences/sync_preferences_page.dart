@@ -1,14 +1,15 @@
-// import "package:flow/constants.dart";
 import "package:flow/constants.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/routes/preferences/sections/icloud.dart";
+import "package:flow/routes/preferences/sync/sync_preferences_theme.dart";
+import "package:flow/routes/preferences/sync/widgets/sync_info_banner.dart";
+import "package:flow/routes/preferences/sync/widgets/sync_interval_grid.dart";
+import "package:flow/routes/preferences/sync/widgets/sync_retain_history_section.dart";
+import "package:flow/routes/preferences/sync/widgets/sync_section_header.dart";
 import "package:flow/services/sync/icloud_syncer.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/list_header.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
-import "package:moment_dart/moment_dart.dart";
 
 class SyncPreferencesPage extends StatefulWidget {
   const SyncPreferencesPage({super.key});
@@ -30,70 +31,71 @@ class _SyncPreferencesPageState extends State<SyncPreferencesPage> {
       options.add(autobackupIntervalInHours);
     }
 
+    final bool showCloudSection = ICloudSyncer.supported || flowDebugMode;
+
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.sync".t(context))),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      backgroundColor: SyncPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: SyncPreferencesTheme.canvas,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          "preferences.sync.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: SyncPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16.0),
-              ListHeader("preferences.sync.autoBackup.interval".t(context)),
-              const SizedBox(height: 8.0),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Wrap(
-                  spacing: 12.0,
-                  runSpacing: 8.0,
-                  children: options
-                      .map(
-                        (value) => FilterChip(
-                          showCheckmark: false,
-                          key: ValueKey(value),
-                          label: Text(
-                            value == null
-                                ? "preferences.sync.autoBackup.disabled".t(
-                                    context,
-                                  )
-                                : Duration(hours: value).toDurationString(
-                                    dropPrefixOrSuffix: true,
-                                    format: value >= 24
-                                        ? DurationFormat.dh
-                                        : DurationFormat.hm,
-                                  ),
-                          ),
-                          onSelected: (bool selected) => selected
-                              ? updateAutoBackupIntervalInHours(value)
-                              : null,
-                          selected: value == autobackupIntervalInHours,
-                        ),
-                      )
-                      .toList(),
+              if (showCloudSection) ...[
+                SyncSectionHeader(
+                  label: "preferences.sync.section.cloudServices".t(context),
                 ),
-              ),
-              const SizedBox(height: 8.0),
-              Frame(
-                child: InfoText(
-                  child: Text(
-                    "preferences.sync.autoBackup.interval.description".t(
-                      context,
-                    ),
-                  ),
-                ),
-              ),
-              if (ICloudSyncer.supported || flowDebugMode) ...[
-                const SizedBox(height: 16.0),
                 if (!ICloudSyncer.supported)
-                  Frame(
-                    child: InfoText(
-                      child: Text(
-                        "DEBUG MODE: Even though your currenct device does not support iCloud, following section is shown because you are in debug mode.",
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      "DEBUG MODE: Even though your currenct device does not support iCloud, following section is shown because you are in debug mode.",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: SyncPreferencesTheme.subtitleInk,
                       ),
                     ),
                   ),
-                ICloud(),
+                const ICloud(),
+                const SizedBox(height: 8.0),
               ],
-              const SizedBox(height: 16.0),
+              SyncSectionHeader(
+                label: "preferences.sync.autoBackup.interval".t(context),
+              ),
+              SyncIntervalGrid(
+                options: options,
+                selectedHours: autobackupIntervalInHours,
+                onSelected: updateAutoBackupIntervalInHours,
+              ),
+              if (showCloudSection) ...[
+                SyncSectionHeader(
+                  label: "preferences.sync.section.retainHistory".t(context),
+                ),
+                const SyncRetainHistorySection(),
+              ],
+              const SizedBox(height: 24.0),
+              const SyncInfoBanner(),
             ],
           ),
         ),
@@ -101,7 +103,7 @@ class _SyncPreferencesPageState extends State<SyncPreferencesPage> {
     );
   }
 
-  void updateAutoBackupIntervalInHours(int? newIntervalInHours) async {
+  void updateAutoBackupIntervalInHours(int? newIntervalInHours) {
     UserPreferencesService().autoBackupIntervalInHours = newIntervalInHours;
 
     if (mounted) setState(() {});

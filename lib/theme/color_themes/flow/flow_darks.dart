@@ -11,8 +11,8 @@ final FlowColorScheme _defaultDarkBase = FlowColorScheme(
   isDark: true,
   surface: const Color(0xff141414),
   onSurface: const Color(0xfff5f6fa),
-  primary: const Color(0xfff2c0ff),
-  onPrimary: const Color(0xff141414),
+  primary: const Color(0xff1e88ff),
+  onPrimary: const Color(0xffffffff),
   secondary: const Color(0xff050505),
   onSecondary: const Color(0xfff5f6fa),
   customColors: FlowCustomColors(
@@ -29,7 +29,7 @@ final FlowThemeGroup flowDarks = FlowThemeGroup(
     _defaultDarkBase.copyWith(
       name: "electricLavender",
       iconName: "shadeOfViolet",
-      primary: const Color(0xfff2c0ff),
+      primary: const Color(0xff1e88ff),
     ),
     _defaultDarkBase.copyWith(
       name: "pinkQuartz",

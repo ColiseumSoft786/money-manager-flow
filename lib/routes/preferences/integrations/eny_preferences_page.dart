@@ -1,19 +1,19 @@
 import "package:flow/constants.dart";
-import "package:flow/l10n/flow_localizations.dart";
+import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/preferences/integrations/eny/eny_preferences_theme.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_dashboard_card.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_disconnect_button.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_info_footer.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_scan_documents_card.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_section_header.dart";
+import "package:flow/routes/preferences/integrations/eny/widgets/eny_status_card.dart";
 import "package:flow/services/integrations/eny.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/helpers.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/utils/extensions.dart";
 import "package:flow/utils/utils.dart";
-import "package:flow/widgets/animated_eny_logo.dart";
-import "package:flow/widgets/general/directional_chevron.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
-import "package:flow/widgets/general/list_header.dart";
-import "package:flow/widgets/general/wavy_divider.dart";
-import "package:flow/widgets/integrations/eny_page/eny_privacy_notice.dart";
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
-import "package:material_symbols_icons/symbols.dart";
 
 class EnyPreferencesPage extends StatefulWidget {
   const EnyPreferencesPage({super.key});
@@ -36,198 +36,109 @@ class _EnyPreferencesPageState extends State<EnyPreferencesPage> {
     });
   }
 
+  void _openDashboard() {
+    openUrl(enyDashboardLink);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Eny")),
+      backgroundColor: EnyPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: EnyPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "Eny",
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: EnyPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
       body: ValueListenableBuilder(
         valueListenable: EnyService().apiKey,
         builder: (context, apiKey, child) {
           final bool connected = EnyService().isConnected;
 
-          return SingleChildScrollView(
-            child: SafeArea(
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
               child: Column(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  EnyPrivacyNotice(),
-                  const SizedBox(height: 24.0),
-                  const WavyDivider(),
-                  const SizedBox(height: 24.0),
-                  if (!connected) ...[
-                    Frame(
-                      child: InfoText(
-                        child: Text(
-                          "integrations.eny.dashboard.description".t(context),
-                        ),
-                      ),
+                  EnySectionHeader(
+                    label: "integrations.eny.privacyNotice".t(context),
+                  ),
+                  Text(
+                    "integrations.eny.privacyNotice.preferencesDescription".t(
+                      context,
+                      {"appName": "appName".t(context)},
                     ),
-                    const SizedBox(height: 8.0),
-                  ],
-                  ListTile(
-                    leading: const SizedBox(
-                      width: 24.0,
-                      height: 24.0,
-                      child: AnimatedEnyLogo(noAnimation: true),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: EnyPreferencesTheme.subtitleInk,
+                      fontSize: 14.0,
+                      height: 1.45,
                     ),
-                    title: Text("integrations.eny.dashboard".t(context)),
-                    trailing: const LeChevron(),
-                    onTap: () {
-                      openUrl(enyDashboardLink, .externalApplication);
+                  ),
+                  const SizedBox(height: 12.0),
+                  EnyDashboardCard(onTap: _openDashboard),
+                  const SizedBox(height: 16.0),
+                  ValueListenableBuilder(
+                    valueListenable: EnyService().remainingCredits,
+                    builder: (context, remainingCredits, child) {
+                      return EnyStatusCard(
+                        connected: connected,
+                        email: EnyService().email,
+                        creditsBusy: _busy,
+                        remainingCredits: remainingCredits,
+                        onConnect: _openDashboard,
+                        onRefreshCredits: connected ? _refreshCredits : null,
+                      );
                     },
                   ),
-                  Column(
-                    mainAxisSize: .min,
-                    crossAxisAlignment: .start,
-                    children: [
-                      ListTile(
-                        leading: Icon(
-                          connected
-                              ? Symbols.link_rounded
-                              : Symbols.link_off_rounded,
-                        ),
-                        title: Text(
-                          "integrations.eny.connected#$connected".t(context),
-                        ),
-                        subtitle: EnyService().email != null
-                            ? Text(
-                                EnyService().email!,
-                                style: context.textTheme.bodyMedium?.semi(
-                                  context,
-                                ),
-                              )
-                            : null,
+                  const SizedBox(height: 16.0),
+                  ValueListenableBuilder(
+                    valueListenable: UserPreferencesService().valueNotifier,
+                    builder: (context, userPreferences, child) {
+                      final bool createTransactionsPerItemInScans =
+                          userPreferences.createTransactionsPerItemInScans;
+                      final int? scansPendingThresholdInHours =
+                          userPreferences.scansPendingThresholdInHours;
 
-                        /// OCD :))))
-                        trailing: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                          child: Icon(
-                            Symbols.fiber_manual_record_rounded,
-                            size: 12.0,
-                            color: connected
-                                ? context.flowColors.income
-                                : context.flowColors.expense,
-                          ),
-                        ),
-                      ),
-
-                      if (connected)
-                        ValueListenableBuilder(
-                          valueListenable: EnyService().remainingCredits,
-                          builder: (context, remainingCredits, child) {
-                            return ListTile(
-                              leading: Icon(Symbols.paid_rounded),
-                              title: Text(
-                                "integrations.eny.creditsRemaining".t(context),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: .min,
-                                spacing: 8.0,
-                                children: [
-                                  Text(
-                                    (_busy || remainingCredits == null)
-                                        ? "...."
-                                        : remainingCredits.toString(),
-                                    style: context.textTheme.bodyLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: [
-                                            const FontFeature.tabularFigures(),
-                                          ],
-                                        ),
-                                  ),
-                                  Icon(Symbols.refresh_rounded, size: 16.0),
-                                ],
-                              ),
-                              onTap: _refreshCredits,
-                            );
-                          },
-                        ),
-                      const SizedBox(height: 24.0),
-                      ListHeader("preferences.scan".t(context)),
-                      const SizedBox(height: 8.0),
-                      ValueListenableBuilder(
-                        valueListenable: UserPreferencesService().valueNotifier,
-                        builder: (context, userPreferences, child) {
-                          final bool createTransactionsPerItemInScans =
-                              userPreferences.createTransactionsPerItemInScans;
-                          final int? scansPendingThresholdInHours =
-                              userPreferences.scansPendingThresholdInHours;
-
-                          return Column(
-                            mainAxisSize: .min,
-                            crossAxisAlignment: .start,
-                            children: [
-                              SwitchListTile(
-                                secondary: Icon(
-                                  createTransactionsPerItemInScans
-                                      ? Symbols.list_rounded
-                                      : Symbols.list_alt_rounded,
-                                ),
-                                title: Text(
-                                  "preferences.scan.createTransactionsPerItemInScans"
-                                      .t(context),
-                                ),
-                                subtitle: Text(
-                                  "preferences.scan.createTransactionsPerItemInScans.description"
-                                      .t(context),
-                                ),
-                                value: createTransactionsPerItemInScans,
-                                onChanged: (bool newValue) {
-                                  UserPreferencesService()
-                                          .createTransactionsPerItemInScans =
-                                      newValue;
-                                },
-                              ),
-                              SwitchListTile(
-                                secondary: const Icon(
-                                  Symbols.search_activity_rounded,
-                                ),
-                                title: Text(
-                                  "preferences.scan.markPendingThreshold".t(
-                                    context,
-                                  ),
-                                ),
-                                value: scansPendingThresholdInHours == 0,
-                                onChanged: (bool newValue) {
-                                  UserPreferencesService()
-                                      .scansPendingThresholdInHours = newValue
-                                      ? 0
-                                      : 6;
-                                },
-                              ),
-                              const SizedBox(height: 8.0),
-                              Frame(
-                                child: InfoText(
-                                  child: Text(
-                                    "preferences.scan.markPendingThreshold.description"
-                                        .t(context),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
+                      return EnyScanDocumentsCard(
+                        createTransactionsPerItem:
+                            createTransactionsPerItemInScans,
+                        markAsPending: scansPendingThresholdInHours == 0,
+                        onCreatePerItemChanged: (bool newValue) {
+                          UserPreferencesService()
+                                  .createTransactionsPerItemInScans =
+                              newValue;
                         },
-                      ),
-                      if (connected) ...[
-                        const SizedBox(height: 24.0),
-                        const WavyDivider(),
-                        const SizedBox(height: 24.0),
-                        ListTile(
-                          leading: Icon(
-                            Symbols.logout_rounded,
-                            color: context.colorScheme.error,
-                          ),
-                          title: Text(
-                            "integrations.eny.disconnect".t(context),
-                            style: TextStyle(color: context.colorScheme.error),
-                          ),
-                          onTap: _disconnectEny,
-                        ),
-                      ],
-                    ],
+                        onMarkPendingChanged: (bool newValue) {
+                          UserPreferencesService().scansPendingThresholdInHours =
+                              newValue ? 0 : 6;
+                        },
+                      );
+                    },
                   ),
-                  const SizedBox(height: 24.0),
+                  const SizedBox(height: 16.0),
+                  const EnyInfoFooter(),
+                  if (connected) ...[
+                    const SizedBox(height: 8.0),
+                    EnyDisconnectButton(onPressed: _disconnectEny),
+                  ],
                 ],
               ),
             ),

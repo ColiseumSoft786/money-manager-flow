@@ -1,4 +1,5 @@
 import "package:flow/data/transactions_filter/time_range.dart";
+import "package:flow/widgets/sheets/select_custom_date_range_sheet.dart";
 import "package:flow/widgets/sheets/select_time_range_mode_sheet.dart";
 import "package:flow/utils/time_and_range.dart";
 import "package:flutter/material.dart";
@@ -20,6 +21,8 @@ Future<TransactionFilterTimeRange?> showTransactionFilterTimeRangeSelectorSheet(
   final TimeRangeMode? mode = await showModalBottomSheet<TimeRangeMode>(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    elevation: 0,
     builder: (BuildContext context) => SelectTimeRangeModeSheet(
       initialValue: initialValue != null
           ? filterRangeToModeMapping[initialValue]
@@ -59,16 +62,19 @@ Future<TransactionFilterTimeRange?> showTransactionFilterTimeRangeSelectorSheet(
               ),
       ),
     TimeRangeMode.custom when context.mounted =>
-      await showDateRangePicker(
+      await showModalBottomSheet<DateTimeRange>(
         context: context,
-        firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
-        lastDate: DateTime(4000),
-        initialDateRange: initialValue?.range is CustomTimeRange
-            ? DateTimeRange(
-                start: initialValue!.range!.from,
-                end: initialValue.range!.to,
-              )
-            : null,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        builder: (BuildContext context) => SelectCustomDateRangeSheet(
+          initialValue: initialValue?.range is CustomTimeRange
+              ? DateTimeRange(
+                  start: initialValue!.range!.from,
+                  end: initialValue.range!.to,
+                )
+              : null,
+        ),
       ).then(
         (value) => value == null
             ? null

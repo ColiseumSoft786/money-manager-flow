@@ -2,6 +2,7 @@ import "package:flow/entity/account.dart";
 import "package:flow/entity/category.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/utils/extensions/transaction_filter.dart";
+import "package:flow/widgets/transaction_filter_head/flow_filter_chip_pill.dart";
 import "package:flutter/foundation.dart" hide Category;
 import "package:flutter/material.dart";
 
@@ -81,12 +82,15 @@ class TransactionFilterChip<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilterChip(
-      showCheckmark: false,
+    return FlowFilterChipPill(
       avatar: avatar,
-      label: Text(getLabel(context), overflow: TextOverflow.ellipsis),
-      onSelected: (_) => onSelect(),
+      label: Text(
+        getLabel(context),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
       selected: highlight,
+      onTap: onSelect,
     );
   }
 

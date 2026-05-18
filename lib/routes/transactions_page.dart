@@ -1,5 +1,5 @@
-import "package:flow/data/flow_icon.dart";
 import "package:flow/data/transaction_filter.dart";
+import "package:flow/data/transactions_filter/pending_time_range.dart";
 import "package:flow/data/transactions_filter/time_range.dart";
 import "package:flow/entity/transaction.dart";
 import "package:flow/l10n/extensions.dart";
@@ -9,18 +9,39 @@ import "package:flow/objectbox/objectbox.g.dart";
 import "package:flow/prefs/transitive.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/transactions.dart";
+import "package:flow/services/user_preferences.dart";
 import "package:flow/theme/helpers.dart";
-import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/spinner.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/widgets/deleted_transactions/deleted_transactions_info_banner.dart";
+import "package:flow/widgets/deleted_transactions/deleted_transactions_list_view.dart";
 import "package:flow/widgets/grouped_transactions_list_view.dart";
+import "package:flow/widgets/pending_transactions/pending_filter_chips.dart";
+import "package:flow/widgets/pending_transactions/pending_transactions_list_view.dart";
+import "package:flow/widgets/pending_transactions/pending_transactions_theme.dart";
+import "package:flow/widgets/pending_transactions/pending_summary_card.dart";
 import "package:flow/widgets/rates_missing_error_box.dart";
 import "package:flow/widgets/time_range_selector.dart";
 import "package:flow/widgets/transactions_date_header.dart";
+import "package:flow/widgets/transactions_empty_state.dart";
 import "package:flutter/material.dart";
+import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
 import "package:moment_dart/moment_dart.dart";
+
+/// Controls how loaded rows are grouped before display.
+enum TransactionsPageScope {
+  /// Posted and pending rows are split like the home tab.
+  all,
+
+  /// Only pending / scheduled rows (see [TransactionsPage.pending]).
+  pending,
+
+  /// Trash bin rows (see [TransactionsPage.deleted]).
+  deleted,
+}
 
 /// Generic transactions page that can be used to display list of transactions
 ///
@@ -33,11 +54,22 @@ class TransactionsPage extends StatefulWidget {
   final TimeRange? initialRange;
   final String? title;
 
+  /// When set, shown as the empty-state body copy under the title.
+  final String? emptyDescriptionKey;
+
+  /// When true, shows the primary **Add Transaction** CTA in the empty state.
+  final bool showEmptyAddButton;
+
+  final TransactionsPageScope scope;
+
   const TransactionsPage({
     super.key,
     required this.queryFn,
     this.initialRange,
     this.title,
+    this.emptyDescriptionKey,
+    this.showEmptyAddButton = false,
+    this.scope = TransactionsPageScope.all,
   });
 
   factory TransactionsPage.account({
@@ -72,7 +104,12 @@ class TransactionsPage extends StatefulWidget {
           range: TransactionFilterTimeRange.fromTimeRange(range),
         ).queryBuilder();
 
-    return TransactionsPage(queryFn: queryBuilder, key: key, title: title);
+    return TransactionsPage(
+      queryFn: queryBuilder,
+      key: key,
+      title: title,
+      emptyDescriptionKey: "transactions.query.noResult.description",
+    );
   }
 
   factory TransactionsPage.pending({
@@ -87,7 +124,14 @@ class TransactionsPage extends StatefulWidget {
           range: range,
         );
 
-    return TransactionsPage(queryFn: queryBuilder, key: key, title: title);
+    return TransactionsPage(
+      queryFn: queryBuilder,
+      key: key,
+      title: title,
+      scope: TransactionsPageScope.pending,
+      emptyDescriptionKey: "transactions.query.noResult.description.pending",
+      showEmptyAddButton: true,
+    );
   }
 
   factory TransactionsPage.deleted({
@@ -96,10 +140,15 @@ class TransactionsPage extends StatefulWidget {
     String? title,
     Widget? header,
   }) {
-    QueryBuilder<Transaction> queryBuilder(TimeRange? range) =>
-        TransactionsService().deletedTransactionsQb(range: range);
+    QueryBuilder<Transaction> queryBuilder(TimeRange range) =>
+        TransactionsService().deletedTransactionsQb();
 
-    return TransactionsPage(queryFn: queryBuilder, key: key, title: title);
+    return TransactionsPage(
+      queryFn: queryBuilder,
+      key: key,
+      title: title,
+      scope: TransactionsPageScope.deleted,
+    );
   }
 
   @override
@@ -110,6 +159,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
   static TimeRange get defaultTimeRange => TimeRange.thisMonth();
 
   late TimeRange _timeRange;
+  late PendingTimeRange _pendingListRange;
 
   late final bool showExchangeRatesMissingWarning;
 
@@ -117,43 +167,115 @@ class _TransactionsPageState extends State<TransactionsPage> {
   void initState() {
     super.initState();
     _timeRange = widget.initialRange ?? defaultTimeRange;
+    _pendingListRange = const PendingTimeRange.followHome();
     showExchangeRatesMissingWarning =
         TransitiveLocalPreferences().usesNonPrimaryCurrency.get() &&
         ExchangeRatesService().getPrimaryCurrencyRates() == null;
   }
 
+  TimeRange _queryTimeRange() {
+    if (widget.scope != TransactionsPageScope.pending) {
+      return _timeRange;
+    }
+
+    if (_pendingListRange == const PendingTimeRange.followHome()) {
+      return UserPreferencesService().homePendingTransactionsTimeRange.range(
+        homeTimeRange: TimeRange.thisMonth(),
+      );
+    }
+
+    return _pendingListRange.range(homeTimeRange: TimeRange.thisMonth());
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isDeletedScope = widget.scope == TransactionsPageScope.deleted;
+    final bool isPendingScope = widget.scope == TransactionsPageScope.pending;
+    final Color screenBackground = isPendingScope
+        ? PendingTransactionsTheme.canvas
+        : Colors.white;
+
     return Scaffold(
-      appBar: AppBar(title: widget.title == null ? null : Text(widget.title!)),
+      backgroundColor: screenBackground,
+      appBar: AppBar(
+        backgroundColor: isPendingScope
+            ? PendingTransactionsTheme.cardFill
+            : screenBackground,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: widget.title == null
+            ? null
+            : Text(
+                widget.title!,
+                style: (isDeletedScope || isPendingScope)
+                    ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17.0,
+                        color: kFlowHomeTransactionHeadingInk,
+                      )
+                    : null,
+              ),
+        bottom: (isDeletedScope || isPendingScope)
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(1.0),
+                child: Divider(
+                  height: 1.0,
+                  thickness: 1.0,
+                  color: kFlowAccountRowDividerLight,
+                ),
+              )
+            : null,
+      ),
+      floatingActionButton: isPendingScope
+          ? FloatingActionButton(
+              onPressed: () => context.push("/transaction/new?isPending=true"),
+              backgroundColor: PendingTransactionsTheme.primary(context),
+              foregroundColor: Colors.white,
+              elevation: 2,
+              child: const Icon(Symbols.add_rounded, fill: 0.0),
+            )
+          : null,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            PinnedHeaderSliver(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (showExchangeRatesMissingWarning) RatesMissingErrorBox(),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Frame(
-                      child: TimeRangeSelector(
-                        initialValue: _timeRange,
-                        onChanged: (newRange) {
-                          setState(() {
-                            _timeRange = newRange;
-                          });
-                        },
-                      ),
+        child: Column(
+          children: [
+            if (showExchangeRatesMissingWarning) RatesMissingErrorBox(),
+            if (isPendingScope) ...[
+              const SizedBox(height: 8.0),
+              PendingFilterChips(
+                selected: _pendingListRange,
+                onSelected: (PendingTimeRange value) {
+                  setState(() {
+                    _pendingListRange = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 12.0),
+            ],
+            if (!isDeletedScope && !isPendingScope)
+              ColoredBox(
+                color: screenBackground,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Frame(
+                    child: TimeRangeSelector(
+                      backgroundColor: screenBackground,
+                      initialValue: _timeRange,
+                      onChanged: (newRange) {
+                        setState(() {
+                          _timeRange = newRange;
+                        });
+                      },
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-            SliverFillRemaining(
+            if (isDeletedScope) const DeletedTransactionsInfoBanner(),
+            Expanded(
               child: StreamBuilder<List<Transaction>>(
                 stream: widget
-                    .queryFn(_timeRange)
+                    .queryFn(_queryTimeRange())
                     .watch(triggerImmediately: true)
                     .map((event) => event.find()),
                 builder: (context, snapshot) {
@@ -161,63 +283,62 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     return const Spinner.center();
                   }
 
-                  if (snapshot.requireData.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "transactions.query.noResult".t(context),
-                              textAlign: TextAlign.center,
-                              style: context.textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 8.0),
-                            FlowIcon(
-                              FlowIconData.icon(Symbols.family_star_rounded),
-                              size: 128.0,
-                              color: context.colorScheme.primary,
-                            ),
-                            const SizedBox(height: 8.0),
-                          ],
-                        ),
-                      ),
+                  final List<Transaction> items = snapshot.requireData;
+
+                  if (items.isEmpty) {
+                    if (isPendingScope) {
+                      return ListView(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        children: [
+                          PendingSummaryCard(transactions: const []),
+                          TransactionsEmptyState(
+                            description: widget.emptyDescriptionKey?.t(context),
+                            onAddTransaction: widget.showEmptyAddButton
+                                ? () => context.push(
+                                    "/transaction/new?isPending=true",
+                                  )
+                                : null,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return TransactionsEmptyState(
+                      description: widget.emptyDescriptionKey?.t(context),
+                      onAddTransaction: widget.showEmptyAddButton
+                          ? () => context.push(
+                              widget.scope == TransactionsPageScope.pending
+                                  ? "/transaction/new?isPending=true"
+                                  : "/transaction/new",
+                            )
+                          : null,
                     );
                   }
 
-                  final DateTime now = DateTime.now().startOfNextMinute();
+                  if (isDeletedScope) {
+                    return DeletedTransactionsListView(
+                      transactions: items,
+                    );
+                  }
 
-                  final Map<TimeRange, List<Transaction>> transactions =
-                      snapshot.requireData
-                          .where(
-                            (transaction) =>
-                                !transaction.transactionDate.isAfter(now) &&
-                                transaction.isPending != true,
-                          )
-                          .groupByDate();
-                  final Map<TimeRange, List<Transaction>> pendingTransactions =
-                      snapshot.requireData
-                          .where(
-                            (transaction) =>
-                                transaction.transactionDate.isAfter(now) ||
-                                transaction.isPending == true,
-                          )
-                          .groupByDate();
+                  if (isPendingScope) {
+                    return PendingTransactionsListView(transactions: items);
+                  }
+
+                  final (
+                    Map<TimeRange, List<Transaction>> transactions,
+                    Map<TimeRange, List<Transaction>> pendingTransactions,
+                  ) = _groupTransactions(items);
 
                   final int totalTransactionsCount =
                       transactions.values.fold<int>(
                         0,
                         (previousValue, element) =>
-                            /// Since the [GroupedTransactionList] below isn't able to combine
-                            /// transfer transactions, we need to count them separately.
                             previousValue + element.length,
                       ) +
                       pendingTransactions.values.fold<int>(
                         0,
                         (previousValue, element) =>
-                            /// Since the [GroupedTransactionList] below isn't able to combine
-                            /// transfer transactions, we need to count them separately.
                             previousValue + element.length,
                       );
 
@@ -245,6 +366,35 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  (
+    Map<TimeRange, List<Transaction>> transactions,
+    Map<TimeRange, List<Transaction>> pendingTransactions,
+  )
+  _groupTransactions(List<Transaction> items) {
+    if (widget.scope == TransactionsPageScope.pending) {
+      return (const {}, items.groupByDate());
+    }
+
+    final DateTime now = DateTime.now().startOfNextMinute();
+
+    return (
+      items
+          .where(
+            (transaction) =>
+                !transaction.transactionDate.isAfter(now) &&
+                transaction.isPending != true,
+          )
+          .groupByDate(),
+      items
+          .where(
+            (transaction) =>
+                transaction.transactionDate.isAfter(now) ||
+                transaction.isPending == true,
+          )
+          .groupByDate(),
     );
   }
 }

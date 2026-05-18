@@ -10,7 +10,7 @@ import "package:flow/l10n/named_enum.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/objectbox/objectbox.g.dart";
-import "package:flow/prefs/local_preferences.dart";
+import "package:flow/prefs/transitive.dart";
 import "package:flow/providers/accounts_provider.dart";
 import "package:flow/providers/categories_provider.dart";
 import "package:flow/providers/transaction_tags_provider.dart";
@@ -28,6 +28,7 @@ import "package:flow/widgets/transaction_filter_head/select_is_pending_sheet.dar
 import "package:flow/widgets/transaction_filter_head/select_multi_account_sheet.dart";
 import "package:flow/widgets/transaction_filter_head/select_multi_category_sheet.dart";
 import "package:flow/widgets/transaction_filter_head/select_transaction_filter_time_range_sheet.dart";
+import "package:flow/widgets/transaction_filter_head/flow_filter_chip_pill.dart";
 import "package:flow/widgets/transaction_filter_head/transaction_filter_chip.dart";
 import "package:flow/widgets/transaction_filter_head/transaction_search_sheet.dart";
 import "package:flutter/material.dart";
@@ -89,7 +90,7 @@ class _DefaultTransactionsFilterHeadState
 
   @override
   void dispose() {
-    TransitiveLocalPreferences().usesNonPrimaryCurrency.removeListener(
+    TransitiveLocalPreferences().usesMultipleCurrencies.removeListener(
       _updateShowCurrencyFilterChip,
     );
     super.dispose();
@@ -143,12 +144,11 @@ class _DefaultTransactionsFilterHeadState
             padding: widget.padding,
             filterChips: [
               if (transactionPresetsSnapshot.hasData)
-                FilterChip(
-                  showCheckmark: false,
+                FlowFilterChipPill(
+                  avatar: const Icon(Symbols.filter_list_rounded),
                   label: Text(differentFieldCount.toString()),
                   selected: differentFieldCount > 0,
-                  avatar: const Icon(Symbols.filter_list_rounded),
-                  onSelected: (_) => _showFilterPresetSelectionSheet(
+                  onTap: () => _showFilterPresetSelectionSheet(
                     transactionPresetsSnapshot.requireData,
                   ),
                 ),
@@ -258,6 +258,8 @@ class _DefaultTransactionsFilterHeadState
     final TransactionSearchData? searchData =
         await showModalBottomSheet<TransactionSearchData>(
           context: context,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           builder: (context) =>
               TransactionSearchSheet(searchData: filter.searchData),
           isScrollControlled: true,
@@ -284,6 +286,8 @@ class _DefaultTransactionsFilterHeadState
         ),
       ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     final StringMultiFilter? accountsFilterOverride = switch (accounts?.value) {
@@ -317,6 +321,8 @@ class _DefaultTransactionsFilterHeadState
         ),
       ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     final Optional<StringMultiFilter>? categoriesFilter = categories == null
@@ -368,6 +374,8 @@ class _DefaultTransactionsFilterHeadState
           builder: (context) =>
               SelectMultiTransactionTypeSheet(currentlySelected: filter.types),
           isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         );
 
     if (types != null) {
@@ -411,6 +419,8 @@ class _DefaultTransactionsFilterHeadState
           context: context,
           builder: (context) => SelectGroupRangeSheet(selected: filter.groupBy),
           isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         );
 
     if (newGroupBy != null) {
@@ -439,7 +449,12 @@ class _DefaultTransactionsFilterHeadState
   void onSelectHasAttachments() async {
     final Optional<bool>? hasAttachments = await showModalBottomSheet(
       context: context,
-      builder: (context) => SelectHasAttachmentSheet(),
+      builder: (context) => SelectHasAttachmentSheet(
+        initialSelected: filter.hasAttachments,
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     if (hasAttachments == null || !mounted) return;
@@ -452,7 +467,12 @@ class _DefaultTransactionsFilterHeadState
   void onSelectIsPending() async {
     final Optional<bool>? isPending = await showModalBottomSheet(
       context: context,
-      builder: (context) => SelectIsPendingSheet(),
+      builder: (context) => SelectIsPendingSheet(
+        initialSelected: filter.isPending,
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
     );
 
     if (isPending == null || !mounted) return;
@@ -486,6 +506,8 @@ class _DefaultTransactionsFilterHeadState
     final Optional<TransactionFilter>? selected =
         await showModalBottomSheet<Optional<TransactionFilter>>(
           context: context,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           builder: (context) => SelectFilterPresetSheet(
             selected: _filter,
             onSaveAsNew: _saveNewFilterPreset,

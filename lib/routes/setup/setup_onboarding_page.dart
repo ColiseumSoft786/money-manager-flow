@@ -9,6 +9,7 @@ import "package:flow/services/sync/icloud_syncer.dart";
 import "package:flow/services/sync/syncer.dart";
 import "package:flow/sync/import.dart";
 import "package:flow/sync/import/base.dart";
+import "package:flow/theme/helpers.dart";
 import "package:flow/utils/extensions/importer.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/action_card.dart";
@@ -19,6 +20,22 @@ import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
 import "package:moment_dart/moment_dart.dart";
 import "package:simple_icons/simple_icons.dart";
+
+Widget _setupOnboardingCtaRow(BuildContext context, String messageKey) {
+  final ColorScheme scheme = context.colorScheme;
+  final TextStyle? textStyle = context.textTheme.titleSmall?.copyWith(
+    color: scheme.primary,
+    fontWeight: FontWeight.w600,
+  );
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(messageKey.t(context), style: textStyle),
+      const SizedBox(width: 6.0),
+      Icon(Symbols.arrow_forward_rounded, size: 18.0, color: scheme.primary),
+    ],
+  );
+}
 
 class SetupOnboardingPage extends StatefulWidget {
   const SetupOnboardingPage({super.key});
@@ -46,6 +63,11 @@ class _SetupOnboardingPageState extends State<SetupOnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = context.colorScheme;
+    final Color onboardingCardFill = scheme.brightness == Brightness.light
+        ? Colors.white
+        : scheme.surfaceContainerHigh;
+
     return Scaffold(
       appBar: AppBar(title: Text("setup.onboarding".t(context))),
       body: (loading || busy)
@@ -55,11 +77,40 @@ class _SetupOnboardingPageState extends State<SetupOnboardingPage> {
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Welcome to",
+                              style: context.textTheme.headlineMedium?.copyWith(
+                                color: context.colorScheme.onSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            Text(
+                              "appName".t(context),
+                              style: context.textTheme.headlineMedium?.copyWith(
+                                color: context.colorScheme.onSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       if (backups?.isNotEmpty == true) ...[
                         ActionCard(
                           onTap: () => showICloudBackupModal(),
                           icon: FlowIconData.icon(SimpleIcons.icloud),
+                          color: onboardingCardFill,
+                          surfaceTintColor: Colors.transparent,
+                          elevation: 1.0,
+                          shadowColor:
+                              context.colorScheme.shadow.withAlpha(0x14),
                           title: "setup.onboarding.recoverICloudBackup".t(
                             context,
                           ),
@@ -75,21 +126,40 @@ class _SetupOnboardingPageState extends State<SetupOnboardingPage> {
                         ),
                         const SizedBox(height: 16.0),
                       ],
+                      
                       ActionCard(
                         onTap: () => context.push("/setup/currency"),
                         icon: FlowIconData.icon(Symbols.wand_stars_rounded),
+                        color: onboardingCardFill,
+                        surfaceTintColor: Colors.transparent,
+                        elevation: 1.0,
+                        shadowColor:
+                            context.colorScheme.shadow.withAlpha(0x14),
                         title: "setup.onboarding.freshStart".t(context),
                         subtitle: "setup.onboarding.freshStart.description".t(
                           context,
+                        ),
+                        trailing: _setupOnboardingCtaRow(
+                          context,
+                          "setup.onboarding.freshStart.action",
                         ),
                       ),
                       const SizedBox(height: 16.0),
                       ActionCard(
                         onTap: () => context.push("/import?setupMode=true"),
-                        icon: FlowIconData.icon(Symbols.restore_page_rounded),
+                        icon: FlowIconData.icon(Symbols.cloud_upload_rounded),
+                        color: onboardingCardFill,
+                        surfaceTintColor: Colors.transparent,
+                        elevation: 1.0,
+                        shadowColor:
+                            context.colorScheme.shadow.withAlpha(0x14),
                         title: "setup.onboarding.importExisting".t(context),
                         subtitle: "setup.onboarding.importExisting.description"
                             .t(context),
+                        trailing: _setupOnboardingCtaRow(
+                          context,
+                          "setup.onboarding.importExisting.action",
+                        ),
                       ),
                     ],
                   ),

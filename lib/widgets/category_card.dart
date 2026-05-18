@@ -29,11 +29,25 @@ class CategoryCard extends StatelessWidget {
 
   final Widget? trailing;
 
+  /// When set (e.g. setup grid on white scaffold), paints the card fill and disables M3 tint.
+  final Color? surfaceColor;
+
+  final double elevation;
+
+  final Color? shadowColor;
+
+  /// When set, overrides the category title style (e.g. smaller text in setup grid).
+  final TextStyle? categoryNameStyle;
+
   const CategoryCard({
     super.key,
     required this.category,
     this.onTapOverride,
     this.trailing,
+    this.surfaceColor,
+    this.elevation = 0.0,
+    this.shadowColor,
+    this.categoryNameStyle,
     this.rates,
     this.showAmount = true,
     this.excludeTransfersInTotal = true,
@@ -61,33 +75,50 @@ class CategoryCard extends StatelessWidget {
     final FlowColorScheme? colorScheme = category.colorScheme;
 
     return Surface(
+      color: surfaceColor,
+      surfaceTintColor: surfaceColor != null ? Colors.transparent : null,
+      elevation: elevation,
+      shadowColor: shadowColor,
       shape: RoundedRectangleBorder(borderRadius: borderRadius),
       builder: (context) => InkWell(
         borderRadius: borderRadius,
         onTap: onTapOverride == null
             ? () => context.push("/category/${category.id}")
             : onTapOverride!.value,
-        child: Row(
-          children: [
-            FlowIcon(
-              category.icon,
-              size: 32.0,
-              plated: true,
-              colorScheme: colorScheme,
-            ),
-            const SizedBox(width: 12.0),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: .start,
-              children: [
-                Text(category.name, style: context.textTheme.titleSmall),
-                if (showAmount)
-                  MoneyText(flow.merge(primaryCurrency, rates).totalFlow),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+          child: Row(
+            children: [
+              FlowIcon(
+                category.icon,
+                size: 32.0,
+                plated: true,
+                colorScheme: colorScheme,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.name,
+                      style:
+                          categoryNameStyle ?? context.textTheme.titleSmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (showAmount)
+                      MoneyText(flow.merge(primaryCurrency, rates).totalFlow),
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8.0),
+                trailing!,
               ],
-            ),
-            const Spacer(),
-            if (trailing != null) ...[trailing!, const SizedBox(width: 12.0)],
-          ],
+            ],
+          ),
         ),
       ),
     );

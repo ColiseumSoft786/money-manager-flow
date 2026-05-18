@@ -1,11 +1,14 @@
-import "package:flow/data/money.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/money_formatting/money_formatting_preferences_theme.dart";
+import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_customization_card.dart";
+import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_footer_notice.dart";
+import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_preferences_card.dart";
+import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_preview_card.dart";
+import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/helpers.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/optional.dart";
-import "package:flow/widgets/general/directional_chevron.dart";
-import "package:flow/widgets/general/money_text.dart";
 import "package:flow/widgets/sheets/select_currency_icu_pattern.dart";
 import "package:flutter/material.dart";
 
@@ -25,53 +28,58 @@ class _MoneyFormattingPreferencesPageState
     final bool useCurrencySymbol = LocalPreferences().useCurrencySymbol.get();
 
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.moneyFormatting".t(context))),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      backgroundColor: MoneyFormattingPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: MoneyFormattingPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.moneyFormatting".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: MoneyFormattingPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 24.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16.0),
-              Center(
-                child: MoneyText(
-                  Money(12345678.90, UserPreferencesService().primaryCurrency),
-                  initiallyAbbreviated: !preferFullAmounts,
-                  tapToToggleAbbreviation: false,
-                  style: context.textTheme.displaySmall,
+              MoneyFormattingPreviewCard(preferFullAmounts: preferFullAmounts),
+              MoneyFormattingSectionHeader(
+                label: "preferences.moneyFormatting.section.preferences".t(
+                  context,
                 ),
               ),
-              const SizedBox(height: 16.0),
-              CheckboxListTile(
-                title: Text(
-                  "preferences.moneyFormatting.preferFull".t(context),
-                ),
-                subtitle: Text(
-                  "preferences.moneyFormatting.preferFull.description".t(
-                    context,
-                  ),
-                ),
-                value: preferFullAmounts,
-                onChanged: updatePreferFullAmounts,
+              MoneyFormattingPreferencesCard(
+                preferFullAmounts: preferFullAmounts,
+                useCurrencySymbol: useCurrencySymbol,
+                onPreferFullAmountsChanged: updatePreferFullAmounts,
+                onUseCurrencySymbolChanged: updateUseCurrencySymbol,
               ),
-              CheckboxListTile(
-                title: Text(
-                  "preferences.moneyFormatting.useCurrencySymbol".t(context),
+              MoneyFormattingSectionHeader(
+                label: "preferences.moneyFormatting.section.customization".t(
+                  context,
                 ),
-                subtitle: Text(
-                  "preferences.moneyFormatting.useCurrencySymbol.description".t(
-                    context,
-                  ),
-                ),
-                value: useCurrencySymbol,
-                onChanged: updateUseCurrencySymbol,
               ),
-              ListTile(
-                title: Text(
-                  "preferences.moneyFormatting.setICUPattern".t(context),
-                ),
+              MoneyFormattingCustomizationCard(
                 onTap: updateCustomICUCurrencyFormatter,
-                trailing: const LeChevron(),
               ),
+              const SizedBox(height: 20.0),
+              const MoneyFormattingFooterNotice(),
             ],
           ),
         ),
@@ -79,17 +87,13 @@ class _MoneyFormattingPreferencesPageState
     );
   }
 
-  void updatePreferFullAmounts(bool? newPreferFullAmounts) async {
-    if (newPreferFullAmounts == null) return;
-
+  void updatePreferFullAmounts(bool newPreferFullAmounts) async {
     await LocalPreferences().preferFullAmounts.set(newPreferFullAmounts);
 
     if (mounted) setState(() {});
   }
 
-  void updateUseCurrencySymbol(bool? newUseCurrencySymbol) async {
-    if (newUseCurrencySymbol == null) return;
-
+  void updateUseCurrencySymbol(bool newUseCurrencySymbol) async {
     await LocalPreferences().useCurrencySymbol.set(newUseCurrencySymbol);
 
     if (mounted) setState(() {});
@@ -106,6 +110,6 @@ class _MoneyFormattingPreferencesPageState
 
     UserPreferencesService().icuCurrencyFormattingPattern = result.value;
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 }

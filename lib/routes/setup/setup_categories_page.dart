@@ -1,13 +1,15 @@
+import "dart:math" as math;
+
 import "package:flow/data/setup/default_categories.dart";
 import "package:flow/entity/category.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/objectbox.g.dart";
+import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/theme/theme.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/add_category_card.dart";
 import "package:flow/widgets/category_card.dart";
-import "package:flow/widgets/general/button.dart";
-import "package:flow/widgets/general/info_text.dart";
 import "package:flow/widgets/general/list_header.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
 import "package:flow/widgets/setup/categories/category_preset_card.dart";
@@ -75,8 +77,17 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final Color screenBackground =
+        light ? Colors.white : Theme.of(context).colorScheme.surface;
+
     return Scaffold(
-      appBar: AppBar(title: Text("setup.categories.setup".t(context))),
+      backgroundColor: screenBackground,
+      appBar: AppBar(
+        backgroundColor: screenBackground,
+        surfaceTintColor: light ? Colors.transparent : null,
+        title: Text("setup.categories.setup".t(context)),
+      ),
       body: StreamBuilder(
         stream: qb().watch(triggerImmediately: true),
         builder: (context, snapshot) {
@@ -97,9 +108,6 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
                 child: Column(
                   crossAxisAlignment: .start,
                   children: [
-                    InfoText(
-                      child: Text("setup.categories.description".t(context)),
-                    ),
                     if (presetCategories.isNotEmpty) ...[
                       const SizedBox(height: 8.0),
                       Align(
@@ -159,19 +167,39 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
                         "setup.categories.existing".t(context),
                         padding: EdgeInsets.zero,
                       ),
-                      const SizedBox(height: 8.0),
-                    ],
-                    ...currentCategories.map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: CategoryCard(
-                          category: e,
-                          onTapOverride: const Optional(null),
-                          showAmount: false,
-                          trailing: Icon(Symbols.done_all_rounded),
+                      const SizedBox(height: 12.0),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12.0,
+                          mainAxisSpacing: 12.0,
+                          mainAxisExtent: 88.0,
                         ),
+                        itemCount: currentCategories.length,
+                        itemBuilder: (context, index) {
+                          final Category e = currentCategories[index];
+                          return CategoryCard(
+                            category: e,
+                            onTapOverride: const Optional(null),
+                            showAmount: false,
+                            surfaceColor: light ? Colors.white : null,
+                            elevation: light ? 4.0 : 0.0,
+                            shadowColor: light
+                                ? Colors.black.withValues(alpha: 0.14)
+                                : null,
+                            categoryNameStyle:
+                                context.textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      height: 1.28,
+                                    ),
+                          );
+                        },
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -179,22 +207,75 @@ class _SetupCategoriesPageState extends State<SetupCategoriesPage> {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              const Spacer(),
-              Button(
-                onTap: busy ? null : save,
-                trailing: widget.standalone
-                    ? const Icon(Symbols.check_rounded)
-                    : const Icon(Symbols.chevron_right_rounded),
-                child: widget.standalone
-                    ? Text("general.done".t(context))
-                    : Text("setup.next".t(context)),
+      bottomNavigationBar: ColoredBox(
+        color: screenBackground,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildPrimaryBottomButton(context),
+                ],
               ),
-            ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Same treatment as [SetupAccountsPage] continue CTA: 342×68 (clamped), 24px radius, blue + dual shadows.
+  Widget _buildPrimaryBottomButton(BuildContext context) {
+    final double maxWidth = MediaQuery.sizeOf(context).width - 32.0;
+    final double width = math.min(342.0, maxWidth);
+    final bool isDone = widget.standalone;
+
+    return Opacity(
+      opacity: busy ? 0.55 : 1.0,
+      child: SizedBox(
+        width: width,
+        height: 68.0,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: kFlowSetupAccountsContinueButtonFill,
+            borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+              onTap: busy ? null : save,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isDone
+                          ? "general.done".t(context)
+                          : "setup.next".t(context),
+                      style: context.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18.0,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Icon(
+                      isDone
+                          ? Symbols.check_rounded
+                          : Symbols.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 22.0,
+                      fill: 0.0,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

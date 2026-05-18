@@ -2,9 +2,13 @@ import "dart:io";
 
 import "package:flow/l10n/extensions.dart";
 import "package:flow/prefs/local_preferences.dart";
+import "package:flow/routes/preferences/transaction_geo/transaction_geo_preferences_theme.dart";
+import "package:flow/routes/preferences/transaction_geo/widgets/geo_map_preview_card.dart";
+import "package:flow/routes/preferences/transaction_geo/widgets/geo_privacy_card.dart";
+import "package:flow/routes/preferences/transaction_geo/widgets/geo_section_header.dart";
+import "package:flow/routes/preferences/transaction_geo/widgets/geo_settings_card.dart";
+import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions/toast.dart";
-import "package:flow/widgets/general/frame.dart";
-import "package:flow/widgets/general/info_text.dart";
 import "package:flow/widgets/geo_permission_missing_reminder.dart";
 import "package:flutter/material.dart";
 import "package:geolocator/geolocator.dart";
@@ -56,7 +60,30 @@ class _TransactionGeoPreferencesPageState
         .get();
 
     return Scaffold(
-      appBar: AppBar(title: Text("preferences.transactions.geo".t(context))),
+      backgroundColor: TransactionGeoPreferencesTheme.canvas,
+      appBar: AppBar(
+        backgroundColor: TransactionGeoPreferencesTheme.cardFill,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          "preferences.transactions.geo.settingsTitle".t(context),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 17.0,
+            color: TransactionGeoPreferencesTheme.titleInk,
+          ),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: kFlowAccountRowDividerLight,
+          ),
+        ),
+      ),
       body: FutureBuilder(
         future: _geoPermissionGranted,
         builder: (context, snapshot) {
@@ -64,44 +91,48 @@ class _TransactionGeoPreferencesPageState
           final bool hasPermission =
               permissionData != null && resolvePermission(permissionData);
 
-          return SingleChildScrollView(
-            child: SafeArea(
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
               child: Column(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 16.0),
-                  SwitchListTile(
-                    title: Text(
-                      "preferences.transactions.geo.enable".t(context),
-                    ),
-                    value: enableGeo,
-                    onChanged: updateEnableGeo,
+                  const GeoMapPreviewCard(),
+                  const SizedBox(height: 12.0),
+                  GeoSettingsCard(
+                    enableGeo: enableGeo,
+                    autoAttach: autoAttachTransactionGeo,
+                    showAutoAttach: geoSupported,
+                    onEnableGeoChanged: updateEnableGeo,
+                    onAutoAttachChanged: updateAutoAttachTransactionGeo,
                   ),
-                  if (geoSupported) ...[
-                    const SizedBox(height: 16.0),
-                    SwitchListTile(
-                      title: Text(
-                        "preferences.transactions.geo.auto.enable".t(context),
-                      ),
-                      value: autoAttachTransactionGeo,
-                      onChanged: updateAutoAttachTransactionGeo,
+                  if (geoSupported && permissionData != null && !hasPermission)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 12.0),
+                      child: GeoPermissionMissingReminder(),
                     ),
-                    if (permissionData != null && !hasPermission) ...[
-                      const SizedBox(height: 16.0),
-                      GeoPermissionMissingReminder(),
-                    ],
-                    const SizedBox(height: 16.0),
-                    Frame(
-                      child: InfoText(
-                        child: Text(
-                          "preferences.transactions.geo.auto.description".t(
+                  const SizedBox(height: 16.0),
+                  Text(
+                    geoSupported
+                        ? "preferences.transactions.geo.intro".t(
+                            context,
+                            {"appName": "appName".t(context)},
+                          )
+                        : "preferences.transactions.geo.auto.description".t(
                             context,
                           ),
-                        ),
-                      ),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: TransactionGeoPreferencesTheme.subtitleInk,
+                      fontSize: 13.5,
+                      height: 1.45,
                     ),
-                  ],
-                  const SizedBox(height: 16.0),
+                  ),
+                  GeoSectionHeader(
+                    label: "preferences.transactions.geo.section.privacy".t(
+                      context,
+                    ),
+                  ),
+                  const GeoPrivacyCard(),
                 ],
               ),
             ),
@@ -150,17 +181,13 @@ class _TransactionGeoPreferencesPageState
     }
   }
 
-  void updateEnableGeo(bool? newEnableGeo) async {
-    if (newEnableGeo == null) return;
-
+  void updateEnableGeo(bool newEnableGeo) async {
     await LocalPreferences().enableGeo.set(newEnableGeo);
 
     if (mounted) setState(() {});
   }
 
-  void updateAutoAttachTransactionGeo(bool? newAutoAttachTransactionGeo) async {
-    if (newAutoAttachTransactionGeo == null) return;
-
+  void updateAutoAttachTransactionGeo(bool newAutoAttachTransactionGeo) async {
     if (newAutoAttachTransactionGeo) {
       final bool granted = await tryRequestPermission();
 
@@ -174,6 +201,9 @@ class _TransactionGeoPreferencesPageState
         );
 
         await LocalPreferences().autoAttachTransactionGeo.set(false);
+
+        if (mounted) setState(() {});
+        return;
       }
 
       await LocalPreferences().autoAttachTransactionGeo.set(

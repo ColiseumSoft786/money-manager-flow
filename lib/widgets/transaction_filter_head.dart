@@ -1,8 +1,7 @@
 import "package:flow/data/transaction_filter.dart";
-import "package:flow/theme/theme.dart";
 import "package:flutter/material.dart";
 
-/// Renders a row of [TransactionFilterChip]s.
+/// Renders a row of transaction filter pills ([TransactionFilterChip], etc.).
 class TransactionFilterHead extends StatelessWidget {
   final TransactionFilter value;
 
@@ -24,22 +23,23 @@ class TransactionFilterHead extends StatelessWidget {
 
     for (final chip in filterChips) {
       children.add(chip);
-      children.add(const SizedBox(width: 12.0));
+      children.add(const SizedBox(width: 8.0));
     }
 
     if (children.isNotEmpty && children.last is SizedBox) {
       children.removeLast();
     }
 
-    return Container(
-      height: 48.0,
-      width: double.infinity,
-      color: context.colorScheme.surface,
-      child: SingleChildScrollView(
-        padding: padding,
-        scrollDirection: Axis.horizontal,
-        child: Row(children: children),
+    final EdgeInsets basePadding =
+        padding ?? const EdgeInsets.symmetric(horizontal: 16.0);
+
+    return SingleChildScrollView(
+      padding: basePadding.copyWith(
+        top: basePadding.top + 8.0,
+        bottom: basePadding.bottom + 10.0,
       ),
+      scrollDirection: Axis.horizontal,
+      child: Row(children: children),
     );
   }
 }
