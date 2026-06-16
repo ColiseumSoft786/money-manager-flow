@@ -1,16 +1,14 @@
-import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
 import "package:flutter/material.dart";
 
-/// Stadium-style transaction filter pill (homepage filter row artwork).
-///
-/// Behaviour is wired by the caller; this widget is visual only.
+/// Individual frosted glass filter pill (Search, This month, etc.).
 class FlowFilterChipPill extends StatelessWidget {
   final Widget label;
 
   /// Usually a colored [Icon]; inherits pill foreground via [IconTheme].
   final Widget? avatar;
 
-  /// When true, uses pale-blue fill / blue foreground (matches “active range” chip).
+  /// When true, uses primary-tinted glass.
   final bool selected;
 
   final VoidCallback onTap;
@@ -23,77 +21,61 @@ class FlowFilterChipPill extends StatelessWidget {
     required this.onTap,
   });
 
-  (Color fill, Color foreground) _resolvedColors(BuildContext context) {
-    final bool dark =
-        Theme.of(context).brightness == Brightness.dark;
-    if (selected) {
-      if (dark) {
-        return (kFlowFilterPillSelectedFillDark, kFlowFilterPillSelectedFgDark);
-      }
-      return (kFlowFilterPillSelectedFillLight, kFlowFilterPillSelectedFgLight);
-    }
-    if (dark) {
-      return (
-        kFlowFilterPillUnselectedFillDark,
-        kFlowFilterPillUnselectedFgDark,
-      );
-    }
-    return (
-      kFlowFilterPillUnselectedFillLight,
-      kFlowFilterPillUnselectedFgLight,
-    );
+  Color _foreground(BuildContext context) {
+    if (selected) return GlassPanel.accentInk(context);
+
+    return GlassPanel.mutedInk(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final (Color fill, Color foreground) = _resolvedColors(context);
-    final BorderRadius radius = BorderRadius.circular(999.0);
-
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final Color foreground = _foreground(context);
     final TextStyle? baseStyle = Theme.of(context).textTheme.labelLarge;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: radius,
-          ),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: 14.0,
-              end: 16.0,
-              top: 10.0,
-              bottom: 10.0,
-            ),
-            child: IconTheme.merge(
-              data: IconThemeData(color: foreground, size: 18.0),
-              child: DefaultTextStyle.merge(
-                style:
-                    baseStyle?.copyWith(
-                      color: foreground,
-                      fontWeight: FontWeight.w600,
-                      height: 1.15,
-                    ) ??
-                    TextStyle(
-                      color: foreground,
-                      fontWeight: FontWeight.w600,
-                      height: 1.15,
-                    ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (avatar != null) ...[
-                      avatar!,
-                      const SizedBox(width: 6.0),
-                    ],
-                    label,
-                  ],
-                ),
+    return GlassPanel(
+      borderRadius: const BorderRadius.all(Radius.circular(999.0)),
+      blurSigma: 14.0,
+      onTap: onTap,
+      tint: selected
+          ? scheme.primary.withValues(
+              alpha: scheme.brightness == Brightness.light ? 0.16 : 0.1,
+            )
+          : null,
+      borderColor: selected
+          ? GlassPanel.accentInk(context).withValues(alpha: 0.38)
+          : (scheme.brightness == Brightness.light
+              ? scheme.outlineVariant.withValues(alpha: 0.45)
+              : null),
+      padding: const EdgeInsetsDirectional.only(
+        start: 14.0,
+        end: 16.0,
+        top: 10.0,
+        bottom: 10.0,
+      ),
+      child: IconTheme.merge(
+        data: IconThemeData(color: foreground, size: 18.0),
+        child: DefaultTextStyle.merge(
+          style:
+              baseStyle?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w600,
+                height: 1.15,
+              ) ??
+              TextStyle(
+                color: foreground,
+                fontWeight: FontWeight.w600,
+                height: 1.15,
               ),
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (avatar != null) ...[
+                avatar!,
+                const SizedBox(width: 6.0),
+              ],
+              label,
+            ],
           ),
         ),
       ),

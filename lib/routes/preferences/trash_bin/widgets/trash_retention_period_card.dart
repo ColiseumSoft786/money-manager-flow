@@ -22,9 +22,9 @@ class TrashRetentionPeriodCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TrashBinPreferencesTheme.cardFill,
+        color: TrashBinPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(TrashBinPreferencesTheme.cardRadius),
-        border: Border.all(color: TrashBinPreferencesTheme.cardBorder),
+        border: Border.all(color: TrashBinPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -65,7 +65,7 @@ class TrashRetentionPeriodCard extends StatelessWidget {
                             color: TrashBinPreferencesTheme.primary(context),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: TrashBinPreferencesTheme.cardFill,
+                              color: TrashBinPreferencesTheme.cardFill(context),
                               width: 2.0,
                             ),
                           ),
@@ -91,14 +91,14 @@ class TrashRetentionPeriodCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 15.0,
-                          color: TrashBinPreferencesTheme.titleInk,
+                          color: TrashBinPreferencesTheme.titleInk(context),
                         ),
                       ),
                       const SizedBox(height: 6.0),
                       Text(
                         "preferences.trashBin.retention.cardDescription".t(context),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: TrashBinPreferencesTheme.subtitleInk,
+                          color: TrashBinPreferencesTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.4,
                         ),

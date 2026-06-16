@@ -81,6 +81,14 @@ dependencies:
     window_manager: ^0.5.1
     flutter_globe_3d: ^2.2.5
     animated_accordion: ^1.1.2
+    receipt_recognition: ^0.2.8
+    google_mlkit_text_recognition: ^0.15.1
+    firebase_core: ^4.10.0
+    firebase_auth: ^6.5.2
+    cloud_firestore: ^6.5.0
+    xtal_dashboard: ^0.7.1
+    flutter_glass_morphism: ^1.0.2
+    loading_indicator: ^3.1.1
 
 dev_dependencies:
     build_runner: ^2.7.1

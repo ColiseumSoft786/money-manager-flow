@@ -79,16 +79,16 @@ class _AccountsTabState extends State<AccountsTab>
     final bool ready = accountsProvider.ready;
 
     if (!ready) {
-      return const ColoredBox(
-        color: AccountsTabTheme.canvas,
-        child: Spinner.center(),
+      return ColoredBox(
+        color: AccountsTabTheme.canvas(context),
+        child: const Spinner.center(),
       );
     }
 
     if (activeAccounts.isEmpty && archivedSorted.isEmpty) {
-      return const ColoredBox(
-        color: AccountsTabTheme.canvas,
-        child: SafeArea(child: NoAccounts()),
+      return ColoredBox(
+        color: AccountsTabTheme.canvas(context),
+        child: const SafeArea(child: NoAccounts()),
       );
     }
 
@@ -96,7 +96,7 @@ class _AccountsTabState extends State<AccountsTab>
         activeAccounts.length + archivedSorted.length;
 
     return ColoredBox(
-      color: AccountsTabTheme.canvas,
+      color: AccountsTabTheme.canvas(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -166,7 +166,7 @@ class _AccountsTabState extends State<AccountsTab>
                               "accounts".t(context).toUpperCase(),
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: AccountsTabTheme.sectionLabel,
+                                    color: AccountsTabTheme.sectionLabel(context),
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.6,
                                     fontSize: 11.0,
@@ -198,7 +198,7 @@ class _AccountsTabState extends State<AccountsTab>
                               "account.archived".t(context).toUpperCase(),
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: AccountsTabTheme.sectionLabel,
+                                    color: AccountsTabTheme.sectionLabel(context),
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.6,
                                     fontSize: 11.0,
@@ -258,7 +258,7 @@ class _AccountsTabState extends State<AccountsTab>
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       fontSize: 26.0,
-                      color: AccountsTabTheme.titleInk,
+                      color: AccountsTabTheme.titleInk(context),
                     ),
                   ),
                   if (_reordering && !isDesktop())
@@ -267,7 +267,7 @@ class _AccountsTabState extends State<AccountsTab>
                       child: Text(
                         "tabs.accounts.reorder.guide".t(context),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AccountsTabTheme.subtitleInk,
+                          color: AccountsTabTheme.subtitleInk(context),
                           fontWeight: FontWeight.w500,
                           fontSize: 14.0,
                         ),
@@ -277,10 +277,10 @@ class _AccountsTabState extends State<AccountsTab>
               ),
             ),
             Material(
-              color: AccountsTabTheme.cardFill,
+              color: AccountsTabTheme.cardFill(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
-                side: const BorderSide(color: AccountsTabTheme.cardBorder),
+                side: BorderSide(color: AccountsTabTheme.cardBorder(context)),
               ),
               child: IconButton(
                 onPressed: toggleReorderMode,
@@ -291,16 +291,16 @@ class _AccountsTabState extends State<AccountsTab>
                   _reordering ? Symbols.check_rounded : Symbols.reorder_rounded,
                   color: _reordering
                       ? AccountsTabTheme.primary(context)
-                      : AccountsTabTheme.titleInk,
+                      : AccountsTabTheme.titleInk(context),
                 ),
               ),
             ),
             const SizedBox(width: 8.0),
             Material(
-              color: AccountsTabTheme.cardFill,
+              color: AccountsTabTheme.cardFill(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
-                side: const BorderSide(color: AccountsTabTheme.cardBorder),
+                side: BorderSide(color: AccountsTabTheme.cardBorder(context)),
               ),
               child: const Padding(
                 padding: EdgeInsets.all(2.0),

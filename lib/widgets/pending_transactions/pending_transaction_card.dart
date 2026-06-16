@@ -2,7 +2,6 @@ import "package:flow/data/flow_icon.dart";
 import "package:flow/data/money.dart";
 import "package:flow/entity/category.dart";
 import "package:flow/entity/transaction.dart";
-import "package:flow/entity/transaction/extensions/default/recurring.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/prefs/local_preferences.dart";
@@ -12,7 +11,6 @@ import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/pending_transactions/pending_transactions_theme.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
-import "package:moment_dart/moment_dart.dart";
 
 class PendingTransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -83,7 +81,7 @@ class PendingTransactionCard extends StatelessWidget {
     final String amountText = money.formatMoney(takeAbsoluteValue: false);
     final Color amountColor = isIncome
         ? PendingTransactionsTheme.incomeAmount
-        : PendingTransactionsTheme.expenseAmount;
+        : PendingTransactionsTheme.expenseAmount(context);
 
     final String primaryLabel = holdable
         ? "transactions.pending.payNow".t(context)
@@ -96,9 +94,9 @@ class PendingTransactionCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: PendingTransactionsTheme.cardFill,
+          color: PendingTransactionsTheme.cardFill(context),
           borderRadius: BorderRadius.circular(PendingTransactionsTheme.cardRadius),
-          border: Border.all(color: PendingTransactionsTheme.cardBorder),
+          border: Border.all(color: PendingTransactionsTheme.cardBorder(context)),
         ),
         child: Column(
           children: [
@@ -126,14 +124,14 @@ class PendingTransactionCard extends StatelessWidget {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 15.0,
-                            color: PendingTransactionsTheme.titleInk,
+                            color: PendingTransactionsTheme.titleInk(context),
                           ),
                         ),
                         const SizedBox(height: 4.0),
                         Text(
                           _subtitle(context),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: PendingTransactionsTheme.subtitleInk,
+                            color: PendingTransactionsTheme.subtitleInk(context),
                             fontSize: 12.5,
                             height: 1.35,
                           ),
@@ -190,8 +188,9 @@ class PendingTransactionCard extends StatelessWidget {
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor:
-                            PendingTransactionsTheme.secondaryButtonFill,
-                        foregroundColor: PendingTransactionsTheme.secondaryButtonInk,
+                            PendingTransactionsTheme.secondaryButtonFill(context),
+                        foregroundColor:
+                            PendingTransactionsTheme.secondaryButtonInk(context),
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
@@ -203,7 +202,7 @@ class PendingTransactionCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 14.0,
-                          color: PendingTransactionsTheme.secondaryButtonInk,
+                          color: PendingTransactionsTheme.secondaryButtonInk(context),
                         ),
                       ),
                     ),

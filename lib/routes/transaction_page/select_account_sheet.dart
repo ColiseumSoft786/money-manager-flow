@@ -54,16 +54,30 @@ class _SelectAccountSheetState extends State<SelectAccountSheet> {
 
     final List<Account> results = simpleSortByQuery(widget.accounts, _query);
 
-    const Color sheetBg = Colors.white;
-    const Color titleInk = kFlowHomeTransactionHeadingInk;
-    const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-    const Color chevronInk = kFlowMonthSelectorChevronInkLight;
+    final bool light = theme.brightness == Brightness.light;
+    final Color sheetBg = light ? Colors.white : theme.colorScheme.surface;
+    final Color titleInk =
+        light ? kFlowHomeTransactionHeadingInk : theme.colorScheme.onSurface;
+    final Color subtitleInk = light
+        ? kFlowAccountRowBalanceInkLight
+        : theme.colorScheme.onSurfaceVariant;
+    final Color chevronInk = light
+        ? kFlowMonthSelectorChevronInkLight
+        : theme.colorScheme.onSurfaceVariant;
     final Color primaryAccent = theme.colorScheme.primary;
     final Color onPrimary = theme.colorScheme.onPrimary;
-    const Color rowSelectedFill = kFlowAccountRowSelectedFillLight;
-    const Color rowSelectedBorder = kFlowAccountRowSelectedBorderLight;
-    const Color indicatorBorder = kFlowAccountRowIndicatorBorderLight;
-    const Color rowDivider = kFlowAccountRowDividerLight;
+    final Color rowSelectedFill = light
+        ? kFlowAccountRowSelectedFillLight
+        : theme.colorScheme.primary.withValues(alpha: 0.12);
+    final Color rowSelectedBorder = light
+        ? kFlowAccountRowSelectedBorderLight
+        : theme.colorScheme.primary;
+    final Color indicatorBorder = light
+        ? kFlowAccountRowIndicatorBorderLight
+        : theme.colorScheme.outlineVariant;
+    final Color rowDivider = light
+        ? kFlowAccountRowDividerLight
+        : theme.colorScheme.outlineVariant;
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),

@@ -88,7 +88,10 @@ class _NewTransactionButtonState extends State<NewTransactionButton> {
                 height: 56.0,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4.0),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.surface,
+                    width: 4.0,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: navbarTheme.transactionButtonBackgroundColor.withValues(

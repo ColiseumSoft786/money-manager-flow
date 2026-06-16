@@ -70,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         body: SafeArea(
           child: _profile == null
-              ? const Center(child: Text("Impossible state"))
+              ? Center(child: Text("profile.impossibleState".t(context)))
               : Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(

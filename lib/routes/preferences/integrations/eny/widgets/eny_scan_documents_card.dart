@@ -22,9 +22,9 @@ class EnyScanDocumentsCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: EnyPreferencesTheme.cardFill,
+        color: EnyPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(EnyPreferencesTheme.cardRadius),
-        border: Border.all(color: EnyPreferencesTheme.cardBorder),
+        border: Border.all(color: EnyPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 16.0, 14.0, 8.0),
@@ -36,7 +36,7 @@ class EnyScanDocumentsCard extends StatelessWidget {
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 15.0,
-                color: EnyPreferencesTheme.titleInk,
+                color: EnyPreferencesTheme.titleInk(context),
               ),
             ),
             const SizedBox(height: 4.0),
@@ -50,10 +50,10 @@ class EnyScanDocumentsCard extends StatelessWidget {
               value: createTransactionsPerItem,
               onChanged: onCreatePerItemChanged,
             ),
-            const Divider(
+            Divider(
               height: 1.0,
               thickness: 1.0,
-              color: EnyPreferencesTheme.divider,
+              color: EnyPreferencesTheme.divider(context),
             ),
             _ScanToggleRow(
               title: "preferences.scan.markPendingThreshold".t(context),
@@ -101,14 +101,14 @@ class _ScanToggleRow extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 14.5,
-                    color: EnyPreferencesTheme.titleInk,
+                    color: EnyPreferencesTheme.titleInk(context),
                   ),
                 ),
                 const SizedBox(height: 3.0),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: EnyPreferencesTheme.subtitleInk,
+                    color: EnyPreferencesTheme.subtitleInk(context),
                     fontSize: 12.5,
                     height: 1.35,
                   ),
@@ -121,8 +121,10 @@ class _ScanToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeTrackColor: EnyPreferencesTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
-            thumbColor: WidgetStateProperty.all(Colors.white),
+            inactiveTrackColor: EnyPreferencesTheme.cardBorder(context),
+            thumbColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.surface,
+            ),
           ),
         ],
       ),

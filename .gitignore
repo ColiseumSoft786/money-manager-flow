@@ -54,3 +54,5 @@ app.*.map.json
 /download
 lib/libobjectbox.dylib
 lib/libobjectbox.so
+config.bat
+node_modules

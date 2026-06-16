@@ -15,12 +15,7 @@ class ModalSheet extends StatelessWidget {
   final double leadingSpacing;
   final double trailingSpacing;
 
-  /// Defaults to `40.0`
-  ///
-  /// Set this to `0.0` to make bottom sheet contact with the system navigation
-  /// bar
-  ///
-  /// This has no effect when [scrollable] is `false`
+  /// Only used when [scrollable] is true — max height of the sheet panel.
   final double topMargin;
   final double titleSpacing;
 
@@ -67,90 +62,96 @@ class ModalSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget? title = this.title == null
+    final Widget? titleWidget = this.title == null
         ? null
         : DefaultTextStyle(
-            style: context.textTheme.headlineSmall!,
+            style: (scrollable
+                    ? context.textTheme.headlineSmall!
+                    : context.textTheme.titleMedium!)
+                .copyWith(fontWeight: FontWeight.w600)!,
             textAlign: TextAlign.center,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              padding: EdgeInsets.symmetric(horizontal: scrollable ? 24.0 : 16.0),
               child: this.title!,
             ),
           );
 
     final EdgeInsets viewInsets = MediaQuery.viewInsetsOf(context);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: BoxConstraints.loose(
-            Size(
-              MediaQuery.sizeOf(context).width,
-              MediaQuery.sizeOf(context).height - topMargin,
-            ),
-          ),
-          child: Material(
-            color: context.colorScheme.surface,
-            clipBehavior: Clip.antiAlias,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(26.0)),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (scrollable)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8.0),
-                      width: 30.0,
-                      height: 6.0,
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.onSurface.withAlpha(0x80),
-                        borderRadius: .circular(24.0),
-                      ),
+    final Widget panel = Material(
+      color: context.colorScheme.surface,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (scrollable)
+              Container(
+                margin: const EdgeInsets.only(top: 8.0),
+                width: 30.0,
+                height: 4.0,
+                decoration: BoxDecoration(
+                  color: context.colorScheme.onSurface.withValues(alpha: 0.25),
+                  borderRadius: .circular(24.0),
+                ),
+              )
+            else
+              const SizedBox(height: 6.0),
+            if (titleWidget != null) ...[
+              SizedBox(height: scrollable ? titleSpacing : 4.0),
+              titleWidget,
+            ],
+            if (titleWidget != null && (leading != null || child != null))
+              SizedBox(height: scrollable ? titleSpacing : 6.0),
+            if (leading != null) ...[
+              leading!,
+              SizedBox(height: leadingSpacing),
+            ],
+            if (child != null)
+              scrollable
+                  ? Flexible(child: Builder(builder: buildScrollableContent))
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: child,
                     ),
-                  SizedBox(height: titleSpacing),
-                  ?title,
-                  if (title != null && (leading != null || child != null))
-                    SizedBox(height: titleSpacing),
-                  if (leading != null) ...[
-                    leading!,
-                    SizedBox(height: leadingSpacing),
-                  ],
-                  if (child != null)
-                    Flexible(
-                      child: Builder(
-                        builder: (context) => buildContent(context),
-                      ),
-                    ),
-                  if (trailing != null) ...[
-                    SizedBox(height: trailingSpacing),
-                    trailing!,
-                  ],
-                ],
-              ),
-            ),
-          ),
+            if (trailing != null) ...[
+              SizedBox(height: trailingSpacing),
+              trailing!,
+            ],
+            if (!scrollable) const SizedBox(height: 4.0),
+          ],
         ),
       ),
     );
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: scrollable
+          ? Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints.loose(
+                  Size(
+                    MediaQuery.sizeOf(context).width,
+                    MediaQuery.sizeOf(context).height - topMargin,
+                  ),
+                ),
+                child: panel,
+              ),
+            )
+          : panel,
+    );
   }
 
-  Widget buildContent(BuildContext context) {
-    if (!scrollable) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: child,
-      );
-    }
-
+  Widget buildScrollableContent(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double maxScrollableContentHeight = math.max(
-          (MediaQuery.of(context).size.height -
+          (MediaQuery.sizeOf(context).height -
               64.0 -
               MediaQuery.viewInsetsOf(context).bottom),
           scrollableContentMaxHeight,
@@ -168,7 +169,10 @@ class ModalSheet extends StatelessWidget {
             ),
           ),
           duration: const Duration(milliseconds: 200),
-          child: child,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: child,
+          ),
         );
       },
     );

@@ -139,7 +139,7 @@ class _TitleInputState extends State<TitleInput> {
                 style: widget.embedded
                     ? context.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: TransactionEntryTheme.valueInk,
+                        color: TransactionEntryTheme.valueInk(context),
                       )
                     : context.textTheme.headlineMedium,
                 textAlign:
@@ -151,7 +151,7 @@ class _TitleInputState extends State<TitleInput> {
                   hintText: widget.fallbackTitle,
                   hintStyle: widget.embedded
                       ? context.textTheme.titleMedium?.copyWith(
-                          color: TransactionEntryTheme.placeholderInk,
+                          color: TransactionEntryTheme.placeholderInk(context),
                           fontWeight: FontWeight.w500,
                         )
                       : context.textTheme.headlineMedium?.copyWith(

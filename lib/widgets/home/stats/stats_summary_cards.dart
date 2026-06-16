@@ -32,7 +32,7 @@ class StatsNetFlowCard extends StatelessWidget {
                 Text(
                   "tabs.stats.netFlow".t(context).toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: StatsTheme.sectionLabel,
+                    color: StatsTheme.sectionLabel(context),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.6,
                     fontSize: 11.0,
@@ -44,7 +44,7 @@ class StatsNetFlowCard extends StatelessWidget {
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 28.0,
-                    color: StatsTheme.titleInk,
+                    color: StatsTheme.titleInk(context),
                   ),
                   tapToToggleAbbreviation: true,
                   initiallyAbbreviated:
@@ -87,8 +87,8 @@ class StatsIncomeExpenseRow extends StatelessWidget {
             label: "tabs.stats.intervalReport.averages.income".t(context)
                 .toUpperCase(),
             money: income,
-            fill: StatsTheme.incomeFill,
-            ink: StatsTheme.incomeInk,
+            fill: StatsTheme.incomeFill(context),
+            ink: StatsTheme.incomeInk(context),
             trend: Trend.fromMoney(current: income, previous: previousIncome),
           ),
         ),
@@ -98,8 +98,8 @@ class StatsIncomeExpenseRow extends StatelessWidget {
             label: "tabs.stats.intervalReport.averages.expense".t(context)
                 .toUpperCase(),
             money: expense,
-            fill: StatsTheme.expenseFill,
-            ink: StatsTheme.expenseInk,
+            fill: StatsTheme.expenseFill(context),
+            ink: StatsTheme.expenseInk(context),
             trend: Trend.fromMoney(
               current: expense,
               previous: previousExpense,
@@ -133,7 +133,7 @@ class _TintedMetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(StatsTheme.cardRadius),
-        border: Border.all(color: StatsTheme.cardBorder),
+        border: Border.all(color: StatsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -155,7 +155,7 @@ class _TintedMetricCard extends StatelessWidget {
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: 20.0,
-                color: StatsTheme.titleInk,
+                color: StatsTheme.titleInk(context),
               ),
               tapToToggleAbbreviation: true,
               initiallyAbbreviated: !LocalPreferences().preferFullAmounts.get(),
@@ -210,9 +210,9 @@ class _StatsCardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: StatsTheme.cardFill,
+        color: StatsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(StatsTheme.cardRadius),
-        border: Border.all(color: StatsTheme.cardBorder),
+        border: Border.all(color: StatsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

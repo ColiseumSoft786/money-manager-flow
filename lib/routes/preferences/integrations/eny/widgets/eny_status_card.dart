@@ -28,9 +28,9 @@ class EnyStatusCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: EnyPreferencesTheme.cardFill,
+        color: EnyPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(EnyPreferencesTheme.cardRadius),
-        border: Border.all(color: EnyPreferencesTheme.cardBorder),
+        border: Border.all(color: EnyPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,7 +44,7 @@ class EnyStatusCard extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15.0,
-                    color: EnyPreferencesTheme.titleInk,
+                    color: EnyPreferencesTheme.titleInk(context),
                   ),
                 ),
                 const Spacer(),
@@ -60,7 +60,7 @@ class EnyStatusCard extends StatelessWidget {
                 email!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: EnyPreferencesTheme.titleInk,
+                  color: EnyPreferencesTheme.titleInk(context),
                 ),
               ),
             ],
@@ -72,7 +72,7 @@ class EnyStatusCard extends StatelessWidget {
                       context,
                     ),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: EnyPreferencesTheme.subtitleInk,
+                color: EnyPreferencesTheme.subtitleInk(context),
                 fontSize: 13.0,
                 height: 1.45,
               ),
@@ -80,7 +80,7 @@ class EnyStatusCard extends StatelessWidget {
             if (connected && onRefreshCredits != null) ...[
               const SizedBox(height: 14.0),
               Material(
-                color: EnyPreferencesTheme.canvas,
+                color: EnyPreferencesTheme.canvas(context),
                 borderRadius: BorderRadius.circular(12.0),
                 child: InkWell(
                   onTap: creditsBusy ? null : onRefreshCredits,
@@ -105,7 +105,7 @@ class EnyStatusCard extends StatelessWidget {
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               fontSize: 14.0,
-                              color: EnyPreferencesTheme.titleInk,
+                              color: EnyPreferencesTheme.titleInk(context),
                             ),
                           ),
                         ),
@@ -116,7 +116,7 @@ class EnyStatusCard extends StatelessWidget {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.0,
-                            color: EnyPreferencesTheme.titleInk,
+                            color: EnyPreferencesTheme.titleInk(context),
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
@@ -124,7 +124,7 @@ class EnyStatusCard extends StatelessWidget {
                         Icon(
                           Symbols.refresh_rounded,
                           size: 18.0,
-                          color: EnyPreferencesTheme.subtitleInk,
+                          color: EnyPreferencesTheme.subtitleInk(context),
                           fill: 0.0,
                         ),
                       ],

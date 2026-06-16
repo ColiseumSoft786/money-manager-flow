@@ -244,8 +244,14 @@ class _ExportPdfPageState extends State<ExportPdfPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text("A4"), onTap: () => context.pop(true)),
-            ListTile(title: Text("Letter"), onTap: () => context.pop(false)),
+            ListTile(
+              title: Text("sync.export.pdf.paperA4".t(context)),
+              onTap: () => context.pop(true),
+            ),
+            ListTile(
+              title: Text("sync.export.pdf.paperLetter".t(context)),
+              onTap: () => context.pop(false),
+            ),
           ],
         ),
       ),

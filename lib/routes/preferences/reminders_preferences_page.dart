@@ -5,7 +5,6 @@ import "package:flow/routes/preferences/reminders/widgets/reminder_daily_toggle_
 import "package:flow/routes/preferences/reminders/widgets/reminder_time_picker_card.dart";
 import "package:flow/services/notifications.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/info_text.dart";
 import "package:flow/widgets/schdeuled_notification_permission_builder.dart";
@@ -54,28 +53,9 @@ class _RemindersPreferencesPageState extends State<RemindersPreferencesPage> {
         flowDebugMode || NotificationsService.schedulingSupported;
 
     return Scaffold(
-      backgroundColor: RemindersPreferencesTheme.canvas,
+      backgroundColor: RemindersPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: RemindersPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          "preferences.reminders.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: RemindersPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.reminders.settingsTitle".t(context)),
       ),
       body: SchdeuledNotificationPermissionBuilder(
         builder: (context, permissions, _) {

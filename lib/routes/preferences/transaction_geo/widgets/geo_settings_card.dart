@@ -23,11 +23,13 @@ class GeoSettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransactionGeoPreferencesTheme.cardFill,
+        color: TransactionGeoPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           TransactionGeoPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: TransactionGeoPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: TransactionGeoPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Column(
         children: [
@@ -39,12 +41,12 @@ class GeoSettingsCard extends StatelessWidget {
             onChanged: onEnableGeoChanged,
           ),
           if (showAutoAttach) ...[
-            const Divider(
+            Divider(
               height: 1.0,
               thickness: 1.0,
               indent: 16.0,
               endIndent: 16.0,
-              color: TransactionGeoPreferencesTheme.divider,
+              color: TransactionGeoPreferencesTheme.divider(context),
             ),
             _GeoToggleRow(
               icon: Symbols.near_me_rounded,
@@ -108,14 +110,14 @@ class _GeoToggleRow extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15.0,
-                    color: TransactionGeoPreferencesTheme.titleInk,
+                    color: TransactionGeoPreferencesTheme.titleInk(context),
                   ),
                 ),
                 const SizedBox(height: 2.0),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: TransactionGeoPreferencesTheme.subtitleInk,
+                    color: TransactionGeoPreferencesTheme.subtitleInk(context),
                     fontSize: 12.5,
                     height: 1.35,
                   ),
@@ -127,8 +129,10 @@ class _GeoToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeTrackColor: TransactionGeoPreferencesTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
-            thumbColor: WidgetStateProperty.all(Colors.white),
+            inactiveTrackColor: TransactionGeoPreferencesTheme.cardBorder(context),
+            thumbColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.surface,
+            ),
           ),
         ],
       ),

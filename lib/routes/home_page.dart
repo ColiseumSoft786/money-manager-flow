@@ -139,6 +139,7 @@ class _HomePageState extends State<HomePage>
           child: PieCanvas(
             theme: context.pieTheme,
             child: Scaffold(
+              extendBody: true,
               body: TabBarView(
                 controller: _tabController,
                 children: [

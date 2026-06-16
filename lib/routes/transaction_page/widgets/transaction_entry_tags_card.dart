@@ -124,6 +124,7 @@ class _TransactionEntryTagsCardState extends State<TransactionEntryTagsCard> {
                             Text(
                               "transaction.tags".t(context),
                               style: TransactionEntryTheme.rowCaptionStyle(
+                                context,
                                 theme,
                               ),
                             ),
@@ -134,18 +135,22 @@ class _TransactionEntryTagsCardState extends State<TransactionEntryTagsCard> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: hasTags
-                                  ? TransactionEntryTheme.rowValueStyle(theme)
+                                  ? TransactionEntryTheme.rowValueStyle(
+                                      context,
+                                      theme,
+                                    )
                                   : TransactionEntryTheme.rowPlaceholderStyle(
+                                      context,
                                       theme,
                                     ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Symbols.chevron_right_rounded,
                         size: 22.0,
-                        color: TransactionEntryTheme.chevronInk,
+                        color: TransactionEntryTheme.chevronInk(context),
                         fill: 0.0,
                       ),
                     ],
@@ -153,12 +158,12 @@ class _TransactionEntryTagsCardState extends State<TransactionEntryTagsCard> {
                 ),
               ),
             ),
-            const Divider(
+            Divider(
               height: 1.0,
               thickness: 1.0,
               indent: 16.0,
               endIndent: 16.0,
-              color: TransactionEntryTheme.rowDivider,
+              color: TransactionEntryTheme.rowDivider(context),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 16.0),

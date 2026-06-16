@@ -19,9 +19,9 @@ class TrashViewDeletedCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TrashBinPreferencesTheme.cardFill,
+        color: TrashBinPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(TrashBinPreferencesTheme.cardRadius),
-        border: Border.all(color: TrashBinPreferencesTheme.cardBorder),
+        border: Border.all(color: TrashBinPreferencesTheme.cardBorder(context)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -43,7 +43,7 @@ class TrashViewDeletedCard extends StatelessWidget {
                   child: Icon(
                     Symbols.delete_outline_rounded,
                     size: 24.0,
-                    color: TrashBinPreferencesTheme.subtitleInk,
+                    color: TrashBinPreferencesTheme.subtitleInk(context),
                     fill: 0.0,
                   ),
                 ),
@@ -57,7 +57,7 @@ class TrashViewDeletedCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 15.0,
-                          color: TrashBinPreferencesTheme.titleInk,
+                          color: TrashBinPreferencesTheme.titleInk(context),
                         ),
                       ),
                       const SizedBox(height: 3.0),
@@ -67,7 +67,7 @@ class TrashViewDeletedCard extends StatelessWidget {
                           {"count": itemCount},
                         ),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: TrashBinPreferencesTheme.subtitleInk,
+                          color: TrashBinPreferencesTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.35,
                         ),
@@ -78,7 +78,7 @@ class TrashViewDeletedCard extends StatelessWidget {
                 Icon(
                   Symbols.chevron_right_rounded,
                   size: 22.0,
-                  color: TrashBinPreferencesTheme.subtitleInk.withValues(
+                  color: TrashBinPreferencesTheme.subtitleInk(context).withValues(
                     alpha: 0.6,
                   ),
                   fill: 0.0,

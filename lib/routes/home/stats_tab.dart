@@ -69,9 +69,9 @@ class _StatsTabState extends State<StatsTab>
     super.build(context);
 
     if (busy && intervalFlowReport == null) {
-      return const ColoredBox(
-        color: StatsTheme.canvas,
-        child: Spinner.center(),
+      return ColoredBox(
+        color: StatsTheme.canvas(context),
+        child: const Spinner.center(),
       );
     }
 
@@ -87,7 +87,7 @@ class _StatsTabState extends State<StatsTab>
         TransitiveLocalPreferences().usesNonPrimaryCurrency.get();
 
     return ColoredBox(
-      color: StatsTheme.canvas,
+      color: StatsTheme.canvas(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

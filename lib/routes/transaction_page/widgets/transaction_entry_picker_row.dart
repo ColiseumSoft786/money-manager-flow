@@ -71,7 +71,10 @@ class TransactionEntryPickerRow extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: TransactionEntryTheme.rowCaptionStyle(theme),
+                          style: TransactionEntryTheme.rowCaptionStyle(
+                            context,
+                            theme,
+                          ),
                         ),
                         const SizedBox(height: 3.0),
                         Text(
@@ -79,8 +82,11 @@ class TransactionEntryPickerRow extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: _hasValue
-                              ? TransactionEntryTheme.rowValueStyle(theme)
-                              : TransactionEntryTheme.rowPlaceholderStyle(theme),
+                              ? TransactionEntryTheme.rowValueStyle(context, theme)
+                              : TransactionEntryTheme.rowPlaceholderStyle(
+                                  context,
+                                  theme,
+                                ),
                         ),
                       ],
                     ),
@@ -88,7 +94,7 @@ class TransactionEntryPickerRow extends StatelessWidget {
                   Icon(
                     Symbols.chevron_right_rounded,
                     size: 22.0,
-                    color: TransactionEntryTheme.chevronInk,
+                    color: TransactionEntryTheme.chevronInk(context),
                     fill: 0.0,
                   ),
                 ],
@@ -97,12 +103,12 @@ class TransactionEntryPickerRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 74.0,
             endIndent: 16.0,
-            color: TransactionEntryTheme.rowDivider,
+            color: TransactionEntryTheme.rowDivider(context),
           ),
       ],
     );

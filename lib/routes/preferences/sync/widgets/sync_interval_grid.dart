@@ -46,13 +46,13 @@ class SyncIntervalGrid extends StatelessWidget {
               child: Material(
                 color: selected
                     ? SyncPreferencesTheme.chipSelectedFill(context)
-                    : SyncPreferencesTheme.chipIdleFill,
+                    : SyncPreferencesTheme.chipIdleFill(context),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14.0),
                   side: BorderSide(
                     color: selected
                         ? SyncPreferencesTheme.chipSelectedBorder(context)
-                        : SyncPreferencesTheme.chipIdleBorder,
+                        : SyncPreferencesTheme.chipIdleBorder(context),
                     width: selected ? 2.0 : 1.0,
                   ),
                 ),
@@ -76,7 +76,7 @@ class SyncIntervalGrid extends StatelessWidget {
                                 fontSize: 14.0,
                                 color: selected
                                     ? SyncPreferencesTheme.chipSelectedInk
-                                    : SyncPreferencesTheme.chipIdleInk,
+                                    : SyncPreferencesTheme.chipIdleInk(context),
                               ),
                         ),
                         if (recommended) ...[
@@ -85,7 +85,7 @@ class SyncIntervalGrid extends StatelessWidget {
                             "preferences.sync.interval.recommended".t(context),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
-                                  color: SyncPreferencesTheme.chipRecommendedInk,
+                                  color: SyncPreferencesTheme.chipRecommendedInk(context),
                                   fontWeight: FontWeight.w600,
                                   fontSize: 9.0,
                                   letterSpacing: 0.8,

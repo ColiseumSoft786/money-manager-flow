@@ -22,11 +22,13 @@ class MoneyFormattingPreferencesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: MoneyFormattingPreferencesTheme.cardFill,
+        color: MoneyFormattingPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           MoneyFormattingPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: MoneyFormattingPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: MoneyFormattingPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Column(
         children: [
@@ -39,12 +41,12 @@ class MoneyFormattingPreferencesCard extends StatelessWidget {
             value: preferFullAmounts,
             onChanged: onPreferFullAmountsChanged,
           ),
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 16.0,
             endIndent: 16.0,
-            color: MoneyFormattingPreferencesTheme.divider,
+            color: MoneyFormattingPreferencesTheme.divider(context),
           ),
           MoneyFormattingToggleRow(
             icon: Symbols.currency_exchange_rounded,

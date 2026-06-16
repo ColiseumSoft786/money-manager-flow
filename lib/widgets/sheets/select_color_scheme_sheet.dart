@@ -6,7 +6,6 @@ import "package:flow/theme/flow_theme_group.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/utils/optional.dart";
 import "package:flow/widgets/general/button.dart";
-import "package:flow/widgets/general/modal_sheet.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -65,104 +64,133 @@ class _SelectColorSchemeSheetState extends State<SelectColorSchemeSheet>
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     final Color dividerColor = Theme.of(context).brightness == Brightness.light
         ? const Color(0xFFE2E8F0)
-        : context.colorScheme.outlineVariant;
+        : scheme.outlineVariant;
 
     final List<FlowColorScheme> schemes = widget.group.schemes;
+    final int rows =
+        (schemes.length + _gridCrossAxisCount - 1) ~/ _gridCrossAxisCount;
+    final double gridNaturalHeight =
+        rows * 52.0 + math.max(0, rows - 1) * 16.0;
+    final double maxGridHeight = MediaQuery.sizeOf(context).height * 0.36;
+    final double gridHeight = math.min(gridNaturalHeight, maxGridHeight);
+    final bool gridScrolls = gridNaturalHeight > maxGridHeight;
 
-    return ModalSheet.scrollable(
-      title: null,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Material(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 6.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 4.0),
+                    Expanded(
+                      child: Text(
+                        "account.themeColor".t(context),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => context.pop(),
+                      icon: Icon(
+                        Symbols.close_rounded,
+                        color: scheme.onSurface,
+                        fill: 0.0,
+                      ),
+                      tooltip:
+                          MaterialLocalizations.of(context).closeButtonTooltip,
+                    ),
+                  ],
+                ),
+              ),
+              Divider(height: 1.0, thickness: 1.0, color: dividerColor),
+              const SizedBox(height: 12.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: SizedBox(
+                  height: gridHeight,
+                  child: GridView.builder(
+                    physics: gridScrolls
+                        ? const ClampingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: _gridCrossAxisCount,
+                      mainAxisSpacing: 16.0,
+                      crossAxisSpacing: 16.0,
+                      mainAxisExtent: 52.0,
+                    ),
+                    itemCount: schemes.length,
+                    itemBuilder: (context, index) {
+                      final FlowColorScheme colorScheme = schemes[index];
+                      final bool selected =
+                          _pendingScheme?.name == colorScheme.name;
+                      return _AnimatedThemeColorCell(
+                        index: index,
+                        controller: _introController,
+                        child: _ThemeColorCircle(
+                          scheme: colorScheme,
+                          selected: selected,
+                          onTap: () =>
+                              setState(() => _pendingScheme = colorScheme),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Button(
+                  fullWidth: true,
+                  borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+                  backgroundColor: scheme.primary,
+                  foregroundColor: scheme.onPrimary,
+                  elevation: 4.0,
+                  shadowColor: scheme.primary.withValues(alpha: 0.28),
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
+                  onTap: () =>
+                      context.pop(Optional<FlowColorScheme>(_pendingScheme)),
                   child: Text(
-                    "account.themeColor".t(context),
-                    style: context.textTheme.titleLarge?.copyWith(
+                    "select.color.save".t(context),
+                    style: context.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: context.colorScheme.onSurface,
-                      height: 1.2,
+                      letterSpacing: 0.6,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Icon(
-                    Symbols.close_rounded,
-                    color: context.colorScheme.onSurface,
-                    fill: 0.0,
-                  ),
-                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-                ),
-              ],
-            ),
-            Divider(height: 1.0, thickness: 1.0, color: dividerColor),
-            const SizedBox(height: 20.0),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _gridCrossAxisCount,
-                mainAxisSpacing: 16.0,
-                crossAxisSpacing: 16.0,
-                mainAxisExtent: 52.0,
               ),
-              itemCount: schemes.length,
-              itemBuilder: (context, index) {
-                final FlowColorScheme scheme = schemes[index];
-                final bool selected =
-                    _pendingScheme?.name == scheme.name;
-                return _AnimatedThemeColorCell(
-                  index: index,
-                  controller: _introController,
-                  child: _ThemeColorCircle(
-                    scheme: scheme,
-                    selected: selected,
-                    onTap: () =>
-                        setState(() => _pendingScheme = scheme),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 28.0),
-            Button(
-              fullWidth: true,
-              borderRadius: const BorderRadius.all(Radius.circular(12.0)),
-              backgroundColor: context.colorScheme.primary,
-              foregroundColor: context.colorScheme.onPrimary,
-              elevation: 4.0,
-              shadowColor: context.colorScheme.primary.withValues(alpha: 0.28),
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              onTap: () => context.pop(Optional<FlowColorScheme>(_pendingScheme)),
-              child: Text(
-                "select.color.save".t(context),
-                style: context.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12.0),
-            Center(
-              child: TextButton(
-                onPressed: () => setState(() => _pendingScheme = null),
-                child: Text(
-                  "select.color.clear".t(context),
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: context.colorScheme.onSurface.withValues(alpha: 0.55),
+              Center(
+                child: TextButton(
+                  onPressed: () => setState(() => _pendingScheme = null),
+                  child: Text(
+                    "select.color.clear".t(context),
+                    style: context.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: scheme.onSurface.withValues(alpha: 0.55),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4.0),
+            ],
+          ),
         ),
       ),
     );

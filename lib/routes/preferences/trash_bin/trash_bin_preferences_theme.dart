@@ -3,18 +3,32 @@ import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 abstract final class TrashBinPreferencesTheme {
-  static const Color canvas = Color(0xFFF8F9FB);
-  static const Color cardFill = Colors.white;
-  static const Color titleInk = kFlowHomeTransactionHeadingInk;
-  static const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-  static const Color sectionLabel = kFlowHomeTransactionCaptionMuted;
+  static bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static ColorScheme _scheme(BuildContext context) =>
+      Theme.of(context).colorScheme;
+
+  static Color canvas(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surface : const Color(0xFFF8F9FB);
+  static Color cardFill(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surfaceContainerHigh : Colors.white;
+  static Color titleInk(BuildContext context) =>
+      _isDark(context) ? _scheme(context).onSurface : kFlowHomeTransactionHeadingInk;
+  static Color subtitleInk(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : kFlowAccountRowBalanceInkLight;
+  static Color sectionLabel(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : kFlowHomeTransactionCaptionMuted;
 
   static Color primary(BuildContext context) =>
       PreferencesUiTheme.primary(context);
   static Color iconPlateFill(BuildContext context) =>
       PreferencesUiTheme.iconPlateFill(context);
 
-  static const Color cardBorder = Color(0xFFE5E7EB);
+  static Color cardBorder(BuildContext context) =>
+      _isDark(context) ? _scheme(context).outlineVariant : const Color(0xFFE5E7EB);
 
   static const Color chipSelectedFill = Color(0xFF3B82F6);
   static const Color chipSelectedInk = Colors.white;

@@ -128,6 +128,7 @@ class NumpadLayoutOptionCard extends StatelessWidget {
                         return Numpad(
                           width: constraints.maxWidth,
                           padding: EdgeInsets.zero,
+                          showPanel: false,
                           mainAxisSpacing: 4.0,
                           crossAxisSpacing: 4.0,
                           children: isPhoneLayout

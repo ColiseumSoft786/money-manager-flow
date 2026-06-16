@@ -20,11 +20,13 @@ class MoneyFormattingPreviewCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: MoneyFormattingPreferencesTheme.cardFill,
+        color: MoneyFormattingPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           MoneyFormattingPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: MoneyFormattingPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: MoneyFormattingPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 18.0),
@@ -59,7 +61,7 @@ class MoneyFormattingPreviewCard extends StatelessWidget {
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 36.0,
-                color: MoneyFormattingPreferencesTheme.titleInk,
+                color: MoneyFormattingPreferencesTheme.titleInk(context),
                 height: 1.1,
               ),
             ),

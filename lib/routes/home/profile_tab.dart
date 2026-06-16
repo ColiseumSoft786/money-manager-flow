@@ -3,6 +3,7 @@ import "dart:async";
 import "package:flow/constants.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox.dart";
+import "package:flow/prefs/local_preferences.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/notifications.dart";
 import "package:flow/services/sync/icloud_syncer.dart";
@@ -129,6 +130,51 @@ class _ProfileTabState extends State<ProfileTab> {
                 onTap: () => context.push("/transactions/pending"),
                 style: rowStyle,
               ),
+              _ProfileRow(
+                label: "budgets.title".t(context),
+                icon: Symbols.account_balance_wallet_rounded,
+                plateInk: const Color(0xFF059669), // emerald-600
+                onTap: () => context.push("/budgets"),
+                style: rowStyle,
+              ),
+              _ProfileRow(
+                label: "goals.title".t(context),
+                icon: Symbols.flag_rounded,
+                plateInk: const Color(0xFFD97706), // amber-600
+                onTap: () => context.push("/goals"),
+                style: rowStyle,
+              ),
+              _ProfileRow(
+                label: "sendMoney.title".t(context),
+                icon: Symbols.send_money_rounded,
+                plateInk: const Color(0xFF0284C7), // sky-600
+                onTap: () => context.push("/send-money"),
+                style: rowStyle,
+              ),
+              if (LocalPreferences().enableTaxMode.get())
+                _ProfileRow(
+                  label: "Tax Report",
+                  icon: Symbols.receipt_long_rounded,
+                  plateInk: const Color(0xFF0891B2), // cyan-600
+                  onTap: () => context.push("/taxReport"),
+                  style: rowStyle,
+                ),
+              if (LocalPreferences().enableSubscriptionManager.get())
+                _ProfileRow(
+                  label: "subscriptions.title".t(context),
+                  icon: Symbols.subscriptions_rounded,
+                  plateInk: const Color(0xFF7C3AED),
+                  onTap: () => context.push("/subscriptions"),
+                  style: rowStyle,
+                ),
+              if (LocalPreferences().enableReceiptScan.get())
+                _ProfileRow(
+                  label: "receiptScan.title".t(context),
+                  icon: Symbols.document_scanner_rounded,
+                  plateInk: const Color(0xFF0D9488),
+                  onTap: () => context.push("/receipt-scan"),
+                  style: rowStyle,
+                ),
             ],
           ),
 
@@ -374,13 +420,17 @@ class _ProfileTabState extends State<ProfileTab> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("[dev] Reset database?"),
+        title: Text("dev.clearObjectBox.title".t(context)),
+        content: Text("dev.clearObjectBox.body".t(context)),
         actions: [
           Button(
             onTap: () => context.pop(true),
-            child: const Text("Confirm delete"),
+            child: Text("dev.confirmDelete".t(context)),
           ),
-          Button(onTap: () => context.pop(false), child: const Text("Cancel")),
+          Button(
+            onTap: () => context.pop(false),
+            child: Text("general.cancel".t(context)),
+          ),
         ],
       ),
     );
@@ -414,13 +464,16 @@ class _ProfileTabState extends State<ProfileTab> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("[dev] Purge iCloud debug folder?"),
+        title: Text("dev.purgeICloud.title".t(context)),
         actions: [
           Button(
             onTap: () => context.pop(true),
-            child: const Text("Confirm delete"),
+            child: Text("dev.confirmDelete".t(context)),
           ),
-          Button(onTap: () => context.pop(false), child: const Text("Cancel")),
+          Button(
+            onTap: () => context.pop(false),
+            child: Text("general.cancel".t(context)),
+          ),
         ],
       ),
     );
@@ -431,7 +484,11 @@ class _ProfileTabState extends State<ProfileTab> {
       final int deletedCount = await ICloudSyncer().debugPurge();
 
       if (mounted) {
-        context.showToast(text: "Deleted $deletedCount debug items");
+        context.showToast(
+          text: "dev.purgeICloud.deleted".t(context, {
+            "count": deletedCount.toString(),
+          }),
+        );
       }
     } finally {
       _debugICloudBusy = false;
@@ -447,13 +504,17 @@ class _ProfileTabState extends State<ProfileTab> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("[dev] Clear Shared Preferences?"),
+        title: Text("dev.clearPrefs.title".t(context)),
+        content: Text("dev.clearPrefs.body".t(context)),
         actions: [
           Button(
             onTap: () => context.pop(true),
-            child: const Text("Confirm clear"),
+            child: Text("dev.confirmClear".t(context)),
           ),
-          Button(onTap: () => context.pop(false), child: const Text("Cancel")),
+          Button(
+            onTap: () => context.pop(false),
+            child: Text("general.cancel".t(context)),
+          ),
         ],
       ),
     );

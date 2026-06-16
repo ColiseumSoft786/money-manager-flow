@@ -24,9 +24,9 @@ class ReminderTimePickerCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: RemindersPreferencesTheme.cardFill,
+        color: RemindersPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(RemindersPreferencesTheme.cardRadius),
-        border: Border.all(color: RemindersPreferencesTheme.cardBorder),
+        border: Border.all(color: RemindersPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 18.0, 16.0, 16.0),
@@ -36,7 +36,7 @@ class ReminderTimePickerCard extends StatelessWidget {
             Text(
               "preferences.reminders.remindDaily.time".t(context).toUpperCase(),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: RemindersPreferencesTheme.sectionLabel,
+                color: RemindersPreferencesTheme.sectionLabel(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 11.0,
                 letterSpacing: 1.0,
@@ -46,7 +46,7 @@ class ReminderTimePickerCard extends StatelessWidget {
             Text(
               "preferences.reminders.time.sectionHint".t(context),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: RemindersPreferencesTheme.subtitleInk,
+                color: RemindersPreferencesTheme.subtitleInk(context),
                 fontSize: 12.5,
               ),
             ),
@@ -131,7 +131,7 @@ class ReminderTimePickerCard extends StatelessWidget {
                               context,
                             ),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: RemindersPreferencesTheme.subtitleInk,
+                              color: RemindersPreferencesTheme.subtitleInk(context),
                               fontSize: 11.0,
                               height: 1.4,
                             ),

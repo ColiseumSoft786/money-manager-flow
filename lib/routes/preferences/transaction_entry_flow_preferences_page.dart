@@ -6,7 +6,6 @@ import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flo
 import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_hero_card.dart";
 import "package:flow/routes/preferences/transaction_entry_flow/widgets/entry_flow_settings_card.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 class TransactionEntryFlowPreferencesPage extends StatefulWidget {
@@ -55,29 +54,9 @@ class _TransactionEntryFlowPreferencesPageState
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: TransactionEntryFlowPreferencesTheme.canvas,
+      backgroundColor: TransactionEntryFlowPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: TransactionEntryFlowPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.transactionEntryFlow.settingsTitle".t(context),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: TransactionEntryFlowPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.transactionEntryFlow.settingsTitle".t(context)),
       ),
       body: SafeArea(
         child: Column(
@@ -118,7 +97,9 @@ class _TransactionEntryFlowPreferencesPageState
                           "preferences.transactionEntryFlow.actions.description"
                               .t(context),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: TransactionEntryFlowPreferencesTheme.subtitleInk,
+                            color: TransactionEntryFlowPreferencesTheme.subtitleInk(
+                              context,
+                            ),
                             fontSize: 13.0,
                           ),
                         ),
@@ -196,7 +177,7 @@ class _SequenceHeader extends StatelessWidget {
                 .t(context)
                 .toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: TransactionEntryFlowPreferencesTheme.sectionLabel,
+              color: TransactionEntryFlowPreferencesTheme.sectionLabel(context),
               fontWeight: FontWeight.w700,
               fontSize: 11.0,
               letterSpacing: 1.1,
@@ -213,7 +194,7 @@ class _SequenceHeader extends StatelessWidget {
             child: Text(
               "preferences.transactionEntryFlow.dragToReorder".t(context),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: TransactionEntryFlowPreferencesTheme.subtitleInk,
+                color: TransactionEntryFlowPreferencesTheme.subtitleInk(context),
                 fontWeight: FontWeight.w700,
                 fontSize: 10.0,
                 letterSpacing: 0.5,

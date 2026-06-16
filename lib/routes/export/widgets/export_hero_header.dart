@@ -15,9 +15,9 @@ class ExportHeroHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: ExportOptionsTheme.rangeSummaryFill,
+          color: ExportOptionsTheme.rangeSummaryFill(context),
           borderRadius: BorderRadius.circular(ExportOptionsTheme.cardRadius),
-          border: Border.all(color: ExportOptionsTheme.cardBorder),
+          border: Border.all(color: ExportOptionsTheme.cardBorder(context)),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
@@ -30,7 +30,7 @@ class ExportHeroHeader extends StatelessWidget {
                     Text(
                       "sync.export.heroTitle".t(context),
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: ExportOptionsTheme.titleInk,
+                        color: ExportOptionsTheme.titleInk(context),
                         fontWeight: FontWeight.w800,
                         fontSize: 20.0,
                         height: 1.25,
@@ -41,7 +41,7 @@ class ExportHeroHeader extends StatelessWidget {
                     Text(
                       "sync.export.heroSubtitle".t(context),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: ExportOptionsTheme.mutedInk,
+                        color: ExportOptionsTheme.mutedInk(context),
                         fontSize: 13.5,
                         height: 1.45,
                       ),

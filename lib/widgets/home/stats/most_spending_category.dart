@@ -7,13 +7,14 @@ import "package:flow/l10n/extensions.dart";
 import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/services/exchange_rates.dart";
+import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/theme/helpers.dart";
 import "package:flow/widgets/general/blur_backgorund.dart";
 import "package:flow/widgets/general/directional_chevron.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/money_text.dart";
-import "package:flow/widgets/general/surface.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -40,13 +41,22 @@ class _MostSpendingCategoryState extends State<MostSpendingCategory> {
   Category? category;
   Money? expense;
 
-  bool busy = false;
+  bool busy = true;
 
   @override
   void initState() {
     super.initState();
     range = widget.range;
+    TransactionsService().addListener(fetch);
+    ExchangeRatesService().exchangeRatesCache.addListener(fetch);
     fetch();
+  }
+
+  @override
+  void dispose() {
+    TransactionsService().removeListener(fetch);
+    ExchangeRatesService().exchangeRatesCache.removeListener(fetch);
+    super.dispose();
   }
 
   @override
@@ -62,6 +72,12 @@ class _MostSpendingCategoryState extends State<MostSpendingCategory> {
 
   @override
   Widget build(BuildContext context) {
+    if (category == null) {
+      return const SizedBox.shrink();
+    }
+
+
+
     return InkWell(
       borderRadius: widget.borderRadius,
       onTap: (busy || category == null)
@@ -71,46 +87,46 @@ class _MostSpendingCategoryState extends State<MostSpendingCategory> {
             )),
       child: BlurBackground(
         blur: busy,
-        child: Surface(
-          shape: RoundedRectangleBorder(
-            borderRadius: widget.borderRadius as BorderRadiusGeometry,
+        child: GlassPanel(
+          borderRadius: widget.borderRadius ?? const BorderRadius.all(
+            Radius.circular(20.0),
           ),
-          builder: (context) => Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              spacing: 16.0,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: .start,
-                    children: [
-                      Row(
-                        spacing: 8.0,
-                        children: [
-                          FlowIcon(
-                            category?.icon ??
-                                FlowIconData.icon(Symbols.category_rounded),
-                            colorScheme: category?.colorScheme,
-                          ),
-                          Text(category?.name ?? "category.none".t(context)),
-                        ],
-                      ),
-                      MoneyText(
-                        expense,
-                        autoSize: true,
-                        style: context.textTheme.displaySmall,
-                      ),
-                    ],
-                  ),
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            spacing: 16.0,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      spacing: 8.0,
+                      children: [
+                        FlowIcon(
+                          category?.icon ??
+                              FlowIconData.icon(Symbols.category_rounded),
+                          colorScheme: category?.colorScheme,
+                        ),
+                        Text(category?.name ?? "category.none".t(context)),
+                      ],
+                    ),
+                    MoneyText(
+                      expense,
+                      autoSize: true,
+                      style: context.textTheme.displaySmall,
+                    ),
+                  ],
                 ),
-                const LeChevron(),
-              ],
-            ),
+              ),
+              const LeChevron(),
+            ],
           ),
         ),
       ),
     );
-  }
+    }
+ 
+  
 
   void fetch() async {
     setState(() {

@@ -301,15 +301,23 @@ class _PopularCurrencyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = context.colorScheme;
+    final bool selected = groupValue == data.code;
 
     return Material(
-      color: context.popularCurrencyTileCardFill,
+      color: selected
+          ? scheme.primary.withValues(alpha: 0.10)
+          : context.popularCurrencyTileCardFill,
       elevation: 0.0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           _SetupCurrencyPageState._popularCardRadius,
         ),
-        side: BorderSide(color: context.popularCurrencyCardBorderColor),
+        side: BorderSide(
+          color: selected
+              ? scheme.primary
+              : context.popularCurrencyCardBorderColor,
+          width: selected ? 2.0 : 1.0,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

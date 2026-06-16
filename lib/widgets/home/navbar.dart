@@ -1,11 +1,19 @@
+import "dart:ui";
+
 import "package:flow/l10n/extensions.dart";
-import "package:flow/theme/navbar_theme.dart";
 import "package:flow/widgets/home/navbar/navbar_button.dart";
 import "package:flutter/material.dart";
 import "package:material_symbols_icons/symbols.dart";
 
+/// Bar height excluding the system safe-area (handled by [BottomAppBar]).
+const double kNavbarBarHeight = 66.0;
+
+/// Extra scroll padding for tab content when the home scaffold uses
+/// `extendBody: true` so lists clear the frosted bar.
+const double kNavbarBodyBottomInset = 88.0;
+
 /// Material [BottomAppBar] with centered FAB notch (`CircularNotchedRectangle`).
-/// Matches the docked FAB + segmented tab layout — no external package needed.
+/// Frosted "liquid glass" fill via [BackdropFilter] (iOS-style tab bar).
 class Navbar extends StatelessWidget {
   final Function(int i) onTap;
 
@@ -15,67 +23,74 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final NavbarTheme navbarTheme = Theme.of(context).extension<NavbarTheme>()!;
-    final bool light = Theme.of(context).brightness == Brightness.light;
-    final Color barBg = light ? Colors.white : navbarTheme.backgroundColor;
-    final Color topLine = light
-        ? const Color(0xFFE8E8E8)
-        : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4);
+    final ThemeData theme = Theme.of(context);
+    final bool light = theme.brightness == Brightness.light;
+    final Color glassFill = light
+        ? Colors.white.withValues(alpha: 0.72)
+        : theme.colorScheme.surface.withValues(alpha: 0.78);
+    final Color glassBorder = light
+        ? Colors.black.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.1);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Divider(height: 1.0, thickness: 1.0, color: topLine),
-        BottomAppBar(
-          padding: EdgeInsets.zero,
-          color: barBg,
-          elevation: 0.0,
-          surfaceTintColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: const CircularNotchedRectangle(),
-          notchMargin: 11.0,
-          height: 66.0,
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              NavbarButton(
-                index: 0,
-                tooltip: "tabs.home".t(context),
-                label: "tabs.home".t(context),
-                icon: Symbols.home_rounded,
-                onTap: onTap,
-                activeIndex: activeIndex,
-              ),
-              NavbarButton(
-                index: 1,
-                tooltip: "tabs.stats".t(context),
-                label: "tabs.stats".t(context),
-                icon: Symbols.pie_chart_rounded,
-                onTap: onTap,
-                activeIndex: activeIndex,
-              ),
-              const SizedBox(width: 68.0),
-              NavbarButton(
-                index: 2,
-                tooltip: "tabs.accounts".t(context),
-                label: "tabs.accounts".t(context),
-                icon: Symbols.account_balance_rounded,
-                onTap: onTap,
-                activeIndex: activeIndex,
-              ),
-              NavbarButton(
-                index: 3,
-                tooltip: "tabs.profile".t(context),
-                label: "tabs.profile".t(context),
-                icon: Symbols.person_rounded,
-                onTap: onTap,
-                activeIndex: activeIndex,
-              ),
-            ],
+    return BottomAppBar(
+      padding: EdgeInsets.zero,
+      color: Colors.transparent,
+      elevation: 0.0,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 11.0,
+      height: kNavbarBarHeight,
+      clipBehavior: Clip.antiAlias,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 28.0, sigmaY: 28.0),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: glassFill,
+              border: Border(top: BorderSide(color: glassBorder, width: 0.5)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                NavbarButton(
+                  index: 0,
+                  tooltip: "tabs.home".t(context),
+                  label: "tabs.home".t(context),
+                  icon: Symbols.home_rounded,
+                  onTap: onTap,
+                  activeIndex: activeIndex,
+                ),
+                NavbarButton(
+                  index: 1,
+                  tooltip: "tabs.stats".t(context),
+                  label: "tabs.stats".t(context),
+                  icon: Symbols.pie_chart_rounded,
+                  onTap: onTap,
+                  activeIndex: activeIndex,
+                ),
+                const SizedBox(width: 68.0),
+                NavbarButton(
+                  index: 2,
+                  tooltip: "tabs.accounts".t(context),
+                  label: "tabs.accounts".t(context),
+                  icon: Symbols.account_balance_rounded,
+                  onTap: onTap,
+                  activeIndex: activeIndex,
+                ),
+                NavbarButton(
+                  index: 3,
+                  tooltip: "tabs.profile".t(context),
+                  label: "tabs.profile".t(context),
+                  icon: Symbols.person_rounded,
+                  onTap: onTap,
+                  activeIndex: activeIndex,
+                ),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

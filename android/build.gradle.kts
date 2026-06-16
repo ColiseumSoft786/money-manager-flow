@@ -1,3 +1,6 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+import com.android.build.gradle.BaseExtension
+
 allprojects {
     repositories {
         google()
@@ -11,9 +14,35 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    pluginManager.withPlugin("com.android.library") {
+        extensions.configure<BaseExtension>("android") {
+            compileSdkVersion(37)
+        }
+    }
+
+    configurations.configureEach {
+        resolutionStrategy {
+            force("androidx.glance:glance-appwidget:1.1.1")
+            force("androidx.glance:glance-material3:1.1.1")
+            force("androidx.glance:glance-preview:1.1.1")
+            force("androidx.glance:glance-appwidget-preview:1.1.1")
+        }
+    }
+
     project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
+}
+
+tasks.register<Exec>("startApi") {
+    workingDir = rootProject.projectDir
+    val os = org.gradle.internal.os.OperatingSystem.current()
+    if (os.isWindows) {
+        commandLine("powershell", "-Command", "Start-Process node -ArgumentList 'service' -WindowStyle Hidden")
+    } else {
+        commandLine("sh", "-c", "nohup node service >/dev/null 2>&1 &")
+    }
 }

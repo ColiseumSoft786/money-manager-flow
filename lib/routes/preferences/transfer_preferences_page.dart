@@ -6,7 +6,6 @@ import "package:flow/routes/preferences/transfer/widgets/transfer_info_banner.da
 import "package:flow/routes/preferences/transfer/widgets/transfer_layout_options_card.dart";
 import "package:flow/routes/preferences/transfer/widgets/transfer_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 
@@ -27,20 +26,9 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
         UserPreferencesService().combineTransfers;
 
     return Scaffold(
-      backgroundColor: TransferPreferencesTheme.canvas,
+      backgroundColor: TransferPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: TransferPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          "preferences.transfer.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: TransferPreferencesTheme.titleInk,
-          ),
-        ),
+        title: Text("preferences.transfer.settingsTitle".t(context)),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
@@ -54,14 +42,6 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
             ),
           ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -75,7 +55,7 @@ class _TransferPreferencesPageState extends State<TransferPreferencesPage> {
                 "preferences.transfer.heroDescription".t(context),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: TransferPreferencesTheme.subtitleInk,
+                  color: TransferPreferencesTheme.subtitleInk(context),
                   fontSize: 14.0,
                   height: 1.45,
                 ),

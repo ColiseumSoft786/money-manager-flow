@@ -31,21 +31,30 @@ class _SelectRecurrenceSheetState extends State<SelectRecurrenceSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalSheet.scrollable(
+    return ModalSheet(
       title: Text("transaction.recurring.setup".t(context)),
       trailing: ModalOverflowBar(
         alignment: .end,
         children: [
-          TextButton.icon(
-            onPressed: () => context.pop(),
-            icon: const Icon(Symbols.close_rounded),
-            label: Text("general.cancel".t(context)),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Symbols.close_rounded),
+                  label: Text("general.cancel".t(context)),
+                ),
+            
+                   TextButton.icon(
+              onPressed: () => context.pop(_recurrence),
+              icon: const Icon(Symbols.check_rounded),
+              label: Text("general.save".t(context)),
+            ),
+              ],
+            ),
           ),
-          TextButton.icon(
-            onPressed: () => context.pop(_recurrence),
-            icon: const Icon(Symbols.check_rounded),
-            label: Text("general.save".t(context)),
-          ),
+       
         ],
       ),
       child: SelectRecurrence(

@@ -20,9 +20,9 @@ class TransferLayoutOptionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransferPreferencesTheme.cardFill,
+        color: TransferPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(TransferPreferencesTheme.cardRadius),
-        border: Border.all(color: TransferPreferencesTheme.cardBorder),
+        border: Border.all(color: TransferPreferencesTheme.cardBorder(context)),
       ),
       child: Column(
         children: [
@@ -35,12 +35,12 @@ class TransferLayoutOptionsCard extends StatelessWidget {
             selected: combineSelected,
             onTap: onCombine,
           ),
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 16.0,
             endIndent: 16.0,
-            color: TransferPreferencesTheme.divider,
+            color: TransferPreferencesTheme.divider(context),
           ),
           _LayoutOptionRow(
             icon: Symbols.view_agenda_rounded,
@@ -108,14 +108,14 @@ class _LayoutOptionRow extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.0,
-                        color: TransferPreferencesTheme.titleInk,
+                        color: TransferPreferencesTheme.titleInk(context),
                       ),
                     ),
                     const SizedBox(height: 3.0),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: TransferPreferencesTheme.subtitleInk,
+                        color: TransferPreferencesTheme.subtitleInk(context),
                         fontSize: 12.5,
                         height: 1.35,
                       ),

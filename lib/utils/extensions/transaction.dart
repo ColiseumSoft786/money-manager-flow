@@ -4,6 +4,7 @@ import "package:flow/entity/transaction/extensions/default/recurring.dart";
 import "package:flow/entity/transaction/extensions/default/transfer.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/routes/transaction_page/select_recurring_update_mode_sheet.dart";
+import "package:flow/services/firebase_send_money_service.dart";
 import "package:flow/services/recurring_transactions.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/utils/extensions/custom_popups.dart";
@@ -149,8 +150,21 @@ extension TransactionHelpers on Transaction {
       return await _moveToTrashBinRecurring(context);
     }
 
+    if (isOutgoingPeerTransfer) {
+      final bool? confirmed = await context.showConfirmationSheet(
+        isDeletionConfirmation: true,
+        title: "sendMoney.removeLocalExpense.title".t(context),
+        child: Text("sendMoney.removeLocalExpense.body".t(context)),
+      );
+      if (confirmed != true) return false;
+    }
+
     try {
       TransactionsService().moveToBinSync(this);
+      if (isOutgoingPeerTransfer) {
+        await FirebaseSendMoneyService()
+            .markOutgoingCancelledByLocalTransactionUuid(uuid);
+      }
       return true;
     } catch (e, stackTrace) {
       _log.severe("Failed to move transaction to trash bin", e, stackTrace);

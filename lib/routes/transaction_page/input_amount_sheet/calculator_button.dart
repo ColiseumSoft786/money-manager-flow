@@ -24,6 +24,7 @@ class CalculatorButton extends StatelessWidget {
     final bool selected = operation == currentOperation;
 
     return NumpadButton(
+      style: selected ? NumpadKeyStyle.accent : NumpadKeyStyle.utility,
       backgroundColor: selected ? context.colorScheme.primary : null,
       onTap: () => onTap(operation),
       child: Transform.scale(

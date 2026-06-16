@@ -1,7 +1,7 @@
 import "package:flow/data/transaction_filter.dart";
 import "package:flutter/material.dart";
 
-/// Renders a row of transaction filter pills ([TransactionFilterChip], etc.).
+/// Renders a horizontally scrolling row of separate filter glass pills.
 class TransactionFilterHead extends StatelessWidget {
   final TransactionFilter value;
 

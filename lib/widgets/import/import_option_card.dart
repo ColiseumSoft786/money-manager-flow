@@ -23,12 +23,12 @@ class ImportOptionCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Material(
-        color: ImportPageTheme.cardFill,
+        color: ImportPageTheme.cardFill(context),
         elevation: 0,
         shadowColor: ImportPageTheme.cardShadow.first.color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ImportPageTheme.cardRadius),
-          side: const BorderSide(color: ImportPageTheme.cardBorder),
+          side: BorderSide(color: ImportPageTheme.cardBorder(context)),
         ),
         child: InkWell(
           onTap: onTap,
@@ -48,14 +48,14 @@ class ImportOptionCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 15.0,
-                          color: ImportPageTheme.titleInk,
+                          color: ImportPageTheme.titleInk(context),
                         ),
                       ),
                       const SizedBox(height: 3.0),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: ImportPageTheme.subtitleInk,
+                          color: ImportPageTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.35,
                         ),
@@ -66,7 +66,7 @@ class ImportOptionCard extends StatelessWidget {
                 Icon(
                   Symbols.chevron_right_rounded,
                   size: 22.0,
-                  color: ImportPageTheme.chevronInk,
+                  color: ImportPageTheme.chevronInk(context),
                 ),
               ],
             ),

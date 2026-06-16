@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "handleLower", "order": "ASCENDING" },
+        { "fieldPath": "discoverable", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "email", "order": "ASCENDING" },
+        { "fieldPath": "discoverable", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

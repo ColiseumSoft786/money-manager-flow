@@ -30,7 +30,7 @@ class EntryFlowAddActionsSection extends StatelessWidget {
           child: Text(
             "preferences.transactionEntryFlow.actions".t(context).toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: TransactionEntryFlowPreferencesTheme.sectionLabel,
+              color: TransactionEntryFlowPreferencesTheme.sectionLabel(context),
               fontWeight: FontWeight.w700,
               fontSize: 11.0,
               letterSpacing: 1.1,
@@ -39,24 +39,24 @@ class EntryFlowAddActionsSection extends StatelessWidget {
         ),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: TransactionEntryFlowPreferencesTheme.cardFill,
+            color: TransactionEntryFlowPreferencesTheme.cardFill(context),
             borderRadius: BorderRadius.circular(
               TransactionEntryFlowPreferencesTheme.cardRadius,
             ),
             border: Border.all(
-              color: TransactionEntryFlowPreferencesTheme.cardBorder,
+              color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
             ),
           ),
           child: Column(
             children: [
               for (int i = 0; i < availableActions.length; i++) ...[
                 if (i > 0)
-                  const Divider(
+                  Divider(
                     height: 1.0,
                     thickness: 1.0,
                     indent: 16.0,
                     endIndent: 16.0,
-                    color: TransactionEntryFlowPreferencesTheme.cardBorder,
+                    color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
                   ),
                 ListTile(
                   leading: Container(

@@ -33,7 +33,7 @@ class PendingFilterChips extends StatelessWidget {
             child: Material(
               color: isSelected
                   ? PendingTransactionsTheme.chipSelectedFill
-                  : PendingTransactionsTheme.chipIdleFill,
+                  : PendingTransactionsTheme.chipIdleFill(context),
               borderRadius: BorderRadius.circular(20.0),
               child: InkWell(
                 onTap: () => onSelected(preset),
@@ -53,7 +53,7 @@ class PendingFilterChips extends StatelessWidget {
                       fontSize: 13.0,
                       color: isSelected
                           ? PendingTransactionsTheme.chipSelectedInk
-                          : PendingTransactionsTheme.chipIdleInk,
+                          : PendingTransactionsTheme.chipIdleInk(context),
                     ),
                   ),
                 ),

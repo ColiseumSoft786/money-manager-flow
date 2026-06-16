@@ -42,11 +42,13 @@ class EntryFlowActionTile extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransactionEntryFlowPreferencesTheme.cardFill,
+        color: TransactionEntryFlowPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           TransactionEntryFlowPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: TransactionEntryFlowPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4.0, 10.0, 8.0, 10.0),
@@ -60,7 +62,7 @@ class EntryFlowActionTile extends StatelessWidget {
                 child: Icon(
                   Symbols.drag_indicator_rounded,
                   size: 22.0,
-                  color: TransactionEntryFlowPreferencesTheme.subtitleInk
+                  color: TransactionEntryFlowPreferencesTheme.subtitleInk(context)
                       .withValues(alpha: 0.55),
                   fill: 0.0,
                 ),
@@ -91,7 +93,7 @@ class EntryFlowActionTile extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15.0,
-                      color: TransactionEntryFlowPreferencesTheme.titleInk,
+                      color: TransactionEntryFlowPreferencesTheme.titleInk(context),
                     ),
                   ),
                   const SizedBox(height: 2.0),
@@ -102,7 +104,7 @@ class EntryFlowActionTile extends StatelessWidget {
                           {"index": stepNumber},
                         ),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: TransactionEntryFlowPreferencesTheme.subtitleInk,
+                      color: TransactionEntryFlowPreferencesTheme.subtitleInk(context),
                       fontSize: 12.5,
                     ),
                   ),
@@ -113,7 +115,7 @@ class EntryFlowActionTile extends StatelessWidget {
               onPressed: onDelete,
               icon: Icon(
                 Symbols.delete_rounded,
-                color: TransactionEntryFlowPreferencesTheme.subtitleInk
+                color: TransactionEntryFlowPreferencesTheme.subtitleInk(context)
                     .withValues(alpha: 0.65),
                 fill: 0.0,
               ),

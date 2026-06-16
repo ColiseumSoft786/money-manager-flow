@@ -1,7 +1,16 @@
 {
-    "cmake.configureOnOpen": false,
-    "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true,
-    "editor.tabSize": 2,
-    "swift.swiftSDK": "arm64-apple-ios"
+  "cmake.configureOnOpen": false,
+  "IDX.aI.enableInlineCompletion": true,
+  "IDX.aI.enableCodebaseIndexing": true,
+  "editor.tabSize": 2,
+  "swift.swiftSDK": "arm64-apple-ios",
+  "task.allowAutomaticTasks": true,
+  "debug.openDebug": "neverOpen",
+  "terminal.integrated.inheritEnv": false,
+  "tasks": {
+    "label": "lint on open",
+    "type": "shell",
+    "command": "npm run lint",
+    "runOn": "folderOpen"
+  }
 }

@@ -53,6 +53,9 @@ class Transaction implements EntityBase {
 
   bool? isPending;
 
+  /// Whether this transaction is tax deductible (business expense)
+  bool? isDeductible;
+
   /// Currency code complying with [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217)
   String currency;
 
@@ -80,6 +83,12 @@ class Transaction implements EntityBase {
     subtype = value?.value;
   }
 
+  static const String splitBilTag='split_bill';
+  @Transient()
+  bool get isSplitBill =>extraTags.contains(splitBilTag);
+
+
+
   /// Extra information related to the transaction
   ///
   /// We plan to use this field as place to store data for custom extensions.
@@ -92,6 +101,21 @@ class Transaction implements EntityBase {
   List<String> extraTags;
 
   static const String importedFromSiriTag = "ios:importedFromSiri";
+  static const String peerTransferTag = "peer_transfer";
+  static const String peerTransferOutTag = "peer_transfer_out";
+  static const String peerTransferInTag = "peer_transfer_in";
+
+  @Transient()
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isPeerTransfer => extraTags.contains(peerTransferTag);
+
+  @Transient()
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isOutgoingPeerTransfer => extraTags.contains(peerTransferOutTag);
+
+  @Transient()
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isIncomingPeerTransfer => extraTags.contains(peerTransferInTag);
 
   String? get externalProviderName {
     if (extraTags.contains(importedFromSiriTag)) {
@@ -230,6 +254,7 @@ class Transaction implements EntityBase {
     this.description,
     this.subtype,
     this.isPending,
+    this.isDeductible,
     this.location,
     required this.amount,
     required this.currency,

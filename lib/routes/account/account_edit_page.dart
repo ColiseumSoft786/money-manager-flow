@@ -24,6 +24,7 @@ import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/flow_theme_group.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/utils/optional.dart";
+import "package:flow/widgets/general/spinner.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/account/update_balance_options_sheet.dart";
 import "package:flow/widgets/account/account_delete_styled_button.dart";
@@ -34,6 +35,9 @@ import "package:flow/widgets/sheets/select_account_type_sheet.dart";
 import "package:flow/widgets/sheets/select_color_scheme_sheet.dart";
 import "package:flow/widgets/sheets/select_currency_sheet.dart";
 import "package:flow/widgets/sheets/select_flow_icon_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_char_flow_icon_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_icon_flow_icon_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet/select_image_flow_icon_sheet.dart";
 import "package:flutter/material.dart" hide Flow;
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -194,13 +198,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 16.0),
               child: Center(
-                child: SizedBox(
-                  width: 24.0,
-                  height: 24.0,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: context.colorScheme.primary,
-                  ),
+                child: Spinner.inline(
+                  size: 24.0,
+                  color: context.colorScheme.primary,
                 ),
               ),
             )
@@ -386,13 +386,9 @@ class _AccountEditPageState extends State<AccountEditPage> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  width: 36.0,
-                                  height: 36.0,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3.0,
-                                    color: context.colorScheme.primary,
-                                  ),
+                                Spinner(
+                                  size: 36.0,
+                                  color: context.colorScheme.primary,
                                 ),
                                 const SizedBox(height: 16.0),
                                 Text(
@@ -990,11 +986,38 @@ class _AccountEditPageState extends State<AccountEditPage> {
   }
 
   Future<void> selectIcon() async {
-    final result = await showModalBottomSheet<FlowIconData>(
+    final FlowIconPickerKind? kind = await showModalBottomSheet<FlowIconPickerKind>(
       context: context,
       builder: (context) => SelectFlowIconSheet(current: _iconData),
       isScrollControlled: true,
     );
+
+    if (!mounted || kind == null) return;
+
+    final FlowIconData? result = switch (kind) {
+      FlowIconPickerKind.symbol => await showModalBottomSheet<FlowIconData>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) =>
+            SelectIconFlowIconSheet(initialValue: _iconData),
+      ),
+      FlowIconPickerKind.character => await showModalBottomSheet<FlowIconData>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => SelectCharFlowIconSheet(
+          iconSize: 96.0,
+          initialValue: _iconData,
+        ),
+      ),
+      FlowIconPickerKind.image => await showModalBottomSheet<FlowIconData>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => SelectImageFlowIconSheet(
+          iconSize: 96.0,
+          initialValue: _iconData,
+        ),
+      ),
+    };
 
     if (result != null) {
       _updateIcon(result);

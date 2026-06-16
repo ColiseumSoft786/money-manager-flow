@@ -19,6 +19,7 @@ import "dart:async";
 import "dart:io";
 import "dart:ui";
 
+import "package:firebase_core/firebase_core.dart";
 import "package:flow/constants.dart";
 import "package:flow/data/flow_icon.dart";
 import "package:flow/entity/profile.dart";
@@ -29,12 +30,16 @@ import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/prefs/local_preferences.dart";
 import "package:flow/providers/accounts_provider.dart";
+import "package:flow/providers/budget_provider.dart";
 import "package:flow/providers/categories_provider.dart";
+import "package:flow/providers/goal_provider.dart";
+import "package:flow/providers/subscription_provider.dart";
 import "package:flow/providers/transaction_tags_provider.dart";
 import "package:flow/routes.dart";
 import "package:flow/services/currency_registry.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/integrations/siri_pending.dart";
+import "package:flow/services/Firebase_auth_service.dart";
 import "package:flow/services/local_auth.dart";
 import "package:flow/services/navigation.dart";
 import "package:flow/services/notifications.dart";
@@ -71,6 +76,8 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp();
+
   PrintAppender(formatter: ColorFormatter()).attachToLogger(Logger.root);
 
   initializeFileLogger();
@@ -105,6 +112,9 @@ void main() async {
   await ObjectBox.initialize();
   startupLog.fine("Initializing local preferences (shared prefs)");
   await LocalPreferences.initialize();
+
+  startupLog.fine("Initializing FirebaseAuthService");
+  await FirebaseAuthService().initialize();
 
   /// Set `sortOrder` values if there are any unset (-1) values
   await ObjectBox().updateAccountOrderList(ignoreIfNoUnsetValue: true);
@@ -221,6 +231,7 @@ class FlowState extends State<Flow> {
       migratePrimaryCurrencyToDb();
       migrateThemePrefsToDb();
       migratePrivacyPreferencesToUserPreferences();
+      migrateBudgetAlertDefaults();
 
       unawaited(SiriPendingService().resolveSiriTransactions());
     });
@@ -284,38 +295,46 @@ class FlowState extends State<Flow> {
       themeMode: _themeMode,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return AccountsProviderScope(
-          child: CategoriesProviderScope(
-            child: TransactionTagsProviderScope(
-              child: FlowThemes(
-                child: GestureDetector(
-                  behavior: _tempLock
-                      ? HitTestBehavior.opaque
-                      : HitTestBehavior.deferToChild,
-                  onTap: _tryUnlockTempLock,
-                  child: IgnorePointer(
-                    ignoring: _tempLock,
-                    child: Stack(
-                      children: [
-                        child ?? Container(),
-                        if (_tempLock)
-                          Positioned.fill(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: 8.0,
-                                sigmaY: 8.0,
-                              ),
-                              child: SizedBox.expand(
-                                child: Center(
-                                  child: FlowIcon(
-                                    FlowIconData.icon(Symbols.lock_rounded),
-                                    size: 80.0,
+        return BudgetsProviderScope(
+          child: GoalsProviderScope(
+            child: SubscriptionsProviderScope(
+              child: AccountsProviderScope(
+                child: CategoriesProviderScope(
+                  child: TransactionTagsProviderScope(
+                    child: FlowThemes(
+                      child: GestureDetector(
+                        behavior: _tempLock
+                            ? HitTestBehavior.opaque
+                            : HitTestBehavior.deferToChild,
+                        onTap: _tryUnlockTempLock,
+                        child: IgnorePointer(
+                          ignoring: _tempLock,
+                          child: Stack(
+                            children: [
+                              child ?? Container(),
+                              if (_tempLock)
+                                Positioned.fill(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: 8.0,
+                                      sigmaY: 8.0,
+                                    ),
+                                    child: SizedBox.expand(
+                                      child: Center(
+                                        child: FlowIcon(
+                                          FlowIconData.icon(
+                                            Symbols.lock_rounded,
+                                          ),
+                                          size: 80.0,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
+                            ],
                           ),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

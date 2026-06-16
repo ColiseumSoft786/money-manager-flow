@@ -33,6 +33,7 @@ class NumpadSelectorRadio extends StatelessWidget {
               children: [
                 Numpad(
                   width: constraints.maxWidth,
+                  showPanel: false,
                   mainAxisSpacing: 3.0,
                   crossAxisSpacing: 3.0,
                   children: isPhoneLayout

@@ -34,18 +34,30 @@ class FlowAccentColors extends ThemeExtension<FlowAccentColors> {
 
   factory FlowAccentColors.fromColorScheme(ColorScheme scheme) {
     final Color primary = scheme.primary;
+    final bool primaryIsLight =
+        ThemeData.estimateBrightnessForColor(primary) == Brightness.light;
+
+    final Color heroStart = primaryIsLight
+        ? Color.lerp(primary, scheme.onSurface, 0.08)!
+        : primary;
+    final Color heroEnd = primaryIsLight
+        ? Color.lerp(primary, scheme.onSurface, 0.28)!
+        : Color.lerp(primary, const Color(0xFF000000), 0.12) ?? primary;
+
     return FlowAccentColors(
       primary: primary,
       onPrimary: scheme.onPrimary,
       iconPlateFill: primary.withValues(alpha: 0.12),
-      iconPlateInk: primary,
+      iconPlateInk: primaryIsLight
+          ? Color.lerp(primary, scheme.onSurface, 0.55)!
+          : primary,
       softFill: primary.withValues(alpha: 0.08),
       chipSelectedFill: primary.withValues(alpha: 0.12),
       chipSelectedBorder: primary,
       infoPanelFill: primary.withValues(alpha: 0.10),
       infoPanelBorder: primary.withValues(alpha: 0.30),
-      heroGradientStart: primary,
-      heroGradientEnd: Color.lerp(primary, const Color(0xFF000000), 0.12) ?? primary,
+      heroGradientStart: heroStart,
+      heroGradientEnd: heroEnd,
     );
   }
 

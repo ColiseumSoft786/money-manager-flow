@@ -90,7 +90,7 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Material(
-            color: SelectCurrencySheetTheme.canvas,
+            color: SelectCurrencySheetTheme.canvas(context),
             clipBehavior: Clip.antiAlias,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -104,10 +104,10 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                     title: "account.edit.selectCurrency".t(context),
                     onBack: () => context.pop(),
                   ),
-                  const Divider(
+                  Divider(
                     height: 1.0,
                     thickness: 1.0,
-                    color: SelectCurrencySheetTheme.divider,
+                    color: SelectCurrencySheetTheme.divider(context),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 10.0),
@@ -122,16 +122,16 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                       decoration: InputDecoration(
                         isDense: true,
                         filled: true,
-                        fillColor: SelectCurrencySheetTheme.sheetFill,
+                        fillColor: SelectCurrencySheetTheme.sheetFill(context),
                         hintText: "currency.searchHint".t(context),
                         hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: SelectCurrencySheetTheme.subtitleInk,
+                          color: SelectCurrencySheetTheme.subtitleInk(context),
                           fontSize: 15.0,
                         ),
                         prefixIcon: Icon(
                           Symbols.search_rounded,
                           size: 22.0,
-                          color: SelectCurrencySheetTheme.subtitleInk,
+                          color: SelectCurrencySheetTheme.subtitleInk(context),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 12.0,
@@ -139,8 +139,8 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: SelectCurrencySheetTheme.border,
+                          borderSide: BorderSide(
+                            color: SelectCurrencySheetTheme.border(context),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -159,7 +159,7 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                       child: Text(
                         "setup.primaryCurrency.popular".t(context),
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: SelectCurrencySheetTheme.subtitleInk,
+                          color: SelectCurrencySheetTheme.subtitleInk(context),
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.0,
                         ),
@@ -192,12 +192,12 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: SelectCurrencySheetTheme.sheetFill,
+                          color: SelectCurrencySheetTheme.sheetFill(context),
                           borderRadius: BorderRadius.circular(
                             SelectCurrencySheetTheme.cardRadius,
                           ),
                           border: Border.all(
-                            color: SelectCurrencySheetTheme.border,
+                            color: SelectCurrencySheetTheme.border(context),
                           ),
                         ),
                         child: ClipRRect(
@@ -209,7 +209,7 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                                   child: Text(
                                     "currency.searchNoResults".t(context),
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: SelectCurrencySheetTheme.subtitleInk,
+                                      color: SelectCurrencySheetTheme.subtitleInk(context),
                                     ),
                                   ),
                                 )
@@ -217,12 +217,12 @@ class _SelectCurrencySheetState extends State<SelectCurrencySheet> {
                                   controller: _scrollController,
                                   padding: EdgeInsets.zero,
                                   itemCount: results.length,
-                                  separatorBuilder: (_, __) => const Divider(
+                                  separatorBuilder: (_, __) => Divider(
                                     height: 1.0,
                                     thickness: 1.0,
                                     indent: 16.0,
                                     endIndent: 16.0,
-                                    color: SelectCurrencySheetTheme.divider,
+                                    color: SelectCurrencySheetTheme.divider(context),
                                   ),
                                   itemBuilder: (context, index) {
                                     final CurrencyData data =
@@ -281,9 +281,9 @@ class _SheetHeader extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: IconButton(
               onPressed: onBack,
-              icon: const Icon(
+              icon: Icon(
                 Symbols.arrow_back_rounded,
-                color: SelectCurrencySheetTheme.titleInk,
+                color: SelectCurrencySheetTheme.titleInk(context),
               ),
             ),
           ),
@@ -297,7 +297,7 @@ class _SheetHeader extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 17.0,
-                color: SelectCurrencySheetTheme.titleInk,
+                color: SelectCurrencySheetTheme.titleInk(context),
               ),
             ),
           ),
@@ -324,14 +324,14 @@ class _PopularCurrencyChip extends StatelessWidget {
 
     return Material(
       color: selected
-          ? SelectCurrencySheetTheme.popularChipFill
-          : SelectCurrencySheetTheme.sheetFill,
+          ? SelectCurrencySheetTheme.popularChipFill(context)
+          : SelectCurrencySheetTheme.sheetFill(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
           color: selected
-              ? SelectCurrencySheetTheme.popularChipBorder
-              : SelectCurrencySheetTheme.border,
+              ? SelectCurrencySheetTheme.popularChipBorder(context)
+              : SelectCurrencySheetTheme.border(context),
           width: selected ? 1.5 : 1.0,
         ),
       ),
@@ -351,7 +351,7 @@ class _PopularCurrencyChip extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   color: selected
                       ? SelectCurrencySheetTheme.primary(context)
-                      : SelectCurrencySheetTheme.titleInk,
+                      : SelectCurrencySheetTheme.titleInk(context),
                 ),
               ),
             ],
@@ -379,7 +379,7 @@ class _CurrencyRow extends StatelessWidget {
 
     return Material(
       color: selected
-          ? SelectCurrencySheetTheme.popularChipFill.withValues(alpha: 0.45)
+          ? SelectCurrencySheetTheme.rowSelectedFill(context)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -398,7 +398,7 @@ class _CurrencyRow extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.0,
-                        color: SelectCurrencySheetTheme.titleInk,
+                        color: SelectCurrencySheetTheme.titleInk(context),
                       ),
                     ),
                     const SizedBox(height: 2.0),
@@ -407,7 +407,7 @@ class _CurrencyRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: SelectCurrencySheetTheme.subtitleInk,
+                        color: SelectCurrencySheetTheme.subtitleInk(context),
                         fontSize: 12.5,
                       ),
                     ),
@@ -451,7 +451,7 @@ class _CurrencyRadio extends StatelessWidget {
         border: Border.all(
           color: selected
               ? SelectCurrencySheetTheme.primary(context)
-              : SelectCurrencySheetTheme.radioIdleBorder,
+              : SelectCurrencySheetTheme.radioIdleBorder(context),
           width: 2.0,
         ),
       ),
@@ -460,8 +460,8 @@ class _CurrencyRadio extends StatelessWidget {
               child: Container(
                 width: 8.0,
                 height: 8.0,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onPrimary,
                   shape: BoxShape.circle,
                 ),
               ),

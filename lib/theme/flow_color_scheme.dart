@@ -67,6 +67,28 @@ const Color kFlowSetupAddCategoryIconPlateFill = Color(0xFFDBEAFE);
 /// Warm off-white page canvas (**Category edit** light mode only).
 const Color kFlowWarmOffWhiteSurfaceLight = Color(0xFFFBFAF7);
 
+/// Auth welcome screen (CashPilot sign-up / sign-in entry).
+const Color kFlowAuthWelcomeBackground = Color(0xFFF8F9FF);
+const Color kFlowAuthWelcomePrimary = Color(0xFF0056A4);
+const Color kFlowAuthWelcomeTagline = Color(0xFF5C6B7A);
+const Color kFlowAuthWelcomeHeadline = Color(0xFF0F172A);
+const Color kFlowAuthWelcomeSubheadline = Color(0xFF64748B);
+const Color kFlowAuthWelcomeSignInBorder = Color(0xFFDCE3EE);
+const Color kFlowAuthWelcomePrimaryButtonShadow = Color(0x400056A4);
+const Color kFlowAuthWelcomeLogoShadow = Color(0x330056A4);
+
+/// Auth sign-in screen (CashPilot).
+const Color kFlowAuthSignInBody = Color(0xFFFFFFFF);
+const Color kFlowAuthSignInHeaderPattern = Color(0x1AFFFFFF);
+const Color kFlowAuthSignInInputFill = Color(0xFFE8EEF6);
+const Color kFlowAuthSignInLabel = Color(0xFF0F172A);
+const Color kFlowAuthSignInHint = Color(0xFF94A3B8);
+const Color kFlowAuthSignInSubtitle = Color(0xFF64748B);
+const Color kFlowAuthSignInIcon = Color(0xFF64748B);
+const double kFlowAuthSignInFieldRadius = 14.0;
+const Color kFlowAuthSignUpLogoPlate = Color(0xFF7EB8E8);
+const Color kFlowAuthSignUpInputBorder = Color(0xFFE2E8F0);
+
 /// Home Income / Expense metric chips (pinned header row).
 const Color kFlowHomeIncomeMetricFill = Color(0xFFE8F8F0);
 const Color kFlowHomeIncomeMetricFillDark = Color(0xFF132A20);

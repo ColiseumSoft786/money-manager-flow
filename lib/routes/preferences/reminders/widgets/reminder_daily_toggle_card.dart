@@ -21,9 +21,9 @@ class ReminderDailyToggleCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: RemindersPreferencesTheme.cardFill,
+        color: RemindersPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(RemindersPreferencesTheme.cardRadius),
-        border: Border.all(color: RemindersPreferencesTheme.cardBorder),
+        border: Border.all(color: RemindersPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
@@ -54,14 +54,14 @@ class ReminderDailyToggleCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15.0,
-                      color: RemindersPreferencesTheme.titleInk,
+                      color: RemindersPreferencesTheme.titleInk(context),
                     ),
                   ),
                   const SizedBox(height: 2.0),
                   Text(
                     "preferences.reminders.remindDaily.subtitle".t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: RemindersPreferencesTheme.subtitleInk,
+                      color: RemindersPreferencesTheme.subtitleInk(context),
                       fontSize: 12.5,
                       height: 1.35,
                     ),
@@ -73,8 +73,10 @@ class ReminderDailyToggleCard extends StatelessWidget {
               value: enabled,
               onChanged: interactive ? onChanged : null,
               activeTrackColor: RemindersPreferencesTheme.primary(context),
-              inactiveTrackColor: const Color(0xFFE5E7EB),
-              thumbColor: WidgetStateProperty.all(Colors.white),
+              inactiveTrackColor: RemindersPreferencesTheme.cardBorder(context),
+              thumbColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.surface,
+              ),
             ),
           ],
         ),

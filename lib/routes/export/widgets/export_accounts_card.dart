@@ -27,9 +27,9 @@ class ExportAccountsCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ExportOptionsTheme.cardFill,
+        color: ExportOptionsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(ExportOptionsTheme.cardRadius),
-        border: Border.all(color: ExportOptionsTheme.cardBorder),
+        border: Border.all(color: ExportOptionsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14.0, 12.0, 14.0, 8.0),
@@ -43,7 +43,7 @@ class ExportAccountsCard extends StatelessWidget {
                     "sync.export.pdf.accounts".t(context),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: ExportOptionsTheme.titleInk,
+                      color: ExportOptionsTheme.titleInk(context),
                     ),
                   ),
                 ),
@@ -73,17 +73,17 @@ class ExportAccountsCard extends StatelessWidget {
                 "total": accounts.length,
               }),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: ExportOptionsTheme.mutedInk,
+                color: ExportOptionsTheme.mutedInk(context),
                 fontSize: 12.0,
               ),
             ),
             const SizedBox(height: 8.0),
             for (int i = 0; i < accounts.length; i++) ...[
               if (i > 0)
-                const Divider(
+                Divider(
                   height: 1.0,
                   thickness: 1.0,
-                  color: ExportOptionsTheme.cardBorder,
+                  color: ExportOptionsTheme.cardBorder(context),
                 ),
               _AccountRow(
                 account: accounts[i],
@@ -115,7 +115,7 @@ class _AccountRow extends StatelessWidget {
 
     return Material(
       color: selected
-          ? ExportOptionsTheme.tabSelectedFill.withValues(alpha: 0.55)
+          ? ExportOptionsTheme.tabSelectedFill(context).withValues(alpha: 0.55)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -137,7 +137,7 @@ class _AccountRow extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: 15.0,
-                    color: ExportOptionsTheme.titleInk,
+                    color: ExportOptionsTheme.titleInk(context),
                   ),
                 ),
               ),

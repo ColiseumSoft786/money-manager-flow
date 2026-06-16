@@ -14,9 +14,9 @@ class EnyDashboardCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: EnyPreferencesTheme.cardFill,
+        color: EnyPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(EnyPreferencesTheme.cardRadius),
-        border: Border.all(color: EnyPreferencesTheme.cardBorder),
+        border: Border.all(color: EnyPreferencesTheme.cardBorder(context)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -49,14 +49,16 @@ class EnyDashboardCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15.0,
-                      color: EnyPreferencesTheme.titleInk,
+                      color: EnyPreferencesTheme.titleInk(context),
                     ),
                   ),
                 ),
                 Icon(
                   Symbols.chevron_right_rounded,
                   size: 22.0,
-                  color: EnyPreferencesTheme.subtitleInk.withValues(alpha: 0.6),
+                  color: EnyPreferencesTheme.subtitleInk(context).withValues(
+                    alpha: 0.6,
+                  ),
                   fill: 0.0,
                 ),
               ],

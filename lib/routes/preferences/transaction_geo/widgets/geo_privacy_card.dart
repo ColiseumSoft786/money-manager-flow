@@ -10,11 +10,13 @@ class GeoPrivacyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransactionGeoPreferencesTheme.cardFill,
+        color: TransactionGeoPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           TransactionGeoPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: TransactionGeoPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: TransactionGeoPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
@@ -24,7 +26,7 @@ class GeoPrivacyCard extends StatelessWidget {
             Icon(
               Symbols.verified_user_rounded,
               size: 22.0,
-              color: TransactionGeoPreferencesTheme.subtitleInk,
+              color: TransactionGeoPreferencesTheme.subtitleInk(context),
               fill: 0.0,
             ),
             const SizedBox(width: 12.0),
@@ -32,7 +34,7 @@ class GeoPrivacyCard extends StatelessWidget {
               child: Text(
                 "preferences.transactions.geo.privacyNotice".t(context),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: TransactionGeoPreferencesTheme.subtitleInk,
+                  color: TransactionGeoPreferencesTheme.subtitleInk(context),
                   fontSize: 13.0,
                   height: 1.45,
                 ),

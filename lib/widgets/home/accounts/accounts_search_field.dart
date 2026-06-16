@@ -22,36 +22,36 @@ class AccountsSearchField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: AccountsTabTheme.titleInk,
+        color: AccountsTabTheme.titleInk(context),
         fontSize: 15.0,
       ),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(color: AccountsTabTheme.subtitleInk),
+        hintStyle: TextStyle(color: AccountsTabTheme.subtitleInk(context)),
         filled: true,
-        fillColor: AccountsTabTheme.cardFill,
+        fillColor: AccountsTabTheme.cardFill(context),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14.0,
           vertical: 12.0,
         ),
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Symbols.search_rounded,
-          color: AccountsTabTheme.subtitleInk,
+          color: AccountsTabTheme.subtitleInk(context),
           size: 22.0,
         ),
         suffixIcon: onClear != null
             ? IconButton(
                 onPressed: onClear,
-                icon: const Icon(
+                icon: Icon(
                   Symbols.close_rounded,
-                  color: AccountsTabTheme.subtitleInk,
+                  color: AccountsTabTheme.subtitleInk(context),
                   size: 20.0,
                 ),
               )
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AccountsTabTheme.cardBorder),
+          borderSide: BorderSide(color: AccountsTabTheme.cardBorder(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
@@ -62,7 +62,7 @@ class AccountsSearchField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AccountsTabTheme.cardBorder),
+          borderSide: BorderSide(color: AccountsTabTheme.cardBorder(context)),
         ),
       ),
     );

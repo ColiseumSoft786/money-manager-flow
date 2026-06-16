@@ -26,15 +26,22 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Figma calls for a pure-white canvas; pin ink tokens to the light palette
-    // so text and icons stay readable on the forced-white surface.
-    const Color screenBackground = Colors.white;
-    const Color titleInk = kFlowHomeTransactionHeadingInk;
-    const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-    const Color chevronInk = kFlowMonthSelectorChevronInkLight;
-    const Color cardShadow = Color.fromRGBO(0, 0, 0, 0.08);
-    const Color iconPlateFill = kFlowSetupAddCategoryIconPlateFill;
-    const Color iconPlateInk = kFlowSetupPrimaryCurrencyInfoTitle;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color screenBackground = isDark ? scheme.surface : Colors.white;
+    final Color cardFill = isDark ? scheme.surfaceContainerHigh : Colors.white;
+    final Color titleInk = isDark ? scheme.onSurface : kFlowHomeTransactionHeadingInk;
+    final Color subtitleInk =
+        isDark ? scheme.onSurfaceVariant : kFlowAccountRowBalanceInkLight;
+    final Color chevronInk =
+        isDark ? scheme.onSurfaceVariant : kFlowMonthSelectorChevronInkLight;
+    final Color dividerInk =
+        isDark ? scheme.outlineVariant : kFlowAccountRowDividerLight;
+    final Color cardShadow =
+        isDark ? Colors.transparent : const Color.fromRGBO(0, 0, 0, 0.08);
+    final Color iconPlateFill = context.flowAccent.iconPlateFill;
+    final Color iconPlateInk = context.flowAccent.iconPlateInk;
 
     return Scaffold(
       backgroundColor: screenBackground,
@@ -56,7 +63,7 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
+            color: dividerInk,
           ),
         ),
       ),
@@ -84,6 +91,7 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
                     cardShadow: cardShadow,
                     iconPlateFill: iconPlateFill,
                     iconPlateInk: iconPlateInk,
+                    cardFill: cardFill,
                     onTap: () => context.push("/transactionTags/new"),
                   ),
                 ),
@@ -95,6 +103,7 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
                       cardShadow: cardShadow,
                       iconPlateFill: iconPlateFill,
                       iconPlateInk: iconPlateInk,
+                      cardFill: cardFill,
                       onCreate: () => context.push("/transactionTags/new"),
                     ),
                   )
@@ -116,6 +125,7 @@ class _TransactionTagsPageState extends State<TransactionTagsPage> {
                           titleInk: titleInk,
                           chevronInk: chevronInk,
                           cardShadow: cardShadow,
+                          cardFill: cardFill,
                           onTap: () =>
                               context.push("/transactionTags/${tag.id}"),
                         );
@@ -139,6 +149,7 @@ class _NewTagCard extends StatelessWidget {
   final Color cardShadow;
   final Color iconPlateFill;
   final Color iconPlateInk;
+  final Color cardFill;
   final VoidCallback onTap;
 
   const _NewTagCard({
@@ -148,6 +159,7 @@ class _NewTagCard extends StatelessWidget {
     required this.cardShadow,
     required this.iconPlateFill,
     required this.iconPlateInk,
+    required this.cardFill,
     required this.onTap,
   });
 
@@ -157,14 +169,14 @@ class _NewTagCard extends StatelessWidget {
     final BorderRadius radius = BorderRadius.circular(16.0);
 
     return Material(
-      color: Colors.white,
+      color: cardFill,
       elevation: 0,
       shadowColor: cardShadow,
       shape: RoundedRectangleBorder(borderRadius: radius),
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          color: Colors.white,
+          color: cardFill,
           boxShadow: [
             BoxShadow(
               color: cardShadow,
@@ -246,6 +258,7 @@ class _EmptyTagsState extends StatelessWidget {
   final Color cardShadow;
   final Color iconPlateFill;
   final Color iconPlateInk;
+  final Color cardFill;
   final VoidCallback onCreate;
 
   const _EmptyTagsState({
@@ -254,6 +267,7 @@ class _EmptyTagsState extends StatelessWidget {
     required this.cardShadow,
     required this.iconPlateFill,
     required this.iconPlateInk,
+    required this.cardFill,
     required this.onCreate,
   });
 
@@ -270,7 +284,7 @@ class _EmptyTagsState extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardFill,
                 borderRadius: BorderRadius.circular(22.0),
                 boxShadow: [
                   BoxShadow(
@@ -343,6 +357,7 @@ class _TagRow extends StatelessWidget {
   final Color titleInk;
   final Color chevronInk;
   final Color cardShadow;
+  final Color cardFill;
   final VoidCallback onTap;
 
   const _TagRow({
@@ -350,6 +365,7 @@ class _TagRow extends StatelessWidget {
     required this.titleInk,
     required this.chevronInk,
     required this.cardShadow,
+    required this.cardFill,
     required this.onTap,
   });
 
@@ -359,11 +375,11 @@ class _TagRow extends StatelessWidget {
     final BorderRadius radius = BorderRadius.circular(14.0);
 
     return Material(
-      color: Colors.white,
+      color: cardFill,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          color: Colors.white,
+          color: cardFill,
           boxShadow: [
             BoxShadow(
               color: cardShadow,

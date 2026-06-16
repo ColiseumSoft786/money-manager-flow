@@ -76,8 +76,14 @@ class Button extends StatelessWidget {
           ? SizedBox(width: double.infinity, child: Center(child: rowWidget))
           : rowWidget;
       padding = this.padding.copyWith(
-        left: this.padding.left - (leading != null ? 4.0 : 0.0),
-        right: this.padding.right - (trailing != null ? 4.0 : 0.0),
+        left: (this.padding.left - (leading != null ? 4.0 : 0.0)).clamp(
+          0.0,
+          double.infinity,
+        ),
+        right: (this.padding.right - (trailing != null ? 4.0 : 0.0)).clamp(
+          0.0,
+          double.infinity,
+        ),
       );
     } else {
       child = fullWidth

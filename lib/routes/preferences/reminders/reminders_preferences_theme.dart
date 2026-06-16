@@ -3,12 +3,31 @@ import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 abstract final class RemindersPreferencesTheme {
-  static const Color canvas = Color(0xFFF8F9FB);
-  static const Color cardFill = Colors.white;
-  static const Color cardBorder = Color(0xFFE5E7EB);
-  static const Color titleInk = kFlowHomeTransactionHeadingInk;
-  static const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-  static const Color sectionLabel = Color(0xFF94A3B8);
+  static bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static ColorScheme _scheme(BuildContext context) =>
+      Theme.of(context).colorScheme;
+
+  static Color canvas(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surface : const Color(0xFFF8F9FB);
+
+  static Color cardFill(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surfaceContainerHigh : Colors.white;
+
+  static Color cardBorder(BuildContext context) =>
+      _isDark(context) ? _scheme(context).outlineVariant : const Color(0xFFE5E7EB);
+
+  static Color titleInk(BuildContext context) =>
+      _isDark(context) ? _scheme(context).onSurface : kFlowHomeTransactionHeadingInk;
+
+  static Color subtitleInk(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : kFlowAccountRowBalanceInkLight;
+
+  static Color sectionLabel(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : const Color(0xFF94A3B8);
 
   static Color primary(BuildContext context) =>
       PreferencesUiTheme.primary(context);

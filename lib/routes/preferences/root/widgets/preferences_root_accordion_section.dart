@@ -51,15 +51,17 @@ class PreferencesRootAccordionSection extends StatelessWidget {
     return heightForRows(rows, tallRows: tallRows);
   }
 
-  static const ShapeBorder _cardShape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.all(Radius.circular(PreferencesRootTheme.cardRadius)),
-    side: BorderSide(color: PreferencesRootTheme.cardBorder),
-  );
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final accent = context.flowAccent;
+
+    final ShapeBorder cardShape = RoundedRectangleBorder(
+      borderRadius: const BorderRadius.all(
+        Radius.circular(PreferencesRootTheme.cardRadius),
+      ),
+      side: BorderSide(color: PreferencesRootTheme.cardBorder(context)),
+    );
 
     return AnimatedAccordion(
       isInitiallyExpanded: isInitiallyExpanded,
@@ -71,18 +73,18 @@ class PreferencesRootAccordionSection extends StatelessWidget {
       collapsedTileElevation: 0.0,
       expandedTileElevation: 0.0,
       headerElevation: 0.0,
-      tileBackgroundColor: PreferencesRootTheme.cardFill,
-      headerBackgroundColor: PreferencesRootTheme.cardFill,
-      contentBackgroundColor: PreferencesRootTheme.cardFill,
-      headerTextColor: PreferencesRootTheme.titleInk,
+      tileBackgroundColor: PreferencesRootTheme.cardFill(context),
+      headerBackgroundColor: PreferencesRootTheme.cardFill(context),
+      contentBackgroundColor: PreferencesRootTheme.cardFill(context),
+      headerTextColor: PreferencesRootTheme.titleInk(context),
       headerPadding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
       contentPadding: EdgeInsets.zero,
       headerTitleStyle: theme.textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.w700,
         fontSize: 16.0,
-        color: PreferencesRootTheme.titleInk,
+        color: PreferencesRootTheme.titleInk(context),
       ),
-      tileShape: _cardShape,
+      tileShape: cardShape,
       headerShape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
           Radius.circular(PreferencesRootTheme.cardRadius),
@@ -92,8 +94,8 @@ class PreferencesRootAccordionSection extends StatelessWidget {
       contentBorderRadius: const BorderRadius.vertical(
         bottom: Radius.circular(PreferencesRootTheme.cardRadius),
       ),
-      contentBorder: const Border(
-        top: BorderSide(color: PreferencesRootTheme.divider),
+      contentBorder: Border(
+        top: BorderSide(color: PreferencesRootTheme.divider(context)),
       ),
       headerLeading: Container(
         width: 40.0,

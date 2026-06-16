@@ -74,7 +74,7 @@ class _FormatTile extends StatelessWidget {
     ExportMode.json => (
       icon: Symbols.data_object_rounded,
       accent: ExportOptionsTheme.primary(context),
-      plate: ExportOptionsTheme.rangeSummaryFill,
+      plate: ExportOptionsTheme.rangeSummaryFill(context),
       title: "sync.export.asJSON".t(context),
       description: "sync.export.asJSON.description".t(context),
     ),
@@ -89,10 +89,10 @@ class _FormatTile extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: ExportOptionsTheme.cardFill,
+        color: ExportOptionsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(ExportOptionsTheme.cardRadius),
         border: Border.all(
-          color: selected ? data.accent : ExportOptionsTheme.cardBorder,
+          color: selected ? data.accent : ExportOptionsTheme.cardBorder(context),
           width: selected ? 2.0 : 1.0,
         ),
       ),
@@ -131,14 +131,14 @@ class _FormatTile extends StatelessWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 16.0,
-                          color: ExportOptionsTheme.titleInk,
+                          color: ExportOptionsTheme.titleInk(context),
                         ),
                       ),
                       const SizedBox(height: 4.0),
                       Text(
                         data.description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: ExportOptionsTheme.mutedInk,
+                          color: ExportOptionsTheme.mutedInk(context),
                           fontSize: 12.5,
                           height: 1.4,
                         ),

@@ -56,27 +56,7 @@ class _ThemePreferencesPageState extends State<ThemePreferencesPage> {
         return Scaffold(
           backgroundColor: ThemePreferencesTheme.canvas,
           appBar: AppBar(
-            backgroundColor: ThemePreferencesTheme.cardFill,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            title: Text(
-              "preferences.theme.settingsTitle".t(context),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 17.0,
-                color: ThemePreferencesTheme.titleInk,
-              ),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1.0),
-              child: Divider(
-                height: 1.0,
-                thickness: 1.0,
-                color: Color(0xFFE5E7EB),
-              ),
-            ),
+            title: Text("preferences.theme.settingsTitle".t(context)),
           ),
           body: SafeArea(
             child: SingleChildScrollView(

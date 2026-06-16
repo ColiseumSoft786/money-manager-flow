@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:convert";
 
 import "package:flow/data/exchange_rates_set.dart";
 import "package:flow/entity/account.dart";
@@ -55,6 +56,15 @@ class LocalPreferences {
   late final BoolSettingsEntry preferFullAmounts;
   late final BoolSettingsEntry useCurrencySymbol;
 
+  /// Whether Tax Mode (deductible expenses tracking) is enabled
+  late final BoolSettingsEntry enableTaxMode;
+
+  /// Whether Subscription Manager is enabled
+  late final BoolSettingsEntry enableSubscriptionManager;
+
+  /// Whether on-device smart receipt scan is enabled
+  late final BoolSettingsEntry enableReceiptScan;
+
   /// Number of notifications issued by the app
   ///
   /// Used to prevent id collisions
@@ -63,6 +73,17 @@ class LocalPreferences {
   late final PendingTransactionsLocalPreferences pendingTransactions;
   late final TransitiveLocalPreferences transitive;
   late final EnyLocalPreferences eny;
+
+  late final PrimitiveSettingsEntry<String>firebaseUserId;
+  late final PrimitiveSettingsEntry<String>firebaseDisplayName;
+  late final BoolSettingsEntry hasFirebaseAccount;
+
+  /// Comma-separated [HomeDashboardWidgetId.name] order for Home tab cards.
+  late final PrimitiveSettingsEntry<String> homeDashboardOrder;
+
+  /// Comma-separated hidden dashboard widget ids.
+  late final PrimitiveSettingsEntry<String> homeDashboardHidden;
+   
 
   LocalPreferences._internal(this._prefs) {
     SettingsEntry.defaultPrefix = "flow.";
@@ -87,7 +108,6 @@ class LocalPreferences {
       preferences: _prefs,
       initialValue: false,
     );
-
     localeOverride = LocaleSettingsEntry(
       key: "localeOverride",
       preferences: _prefs,
@@ -141,6 +161,24 @@ class LocalPreferences {
       initialValue: true,
     );
 
+    enableTaxMode = BoolSettingsEntry(
+      key: "enableTaxMode",
+      preferences: _prefs,
+      initialValue: false,
+    );
+
+    enableSubscriptionManager = BoolSettingsEntry(
+      key: "enableSubscriptionManager",
+      preferences: _prefs,
+      initialValue: false,
+    );
+
+    enableReceiptScan = BoolSettingsEntry(
+      key: "enableReceiptScan",
+      preferences: _prefs,
+      initialValue: false,
+    );
+
     lastRequestedAppStoreReview = DateTimeSettingsEntry(
       key: "lastRequestedAppStoreReview",
       preferences: _prefs,
@@ -158,6 +196,31 @@ class LocalPreferences {
     );
     transitive = TransitiveLocalPreferences.initialize(_prefs);
     eny = EnyLocalPreferences.initialize(_prefs);
+
+    firebaseUserId=PrimitiveSettingsEntry<String>(
+      key: "firebaseUserId",
+      preferences: _prefs,
+    );
+
+    firebaseDisplayName=PrimitiveSettingsEntry<String>(
+      key: 
+      "firebaseDisplayName", 
+      preferences: _prefs);
+
+    hasFirebaseAccount=BoolSettingsEntry(
+      key: "hasFirebaseAccount",
+      preferences: _prefs,
+        initialValue: false,
+    );
+
+    homeDashboardOrder = PrimitiveSettingsEntry<String>(
+      key: "homeDashboard.order",
+      preferences: _prefs,
+    );
+    homeDashboardHidden = PrimitiveSettingsEntry<String>(
+      key: "homeDashboard.hidden",
+      preferences: _prefs,
+    );
   }
 
   @Deprecated("Use UserPreferencesService().primaryCurrency instead")
@@ -200,6 +263,25 @@ class LocalPreferences {
     return primaryCurrencyName;
   }
 
+
+   Future<void>saveFirebaseUser({
+    required String userId,
+    required String displayName,
+   })async{
+    await firebaseUserId.set(userId);
+    await firebaseDisplayName.set(displayName);
+    await hasFirebaseAccount.set(true);
+   }
+
+   Future<void>clearFirebaseUser()async{
+    await firebaseUserId.remove();
+    await firebaseDisplayName.remove();
+    await hasFirebaseAccount.set(false);
+   }
+
+   String? getCachedFirebaseUserId()=>firebaseUserId.value;
+   bool get hasFirebaseAccountCached => hasFirebaseAccount.get();
+
   factory LocalPreferences() {
     if (_instance == null) {
       throw Exception(
@@ -226,7 +308,31 @@ class LocalPreferences {
       cacheOptions: SharedPreferencesWithCacheOptions(),
     );
 
+    await _repairInvalidJsonPrefs(withCache);
+
     _instance ??= LocalPreferences._internal(withCache);
+  }
+
+  /// `local_settings` logs when JSON prefs are null/empty; seed valid defaults.
+  static Future<void> _repairInvalidJsonPrefs(
+    SharedPreferencesWithCache prefs,
+  ) async {
+    const String exchangeRatesKey = "flow.caches.exchangeRatesCache";
+    final String defaultExchangeRatesJson = jsonEncode(
+      ExchangeRatesSet({}).toJson(),
+    );
+
+    final String? raw = prefs.getString(exchangeRatesKey);
+    if (raw == null || raw.trim().isEmpty) {
+      await prefs.setString(exchangeRatesKey, defaultExchangeRatesJson);
+      return;
+    }
+
+    try {
+      jsonDecode(raw);
+    } catch (_) {
+      await prefs.setString(exchangeRatesKey, defaultExchangeRatesJson);
+    }
   }
 
   static Future<void> _migrateFromLegacy(String migrationCompletedKey) async {

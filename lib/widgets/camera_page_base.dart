@@ -1,7 +1,9 @@
 import "dart:io";
 
 import "package:camera/camera.dart";
+import "package:flow/l10n/extensions.dart";
 import "package:flow/services/camera.dart";
+import "package:flow/widgets/general/spinner.dart";
 import "package:flow/utils/utils.dart";
 import "package:flutter/material.dart";
 import "package:flutter/scheduler.dart";
@@ -82,12 +84,14 @@ class CameraPageBaseState extends State<CameraPageBase>
         if (isSupported)
           Positioned.fill(
             child: controller == null || !controller!.value.isInitialized
-                ? const Center(child: CircularProgressIndicator())
+                ? const Spinner.center()
                 : cameraWidget(context, controller!),
           ),
         if (!isSupported)
           widget.unsupportedWidget ??
-              Material(child: Center(child: Text("Camera not supported :("))),
+              Material(
+                child: Center(child: Text("camera.notSupported".t(context))),
+              ),
 
         ...widget.children,
       ],

@@ -323,6 +323,9 @@ class RecurringTransactionsService {
     return recurringTransaction;
   }
 
+  List<RecurringTransaction> getAllSync() =>
+      ObjectBox().box<RecurringTransaction>().getAll();
+
   Future<RecurringTransaction?> findOne(dynamic identifier) async {
     if (identifier is int) {
       return await ObjectBox().box<RecurringTransaction>().getAsync(identifier);

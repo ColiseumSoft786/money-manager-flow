@@ -13,7 +13,6 @@ import "package:flow/routes/export/widgets/export_section_header.dart";
 import "package:flow/services/accounts.dart";
 import "package:flow/sync/export/export_pdf.dart";
 import "package:flow/sync/export/mode.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/widgets/general/spinner.dart";
 import "package:flutter/foundation.dart" hide Category;
 import "package:flutter/material.dart";
@@ -70,12 +69,12 @@ class _ExportOptionsPageState extends State<ExportOptionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color screenBackground = ExportOptionsTheme.canvas;
+    final Color screenBackground = ExportOptionsTheme.canvas(context);
 
     return Scaffold(
       backgroundColor: screenBackground,
       appBar: AppBar(
-        backgroundColor: ExportOptionsTheme.cardFill,
+        backgroundColor: ExportOptionsTheme.cardFill(context),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -84,15 +83,15 @@ class _ExportOptionsPageState extends State<ExportOptionsPage> {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 17.0,
-            color: ExportOptionsTheme.titleInk,
+            color: ExportOptionsTheme.titleInk(context),
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
+            color: ExportOptionsTheme.cardBorder(context),
           ),
         ),
       ),
@@ -329,9 +328,11 @@ class _BottomExportBar extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ExportOptionsTheme.cardBorder)),
+      decoration: BoxDecoration(
+        color: ExportOptionsTheme.cardFill(context),
+        border: Border(
+          top: BorderSide(color: ExportOptionsTheme.cardBorder(context)),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 16.0),
@@ -344,7 +345,7 @@ class _BottomExportBar extends StatelessWidget {
                   Icon(
                     Symbols.calendar_today_rounded,
                     size: 16.0,
-                    color: ExportOptionsTheme.mutedInk,
+                    color: ExportOptionsTheme.mutedInk(context),
                     fill: 0.0,
                   ),
                   const SizedBox(width: 6.0),
@@ -354,7 +355,7 @@ class _BottomExportBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: ExportOptionsTheme.mutedInk,
+                        color: ExportOptionsTheme.mutedInk(context),
                         fontWeight: FontWeight.w600,
                         fontSize: 12.0,
                       ),
@@ -409,7 +410,7 @@ class _BottomExportBar extends StatelessWidget {
               "sync.export.disclaimer".t(context),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: ExportOptionsTheme.mutedInk,
+                color: ExportOptionsTheme.mutedInk(context),
                 fontSize: 11.0,
                 height: 1.4,
               ),

@@ -5,7 +5,6 @@ import "package:flow/routes/preferences/numpad/widgets/numpad_info_banner.dart";
 import "package:flow/routes/preferences/numpad/widgets/numpad_layout_option_card.dart";
 import "package:flow/routes/preferences/numpad/widgets/numpad_preview_hero.dart";
 import "package:flow/routes/preferences/numpad/widgets/numpad_section_header.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 class NumpadPreferencesPage extends StatefulWidget {
@@ -24,27 +23,7 @@ class _NumpadPreferencesPageState extends State<NumpadPreferencesPage> {
     return Scaffold(
       backgroundColor: NumpadPreferencesTheme.canvas,
       appBar: AppBar(
-        backgroundColor: NumpadPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.numpad.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: NumpadPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.numpad.settingsTitle".t(context)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

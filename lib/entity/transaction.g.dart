@@ -12,6 +12,7 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) =>
         description: json['description'] as String?,
         subtype: json['subtype'] as String?,
         isPending: json['isPending'] as bool?,
+        isDeductible: json['isDeductible'] as bool?,
         location: (json['location'] as List<dynamic>?)
             ?.map((e) => (e as num).toDouble())
             .toList(),
@@ -64,6 +65,7 @@ Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
       'location': instance.location,
       'amount': instance.amount,
       'isPending': instance.isPending,
+      'isDeductible': instance.isDeductible,
       'currency': instance.currency,
       'subtype': instance.subtype,
       'extra': instance.extra,

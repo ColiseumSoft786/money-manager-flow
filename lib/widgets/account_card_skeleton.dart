@@ -36,10 +36,10 @@ class AccountCardSkeleton extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 22.0),
             decoration: BoxDecoration(
-              color: AccountsTabTheme.addCardFill,
+              color: AccountsTabTheme.addCardFill(context),
               borderRadius: radius,
               border: DashedBorder(
-                color: AccountsTabTheme.addCardBorder,
+                color: AccountsTabTheme.addCardBorder(context),
                 width: 1.5,
                 borderRadius: radius,
                 dashLength: 6.0,
