@@ -15,9 +15,9 @@ class StatsDailyTrendsCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: StatsTheme.cardFill,
+        color: StatsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(StatsTheme.cardRadius),
-        border: Border.all(color: StatsTheme.cardBorder),
+        border: Border.all(color: StatsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0),
@@ -32,7 +32,7 @@ class StatsDailyTrendsCard extends StatelessWidget {
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 16.0,
-                      color: StatsTheme.titleInk,
+                      color: StatsTheme.titleInk(context),
                     ),
                   ),
                 ),

@@ -1,20 +1,20 @@
-import "package:flow/constants.dart";
 import "package:flow/data/flow_icon.dart";
 import "package:flow/data/money.dart";
-import "package:flow/data/transaction_filter.dart";
+import "package:flow/data/transactions_filter/group_range.dart";
+import "package:flow/entity/category.dart";
 import "package:flow/entity/transaction.dart";
-import "package:flow/entity/transaction/extensions/default/transfer.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/providers/accounts_provider.dart";
+import "package:flow/utils/flow_haptics.dart";
 import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/utils/extensions/transaction.dart";
 import "package:flow/widgets/general/directional_slidable.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/general/money_text_builder.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
 import "package:flow/widgets/home/home_transaction_cards_scope.dart";
 import "package:flow/widgets/general/money_text.dart";
-import "package:flow/widgets/transaction_list_tile/transaction_subtitle.dart";
 import "package:flow/widgets/transaction_list_tile_theme.dart";
 import "package:flutter/material.dart";
 import "package:flutter_slidable/flutter_slidable.dart";
@@ -24,29 +24,14 @@ import "package:moment_dart/moment_dart.dart";
 
 class TransactionListTile extends StatelessWidget {
   final TransactionListTileThemeData? theme;
-
   final Transaction transaction;
-
   final VoidCallback? recoverFromTrashFn;
   final VoidCallback? moveToTrashFn;
   final VoidCallback? duplicateFn;
   final Function([bool confirm])? confirmFn;
-
   final Key? dismissibleKey;
-
   final bool combineTransfers;
-
   final bool? overrideObscure;
-
-  /// Determines what date/time to show. i.e.:
-  ///
-  /// * [TransactionGroupRange.hour] - Hour and minute
-  /// * [TransactionGroupRange.day] - Hour and minute
-  /// * [TransactionGroupRange.week] - Calendar date with hour and minute
-  /// * [TransactionGroupRange.month] - Calendar date with hour and minute
-  /// * [TransactionGroupRange.year] - Calendar date with hour and minute
-  ///
-  /// Defaults to [TransactionGroupRange.day]
   final TransactionGroupRange? groupRange;
 
   const TransactionListTile({
@@ -65,25 +50,10 @@ class TransactionListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TransactionListTileThemeData effectiveTheme =
-        TransactionListTileTheme.maybeOf(context)?.data.merge(theme) ??
-        theme ??
-        TransactionListTileThemeData.fallback;
-
-    final bool cardChrome = HomeTransactionCardsScope.enabledIn(context);
-
-    final bool showPendingConfirmation =
-        confirmFn != null && transaction.confirmable();
-
-    final bool showDuplicateButton =
-        transaction.isDeleted != true && duplicateFn != null;
-    final bool showHoldButton = confirmFn != null && transaction.holdable();
-    final bool showConfirmButton =
-        confirmFn != null && transaction.confirmable();
-
-    if ((combineTransfers || showPendingConfirmation) &&
-        transaction.isTransfer &&
-        !transaction.amount.isNegative) {
+    final effectiveTheme = TransactionListTileTheme.maybeOf(context)?.data.merge(theme) ?? theme ?? TransactionListTileThemeData.fallback;
+    final showPendingConfirmation = confirmFn != null && transaction.confirmable();
+    
+    if ((combineTransfers || showPendingConfirmation) && transaction.isTransfer && !transaction.amount.isNegative) {
       return Container();
     }
 
@@ -96,294 +66,23 @@ class TransactionListTile extends StatelessWidget {
             "transaction.fallbackTitle".t(context)),
     };
 
-    final Transfer? transfer = transaction.isTransfer
-        ? transaction.extensions.transfer
-        : null;
-
-    final List<InlineSpan> subtitleComponents = [
-      TextSpan(
-        text: (transaction.isTransfer && combineTransfers)
-            ? "${AccountsProvider.of(context).getName(transfer!.fromAccountUuid)} → ${AccountsProvider.of(context).getName(transfer.toAccountUuid)}"
-            : (AccountsProvider.of(context).getName(transaction.accountUuid) ??
-                  transaction.account.target?.name),
-      ),
-      if (effectiveTheme.showCategoryOrDefault &&
-          transaction.category.target != null)
-        TextSpan(text: transaction.category.target!.name),
-      if (effectiveTheme.showExternalSourceOrDefault)
-        if (transaction.externalProviderName
-            case String externalProviderName) ...[
-          TextSpan(
-            children: [
-              if (externalProviderName == "Siri")
-                WidgetSpan(
-                  child: Padding(
-                    padding: .only(right: 4.0),
-                    child: Image.asset("assets/images/siri.png", height: 12.0),
-                  ),
-                  alignment: .middle,
-                ),
-              if (externalProviderName == "Eny")
-                WidgetSpan(
-                  child: Padding(
-                    padding: .only(right: 4.0),
-                    child: Image.network(enyLogoUrl, height: 12.0),
-                  ),
-                  alignment: .middle,
-                ),
-              TextSpan(text: externalProviderName),
-            ],
-          ),
-        ],
-      TextSpan(text: dateString),
-      if (transaction.transactionDate.isFuture)
-        TextSpan(
-          text: transaction.isPending == true
-              ? "transaction.pending".t(context)
-              : "transaction.pending.preapproved".t(context),
-        ),
-    ];
-
-    final WidgetSpan? titleLeadingIconSpan = transaction.isRecurring
-        ? titleIconSpan(context, Symbols.repeat_rounded)
-        : (transaction.transactionDate.isFutureAnchored(
-                Moment.now().startOfNextMinute(),
-              )
-              ? titleIconSpan(
-                  context,
-                  Symbols.search_activity_rounded,
-                  color: transaction.isPending == true
-                      ? context.colorScheme.onSurface.withAlpha(0xc0)
-                      : context.flowColors.income,
-                )
-              : null);
-
-    final Widget inner = Padding(
-      padding: effectiveTheme.paddingOrDefault,
-      child: Column(
-        children: [
-          Row(
-                crossAxisAlignment: cardChrome
-                    ? CrossAxisAlignment.center
-                    : CrossAxisAlignment.start,
-                spacing: effectiveTheme.spacingOrDefault,
-                children: [
-                  buildLeading(context, effectiveTheme, cardChrome),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: effectiveTheme.titleSpacingOrDefault,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              if (titleLeadingIconSpan != null) ...[
-                                titleLeadingIconSpan,
-                                TextSpan(text: " "),
-                              ],
-                              TextSpan(text: resolvedTitle),
-                            ],
-                            style: cardChrome
-                                ? context.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color:
-                                        Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? kFlowHomeTransactionHeadingInk
-                                        : context.colorScheme.onSurface,
-                                  )
-                                : context.textTheme.bodyMedium,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (cardChrome)
-                          _buildHomeStackedMeta(
-                            context,
-                            effectiveTheme,
-                            combineTransfers,
-                            resolvedTitle,
-                          )
-                        else
-                          TransactionSubtitle(
-                            components: subtitleComponents,
-                            foregroundColor: null,
-                          ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    spacing: effectiveTheme.titleSpacingOrDefault,
-                    children: [
-                      MoneyTextBuilder(
-                        money: transaction.money,
-                        displayAbsoluteAmount:
-                            transaction.isTransfer && combineTransfers,
-                        overrideObscure: overrideObscure,
-                        builder: (context, text, money) {
-                          String displayText = text;
-                          if (cardChrome &&
-                              !transaction.isTransfer &&
-                              money != null &&
-                              money.amount > 0 &&
-                              !displayText.trimLeft().startsWith("+")) {
-                            displayText = "+$displayText";
-                          }
-                          return Text(
-                            displayText,
-                            style: cardChrome
-                                ? context.textTheme.titleSmall?.copyWith(
-                                    color: transaction.type.color(context),
-                                    fontWeight: FontWeight.w700,
-                                  )
-                                : context.textTheme.bodyLarge?.copyWith(
-                                    color: transaction.type.color(context),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                          );
-                        },
-                      ),
-                      if (combineTransfers &&
-                          AccountsProvider.of(context).ready &&
-                          transaction.extensions.transfer?.conversionRate !=
-                              null &&
-                          transaction.extensions.transfer?.conversionRate !=
-                              1.0)
-                        MoneyText(
-                          Money(
-                            transaction.money.amount *
-                                transaction
-                                    .extensions
-                                    .transfer!
-                                    .conversionRate!,
-                            AccountsProvider.of(context)
-                                .get(
-                                  transaction
-                                      .extensions
-                                      .transfer!
-                                      .toAccountUuid,
-                                )!
-                                .currency,
-                          ),
-                          displayAbsoluteAmount: true,
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: context.colorScheme.onSurface.withAlpha(
-                              0x80,
-                            ),
-                          ),
-                          overrideObscure: overrideObscure,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              if (showPendingConfirmation) ...[
-                SizedBox(height: effectiveTheme.spacingOrDefault),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => confirmFn!(),
-                      label: Text("general.confirm".t(context)),
-                      icon: Icon(Symbols.check_rounded),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12.0),
-              ],
-        ],
-      ),
+    final listTile = _ModernTransactionCard(
+      transaction: transaction,
+      resolvedTitle: resolvedTitle,
+      effectiveTheme: effectiveTheme,
+      combineTransfers: combineTransfers,
+      groupRange: groupRange,
+      overrideObscure: overrideObscure,
+      onTap: () => context.push("/transaction/${transaction.id}"),
+      child: _buildCardContent(context, effectiveTheme, resolvedTitle),
     );
 
-    final BorderRadius cardRadius = BorderRadius.circular(18.0);
+    final startActions = _buildStartActions(context);
+    final endActions = _buildEndActions(context, showPendingConfirmation);
 
-    final Widget listTile = cardChrome
-        ? Padding(
-            padding: const EdgeInsets.fromLTRB(14.0, 6.0, 14.0, 6.0),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.white
-                    : context.colorScheme.surfaceContainerHigh,
-                borderRadius: cardRadius,
-                border: Border.all(
-                  width: 1.0,
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? kFlowHomeTransactionCardBorder
-                      : context.colorScheme.outline.withValues(alpha: 0.22),
-                ),
-                boxShadow: Theme.of(context).brightness == Brightness.light
-                    ? const [
-                        BoxShadow(
-                          offset: Offset(0.0, 1.0),
-                          blurRadius: 2.0,
-                          spreadRadius: 0.0,
-                          color: kFlowHomeTransactionCardShadowColor,
-                        ),
-                      ]
-                    : const [],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => context.push("/transaction/${transaction.id}"),
-                  borderRadius: cardRadius,
-                  child: inner,
-                ),
-              ),
-            ),
-          )
-        : Material(
-            type: MaterialType.card,
-            color: kTransparent,
-            child: InkWell(
-              onTap: () => context.push("/transaction/${transaction.id}"),
-              child: inner,
-            ),
-          );
-
-    final List<SlidableAction> startActions = [
-      if (showDuplicateButton)
-        SlidableAction(
-          onPressed: (context) => duplicateFn!(),
-          icon: Symbols.content_copy_rounded,
-          backgroundColor: context.flowColors.semi,
-        ),
-    ];
-
-    final List<SlidableAction> endActions = [
-      if (showConfirmButton)
-        SlidableAction(
-          onPressed: (context) => confirmFn!(),
-          icon: Symbols.check_rounded,
-          backgroundColor: context.colorScheme.primary,
-        ),
-      if (showHoldButton)
-        SlidableAction(
-          onPressed: (context) => confirmFn!(false),
-          icon: Symbols.cancel_rounded,
-          backgroundColor: context.flowColors.expense,
-        ),
-      if (moveToTrashFn != null &&
-          !showHoldButton &&
-          transaction.isDeleted != true)
-        SlidableAction(
-          onPressed: (context) => moveToTrashFn!(),
-          icon: Symbols.delete_forever_rounded,
-          backgroundColor: context.flowColors.expense,
-        ),
-      if (recoverFromTrashFn != null &&
-          !showHoldButton &&
-          transaction.isDeleted == true)
-        SlidableAction(
-          onPressed: (context) => recoverFromTrashFn!(),
-          icon: Symbols.restore_page_rounded,
-          backgroundColor: context.flowColors.income,
-        ),
-    ];
+    if (startActions.isEmpty && endActions.isEmpty) {
+      return listTile;
+    }
 
     return DirectionalSlidable(
       key: dismissibleKey,
@@ -394,183 +93,466 @@ class TransactionListTile extends StatelessWidget {
     );
   }
 
-  /// Home elevated cards: account, category, time on separate lines (no • run-on).
-  Widget _buildHomeStackedMeta(
-    BuildContext context,
-    TransactionListTileThemeData effectiveTheme,
-    bool combineTransfers,
-    String resolvedTitle,
-  ) {
-    final bool light = Theme.of(context).brightness == Brightness.light;
-    final Color captionColor = light
-        ? kFlowHomeTransactionCaptionMuted
-        : context.colorScheme.onSurfaceVariant;
+  Widget _buildCardContent(
+  BuildContext context,
+  TransactionListTileThemeData effectiveTheme,
+  String resolvedTitle,
+) {
+  final theme = Theme.of(context);
+  final isExpense = transaction.type == TransactionType.expense;
+  final timeString = _getTimeString();
+  final categoryText = transaction.category.target?.name;
+  final accountText = _getAccountName(context);
 
-    final TextStyle lineStyle = context.textTheme.bodySmall!.copyWith(
-      color: captionColor,
-      height: 1.45,
-      fontWeight: FontWeight.w500,
-    );
-
-    final List<Widget> lines = <Widget>[];
-
-    void pushLine(Widget line) {
-      if (lines.isNotEmpty) {
-        lines.add(const SizedBox(height: 4.0));
-      }
-      lines.add(line);
-    }
-
-    final Transfer? xfer =
-        transaction.isTransfer ? transaction.extensions.transfer : null;
-
-    final String accountLabel =
-        (transaction.isTransfer && combineTransfers && xfer != null)
-        ? "${AccountsProvider.of(context).getName(xfer.fromAccountUuid) ?? ""} → ${AccountsProvider.of(context).getName(xfer.toAccountUuid) ?? ""}"
-        : (AccountsProvider.of(context).getName(transaction.accountUuid) ??
-              transaction.account.target?.name ??
-              "");
-
-    if (accountLabel.isNotEmpty) {
-      pushLine(
-        Text(
-          accountLabel,
-          style: lineStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
-    }
-
-    if (effectiveTheme.showCategoryOrDefault &&
-        transaction.category.target != null) {
-      final String cat = transaction.category.target!.name;
-      if (cat.toLowerCase() != resolvedTitle.trim().toLowerCase()) {
-        pushLine(
-          Text(
-            cat,
-            style: lineStyle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
-      }
-    }
-
-    if (effectiveTheme.showExternalSourceOrDefault &&
-        transaction.externalProviderName != null) {
-      final String externalProviderName = transaction.externalProviderName!;
-      pushLine(
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (externalProviderName == "Siri")
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 6.0),
-                child: Image.asset("assets/images/siri.png", height: 12.0),
+  return Padding(
+    padding: effectiveTheme.paddingOrDefault,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+       
+        _ModernIcon(transaction: transaction, effectiveTheme: effectiveTheme),
+        SizedBox(width: effectiveTheme.spacingOrDefault),
+        
+        
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+             
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(
+                    child: Text(
+                      resolvedTitle.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: theme.colorScheme.onSurface,
+                        height: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                 
+                  MoneyTextBuilder(
+                    money: transaction.money,
+                    displayAbsoluteAmount: true,
+                    overrideObscure: overrideObscure,
+                    builder: (context, text, money) {
+                      return Text(
+                        isExpense ? "-$text" : "+$text",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                          color: isExpense 
+                              ? context.flowColors.expense 
+                              : context.flowColors.income,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-            if (externalProviderName == "Eny")
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 6.0),
-                child: Image.network(enyLogoUrl, height: 12.0),
-              ),
-            Flexible(
-              fit: FlexFit.loose,
-              child: Text(
-                externalProviderName,
-                style: lineStyle.copyWith(fontWeight: FontWeight.w600),
+              const SizedBox(height: 4),
+            
+              if (categoryText != null && categoryText.isNotEmpty)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        categoryText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                          height: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                     
+                     timeString,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 2),
+             
+              Text(
+               
+               accountText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
+}
+
+  String _getTimeString() {
+    final DateTime now = Moment.now().startOfNextMinute();
+    final bool isPending = transaction.isPending == true ||
+        transaction.transactionDate.isFutureAnchored(now);
+
+    if (isPending) {
+      return transaction.transactionDate.toMoment().calendar();
     }
 
-    final String pendingPiece = transaction.transactionDate.isFuture
-        ? " · ${transaction.isPending == true ? "transaction.pending".t(context) : "transaction.pending.preapproved".t(context)}"
-        : "";
-
-    pushLine(
-      Text(
-        "${dateString}$pendingPiece",
-        style: lineStyle,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: lines,
-    );
+    return switch (groupRange) {
+      TransactionGroupRange.hour || TransactionGroupRange.day =>
+        transaction.transactionDate.toMoment().LT,
+      _ => transaction.transactionDate.toMoment().lll,
+    };
   }
 
-  FlowIcon buildLeading(
-    BuildContext context,
-    TransactionListTileThemeData theme,
-    bool cardChrome,
-  ) {
+  String _getAccountName(BuildContext context) {
+    final transfer =
+        transaction.isTransfer ? transaction.extensions.transfer : null;
+
+    if (transaction.isTransfer && combineTransfers && transfer != null) {
+      return "${AccountsProvider.of(context).getName(transfer.fromAccountUuid)} → ${AccountsProvider.of(context).getName(transfer.toAccountUuid)}";
+    }
+
+    return AccountsProvider.of(context).getName(transaction.accountUuid) ??
+        transaction.account.target?.name ??
+        "";
+  }
+
+  List<SlidableAction> _buildStartActions(BuildContext context) {
+    final actions = <SlidableAction>[];
+    
+    if (transaction.isDeleted != true) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticLight();
+          context.push("/transaction/${transaction.id}");
+        },
+        icon: Symbols.edit_rounded,
+        backgroundColor: context.colorScheme.secondaryContainer,
+        foregroundColor: context.colorScheme.onSecondaryContainer,
+      ));
+    }
+    
+    if (duplicateFn != null && transaction.isDeleted != true) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticLight();
+          duplicateFn!();
+        },
+        icon: Symbols.content_copy_rounded,
+        backgroundColor: context.colorScheme.tertiaryContainer,
+        foregroundColor: context.colorScheme.onTertiaryContainer,
+      ));
+    }
+    
+    return actions;
+  }
+
+  List<SlidableAction> _buildEndActions(BuildContext context, bool showPendingConfirmation) {
+    final actions = <SlidableAction>[];
+    final showConfirmButton = confirmFn != null && transaction.confirmable();
+    final showHoldButton = confirmFn != null && transaction.holdable();
+    
+    if (showConfirmButton) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticMedium();
+          confirmFn!();
+        },
+        icon: Symbols.check_rounded,
+        backgroundColor: context.flowColors.income,
+        foregroundColor: Colors.white,
+      ));
+    }
+    
+    if (showHoldButton) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticMedium();
+          confirmFn!(false);
+        },
+        icon: Symbols.cancel_rounded,
+        backgroundColor: context.flowColors.expense,
+        foregroundColor: Colors.white,
+      ));
+    }
+    
+    if (moveToTrashFn != null && !showHoldButton && transaction.isDeleted != true) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticMedium();
+          moveToTrashFn!();
+        },
+        icon: Symbols.delete_forever_rounded,
+        backgroundColor: context.colorScheme.errorContainer,
+        foregroundColor: context.colorScheme.onErrorContainer,
+      ));
+    }
+    
+    if (recoverFromTrashFn != null && !showHoldButton && transaction.isDeleted == true) {
+      actions.add(SlidableAction(
+        onPressed: (_) {
+          flowHapticLight();
+          recoverFromTrashFn!();
+        },
+        icon: Symbols.restore_page_rounded,
+        backgroundColor: context.flowColors.income,
+        foregroundColor: Colors.white,
+      ));
+    }
+    
+    return actions;
+  }
+}
+
+// Modern icon widget
+class _ModernIcon extends StatelessWidget {
+  final Transaction transaction;
+  final TransactionListTileThemeData effectiveTheme;
+
+  const _ModernIcon({required this.transaction, required this.effectiveTheme});
+
+  @override
+  Widget build(BuildContext context) {
     late final FlowIconData iconData;
     FlowColorScheme? colorScheme;
 
     if (transaction.isTransfer) {
       iconData = FlowIconData.icon(Symbols.sync_alt_rounded);
-    } else if (theme.useAccountIconForLeadingOrDefault) {
+    } else if (effectiveTheme.useAccountIconForLeadingOrDefault) {
       iconData =
           AccountsProvider.of(context).get(transaction.accountUuid)?.icon ??
           transaction.account.target?.icon ??
           FlowIconData.icon(Symbols.circle_rounded);
     } else if (transaction.category.target != null) {
-      iconData = transaction.category.target!.icon;
-      colorScheme = transaction.category.target!.colorScheme;
+      final Category category = transaction.category.target!;
+      iconData = category.icon;
+      colorScheme = category.colorScheme;
     } else {
       iconData = FlowIconData.icon(Symbols.circle_rounded);
     }
 
-    return FlowIcon(
-      iconData,
-      plated: true,
-      fill: transaction.category.target != null ? 1.0 : 0.0,
-      color: colorScheme?.primary,
-      plateColor: colorScheme?.secondary,
-      platePadding:
-          cardChrome ? const EdgeInsets.all(12.0) : const EdgeInsets.all(8.0),
-      borderRadius: cardChrome
-          ? BorderRadius.circular(8.0)
-          : const BorderRadius.all(Radius.circular(16.0)),
+    final Category? category = transaction.category.target;
+    final bool isPending =
+        transaction.isPending == true ||
+        transaction.transactionDate.isFutureAnchored(
+          Moment.now().startOfNextMinute(),
+        );
+
+    return Opacity(
+      opacity: isPending ? 0.65 : 1.0,
+      child: FlowIcon(
+        iconData,
+        plated: true,
+        size: 20.0,
+        fill: category != null ? 1.0 : 0.0,
+        color: colorScheme?.primary,
+        plateColor: colorScheme?.secondary,
+        platePadding: const EdgeInsets.all(8.0),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
     );
   }
+}
 
-  String get dateString {
-    final DateTime now = Moment.now().startOfNextMinute();
+// Modern meta row with chips
+class _ModernMetaRow extends StatelessWidget {
+  final Transaction transaction;
+  final bool combineTransfers;
+  final TransactionGroupRange? groupRange;
 
-    final bool pending =
-        transaction.isPending == true ||
-        transaction.transactionDate.isFutureAnchored(now);
+  const _ModernMetaRow({
+    required this.transaction,
+    required this.combineTransfers,
+    required this.groupRange,
+  });
 
-    if (pending) return transaction.transactionDate.toMoment().calendar();
+  @override
+  Widget build(BuildContext context) {
+    final theme=Theme.of(context);
+    final transfer = transaction.isTransfer ? transaction.extensions.transfer : null;
+    
+    String accountText;
+    if (transaction.isTransfer && combineTransfers && transfer != null) {
+      accountText = "${AccountsProvider.of(context).getName(transfer.fromAccountUuid)} → ${AccountsProvider.of(context).getName(transfer.toAccountUuid)}";
+    } else {
+      accountText = AccountsProvider.of(context).getName(transaction.accountUuid) ?? transaction.account.target?.name ?? "";
+    }
+    
+    final categoryText = transaction.category.target?.name;
+    final timeText = _getTimeString();
+    
+    
+    final List<String> parts = <String>[];
+    if (accountText.isNotEmpty) parts.add(accountText);
+    if (categoryText != null && categoryText.isNotEmpty) parts.add(categoryText);
+    parts.add(timeText);
 
+    return Text(
+      parts.join(" · "),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: GlassPanel.mutedInk(context),
+        height: 1.2,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+  
+  String _getTimeString() {
+    final now = Moment.now().startOfNextMinute();
+    final isPending = transaction.isPending == true || transaction.transactionDate.isFutureAnchored(now);
+    
+    if (isPending) return transaction.transactionDate.toMoment().calendar();
+    
     return switch (groupRange) {
-      TransactionGroupRange.hour ||
-      TransactionGroupRange.day => transaction.transactionDate.toMoment().LT,
+      TransactionGroupRange.hour || TransactionGroupRange.day => transaction.transactionDate.toMoment().LT,
       _ => transaction.transactionDate.toMoment().lll,
     };
   }
+}
 
-  WidgetSpan titleIconSpan(
-    BuildContext context,
-    IconData icon, {
-    Color? color,
-  }) => WidgetSpan(
-    alignment: PlaceholderAlignment.middle,
-    child: Icon(
-      icon,
-      size: context.textTheme.bodyMedium!.fontSize!,
-      fill: 0.0,
-      color: color,
-    ),
-  );
+// Modern amount display
+class _ModernAmount extends StatelessWidget {
+  final Transaction transaction;
+  final bool combineTransfers;
+  final bool? overrideObscure;
+
+  const _ModernAmount({
+    required this.transaction,
+    required this.combineTransfers,
+    required this.overrideObscure,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final flowColors = context.flowColors;
+    final isPositive = transaction.type == TransactionType.income;
+    final Color color =
+        isPositive ? flowColors.income : flowColors.expense;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MoneyTextBuilder(
+          money: transaction.money,
+          displayAbsoluteAmount: transaction.isTransfer && combineTransfers,
+          overrideObscure: overrideObscure,
+          builder: (context, text, money) {
+            String displayText = text;
+            if (isPositive && !displayText.trimLeft().startsWith("+")) {
+              displayText = "+$displayText";
+            }
+            return Text(
+              displayText,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+                color: color,
+              ),
+            );
+          },
+        ),
+        if (combineTransfers && 
+            transaction.extensions.transfer?.conversionRate != null &&
+            transaction.extensions.transfer?.conversionRate != 1.0)
+          MoneyText(
+            Money(
+              transaction.money.amount * transaction.extensions.transfer!.conversionRate!,
+              AccountsProvider.of(context)
+                  .get(transaction.extensions.transfer!.toAccountUuid)!
+                  .currency,
+            ),
+            displayAbsoluteAmount: true,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            overrideObscure: overrideObscure,
+          ),
+      ],
+    );
+  }
+}
+
+// Modern transaction card wrapper
+class _ModernTransactionCard extends StatelessWidget {
+  final Transaction transaction;
+  final String resolvedTitle;
+  final TransactionListTileThemeData effectiveTheme;
+  final bool combineTransfers;
+  final TransactionGroupRange? groupRange;
+  final bool? overrideObscure;
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _ModernTransactionCard({
+    required this.transaction,
+    required this.resolvedTitle,
+    required this.effectiveTheme,
+    required this.combineTransfers,
+    required this.groupRange,
+    required this.overrideObscure,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnGlass = HomeTransactionCardsScope.enabledIn(context);
+    
+    if (isOnGlass) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16.0, 5.0, 16.0, 5.0),
+        child: GlassPanel(
+          borderRadius: BorderRadius.circular(16),
+          blurBehind: true,
+          blurSigma: GlassPanel.resolveListTileBlur(context),
+          borderColor: GlassPanel.resolveListTileBorder(context),
+          padding: EdgeInsets.zero,
+          onTap: onTap,
+          child: child,
+        ),
+      );
+    }
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashFactory: InkRipple.splashFactory,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          child: child,
+        ),
+      ),
+    );
+  }
 }

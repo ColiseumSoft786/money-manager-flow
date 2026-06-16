@@ -43,6 +43,7 @@ class Goal implements EntityBase {
   String currency;
 
   String? iconCode;
+  double? baseLineBalance;
 
   @Transient()
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -81,6 +82,7 @@ class Goal implements EntityBase {
     required this.currency,
     required this.range,
     this.iconCode,
+    this.baseLineBalance,
     DateTime? createdDate,
   }) : createdDate = createdDate ?? DateTime.now(),
        uuid = const Uuid().v4();

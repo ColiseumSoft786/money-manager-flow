@@ -40,6 +40,9 @@ class Budget implements EntityBase {
   /// When [true], and [timeRange] is [PageableRange], it will automatically
   /// create a new budget for the next period when the current one expires.
   bool renewAutomatically;
+  double alertThreshold;
+  bool stopAtLimit;
+  bool notificationsEnabled;
 
   double amount;
 
@@ -71,6 +74,9 @@ class Budget implements EntityBase {
     required this.currency,
     required this.range,
     this.renewAutomatically = true,
+    this.alertThreshold = 0.8,
+    this.stopAtLimit = false,
+    this.notificationsEnabled = true,
     DateTime? createdDate,
   }) : createdDate = createdDate ?? DateTime.now(),
        uuid = const Uuid().v4();

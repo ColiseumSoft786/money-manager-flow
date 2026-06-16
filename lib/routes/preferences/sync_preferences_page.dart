@@ -8,7 +8,6 @@ import "package:flow/routes/preferences/sync/widgets/sync_retain_history_section
 import "package:flow/routes/preferences/sync/widgets/sync_section_header.dart";
 import "package:flow/services/sync/icloud_syncer.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 class SyncPreferencesPage extends StatefulWidget {
@@ -34,28 +33,9 @@ class _SyncPreferencesPageState extends State<SyncPreferencesPage> {
     final bool showCloudSection = ICloudSyncer.supported || flowDebugMode;
 
     return Scaffold(
-      backgroundColor: SyncPreferencesTheme.canvas,
+      backgroundColor: SyncPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: SyncPreferencesTheme.canvas,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          "preferences.sync.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: SyncPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.sync.settingsTitle".t(context)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -73,7 +53,7 @@ class _SyncPreferencesPageState extends State<SyncPreferencesPage> {
                     child: Text(
                       "DEBUG MODE: Even though your currenct device does not support iCloud, following section is shown because you are in debug mode.",
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: SyncPreferencesTheme.subtitleInk,
+                        color: SyncPreferencesTheme.subtitleInk(context),
                       ),
                     ),
                   ),

@@ -6,7 +6,6 @@ import "package:flow/routes/preferences/button_order/widgets/button_order_info_b
 import "package:flow/routes/preferences/button_order/widgets/button_order_reorder_tile.dart";
 import "package:flow/services/integrations/eny.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 
@@ -46,27 +45,7 @@ class ButtonOrderPreferencesPageState extends State<ButtonOrderPreferencesPage> 
     return Scaffold(
       backgroundColor: ButtonOrderPreferencesTheme.canvas,
       appBar: AppBar(
-        backgroundColor: ButtonOrderPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.transactionButtonOrder".t(context),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: ButtonOrderPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.transactionButtonOrder".t(context)),
       ),
       body: SafeArea(
         child: Column(

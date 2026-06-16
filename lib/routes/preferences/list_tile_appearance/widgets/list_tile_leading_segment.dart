@@ -16,7 +16,7 @@ class ListTileLeadingSegment extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ListTileAppearanceTheme.segmentTrack,
+        color: ListTileAppearanceTheme.segmentTrack(context),
         borderRadius: BorderRadius.circular(ListTileAppearanceTheme.cardRadius),
       ),
       child: Padding(
@@ -62,7 +62,9 @@ class _SegmentOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? ListTileAppearanceTheme.cardFill : Colors.transparent,
+      color: selected
+          ? ListTileAppearanceTheme.cardFill(context)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(12.0),
       child: InkWell(
         onTap: onTap,
@@ -76,8 +78,8 @@ class _SegmentOption extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 fontSize: 14.0,
                 color: selected
-                    ? ListTileAppearanceTheme.titleInk
-                    : ListTileAppearanceTheme.subtitleInk,
+                    ? ListTileAppearanceTheme.titleInk(context)
+                    : ListTileAppearanceTheme.subtitleInk(context),
               ),
             ),
           ),

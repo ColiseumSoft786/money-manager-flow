@@ -128,8 +128,13 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
     const EdgeInsets contentPadding = EdgeInsets.symmetric(horizontal: 16.0);
     final FlowColorScheme? activeScheme = getThemeStrict(_colorSchemeName);
 
-    const Color screenBackground = Colors.white;
-    const Color titleInk = kFlowHomeTransactionHeadingInk;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color screenBackground = isDark ? scheme.surface : Colors.white;
+    final Color titleInk =
+        isDark ? scheme.onSurface : kFlowHomeTransactionHeadingInk;
+    // Note: other parts of this page compute their own card/divider tokens
+    // using the same scheme in helper methods below.
 
     final LatLng center =
         (_type == TransactionTagType.location
@@ -297,12 +302,14 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
   }
 
   Widget _buildSectionLabel(BuildContext context, String text) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: Text(
         text,
         style: context.textTheme.titleSmall?.copyWith(
-          color: kFlowPopularCurrenciesSectionHeading,
+          color: isDark ? scheme.onSurfaceVariant : kFlowPopularCurrenciesSectionHeading,
           fontWeight: FontWeight.w500,
           height: 1.3,
         ),
@@ -311,8 +318,11 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
   }
 
   Widget _editInsetCard(BuildContext context, Widget child) {
-    const Color cardBg = Colors.white;
-    const Color borderColor = Color(0xFFE5E7EB);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color cardBg = isDark ? scheme.surfaceContainerHigh : Colors.white;
+    final Color borderColor =
+        isDark ? scheme.outlineVariant : const Color(0xFFE5E7EB);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -331,19 +341,27 @@ class _TransactionTagPageState extends State<TransactionTagPage> {
     BuildContext context,
     FlowColorScheme? activeScheme,
   ) {
-    const Color dividerColor = Color(0xFFF0F0EE);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color dividerColor =
+        isDark ? scheme.outlineVariant : const Color(0xFFF0F0EE);
+    final Color basePlateBg = isDark ? scheme.surface : Colors.white;
 
     final Color symbolPlateBg = activeScheme != null
         ? Color.alphaBlend(
             activeScheme.primary.withValues(alpha: 0.14),
-            Colors.white,
+            basePlateBg,
           )
         : _kTagAccentPlateBgNeutral;
     final Color symbolPlateFg =
         activeScheme?.primary ?? _kTagAccentPlateFgNeutral;
 
-    const Color altPlateBg = Color(0xFFF5F4F2);
-    const Color altPlateFg = Color(0xFF57534E);
+    final Color altPlateBg = isDark
+        ? scheme.surfaceContainerHighest
+        : const Color(0xFFF5F4F2);
+    final Color altPlateFg = isDark
+        ? scheme.onSurfaceVariant
+        : const Color(0xFF57534E);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -58,7 +58,7 @@ class PreferencesRootToggleRow extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 15.0,
-                        color: PreferencesRootTheme.titleInk,
+                        color: PreferencesRootTheme.titleInk(context),
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -66,7 +66,7 @@ class PreferencesRootToggleRow extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: PreferencesRootTheme.subtitleInk,
+                          color: PreferencesRootTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.35,
                         ),
@@ -79,19 +79,22 @@ class PreferencesRootToggleRow extends StatelessWidget {
                 value: value,
                 onChanged: onChanged,
                 activeTrackColor: accent.primary,
-                inactiveTrackColor: const Color(0xFFE5E7EB),
-                thumbColor: WidgetStateProperty.all(Colors.white),
+                inactiveTrackColor:
+                    PreferencesRootTheme.switchInactiveTrack(context),
+                thumbColor: WidgetStateProperty.all(
+                  Theme.of(context).colorScheme.surface,
+                ),
               ),
             ],
           ),
         ),
         if (showDivider)
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 70.0,
             endIndent: 14.0,
-            color: PreferencesRootTheme.divider,
+            color: PreferencesRootTheme.divider(context),
           ),
       ],
     );

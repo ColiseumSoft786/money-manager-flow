@@ -59,11 +59,11 @@ class _QuickLinkCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Material(
-      color: ExportOptionsTheme.cardFill,
+      color: ExportOptionsTheme.cardFill(context),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(ExportOptionsTheme.cardRadius),
-        side: const BorderSide(color: ExportOptionsTheme.cardBorder),
+        side: BorderSide(color: ExportOptionsTheme.cardBorder(context)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -91,7 +91,7 @@ class _QuickLinkCard extends StatelessWidget {
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 13.0,
-                  color: ExportOptionsTheme.titleInk,
+                  color: ExportOptionsTheme.titleInk(context),
                   height: 1.25,
                 ),
               ),
@@ -101,7 +101,7 @@ class _QuickLinkCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: ExportOptionsTheme.mutedInk,
+                  color: ExportOptionsTheme.mutedInk(context),
                   fontSize: 11.0,
                   height: 1.35,
                 ),

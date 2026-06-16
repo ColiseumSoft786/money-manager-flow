@@ -22,7 +22,7 @@ class TrashEmptyButton extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: Material(
-            color: TrashBinPreferencesTheme.cardFill,
+            color: TrashBinPreferencesTheme.cardFill(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14.0),
               side: BorderSide(
@@ -70,7 +70,7 @@ class TrashEmptyButton extends StatelessWidget {
           "preferences.trashBin.emptyBin.irreversible".t(context),
           textAlign: TextAlign.center,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: TrashBinPreferencesTheme.subtitleInk,
+            color: TrashBinPreferencesTheme.subtitleInk(context),
             fontWeight: FontWeight.w600,
             fontSize: 10.0,
             letterSpacing: 1.2,

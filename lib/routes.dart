@@ -2,9 +2,16 @@ import "package:flow/data/transaction_multi_programmable_object.dart";
 import "package:flow/data/transaction_programmable_object.dart";
 import "package:flow/entity/account.dart";
 import "package:flow/l10n/extensions.dart";
+import "package:flow/routes/auth/auth_route_helper.dart";
+import "package:flow/routes/auth/auth_sign_in_page.dart";
+import "package:flow/routes/auth/auth_sign_up_page.dart";
+import "package:flow/routes/auth/auth_welcome_page.dart";
+import "package:flow/services/Firebase_auth_service.dart";
 import "package:flow/routes/account/account_edit_page.dart";
 import "package:flow/routes/account_page.dart";
 import "package:flow/routes/accounts_page.dart";
+import "package:flow/routes/budget_edit_page.dart";
+import "package:flow/routes/budget_page.dart";
 import "package:flow/routes/categories_page.dart";
 import "package:flow/routes/category/category_edit_page.dart";
 import "package:flow/routes/category_page.dart";
@@ -18,8 +25,18 @@ import "package:flow/routes/error_page.dart";
 import "package:flow/routes/export/export_history_page.dart";
 import "package:flow/routes/export/export_pdf_page.dart";
 import "package:flow/routes/export_options_page.dart";
+import "package:flow/data/firebase_friend.dart";
+import "package:flow/routes/send_money/find_recipient_page.dart";
+import "package:flow/routes/send_money/send_money_home_page.dart";
+import "package:flow/routes/send_money/send_money_page.dart";
 import "package:flow/routes/export_page.dart";
+import "package:flow/routes/goal_edit_page.dart";
+import "package:flow/routes/goals_page.dart";
+import "package:flow/routes/receipt_scan_page.dart";
+import "package:flow/routes/subscription_edit_page.dart";
+import "package:flow/routes/subscriptions_page.dart";
 import "package:flow/routes/home_page.dart";
+import "package:flow/routes/tax_report_page.dart";
 import "package:flow/routes/import_page.dart";
 import "package:flow/routes/import_wizard/csv.dart";
 import "package:flow/routes/import_wizard/ivy.dart";
@@ -28,6 +45,7 @@ import "package:flow/routes/import_wizard/v2.dart";
 import "package:flow/routes/integrate/integrate_eny_page.dart";
 import "package:flow/routes/integrations/eny_page.dart";
 import "package:flow/routes/preferences/button_order_preferences_page.dart";
+import "package:flow/routes/preferences/home_dashboard_customize_page.dart";
 import "package:flow/routes/preferences/change_preferences_page.dart";
 import "package:flow/routes/preferences/integrations/eny_preferences_page.dart";
 import "package:flow/routes/preferences/money_formatting_preferences_page.dart";
@@ -73,6 +91,16 @@ final GlobalKey<NavigatorState> globalNavigatorKey =
 
 final GoRouter router = GoRouter(
   navigatorKey: globalNavigatorKey,
+  refreshListenable: FirebaseAuthService().authRevision,
+  redirect: (context, state) {
+    if (state.matchedLocation.startsWith("/auth") &&
+        FirebaseAuthService().isSignedIn) {
+      return AuthRouteHelper.postAuthPath(
+        state.uri.queryParameters["returnTo"],
+      );
+    }
+    return null;
+  },
   errorBuilder: (context, state) => ErrorPage(error: state.error?.toString()),
   routes: [
     GoRoute(path: "/", builder: (context, state) => const HomePage()),
@@ -216,6 +244,56 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const CategoriesPage(),
     ),
     GoRoute(
+      path: "/budgets",
+      builder: (context, state) => const BudgetsPage(),
+    ),
+    GoRoute(
+      path: "/budget/new",
+      builder: (context, state) => const BudgetEditPage.create(),
+    ),
+    GoRoute(
+      path: "/budget/:id/edit",
+      builder: (context, state) => BudgetEditPage(
+        budgetId: int.tryParse(state.pathParameters["id"]!) ?? 0,
+      ),
+    ),
+    GoRoute(
+      path: "/goals",
+      builder: (context, state) => const GoalsPage(),
+    ),
+    GoRoute(
+      path: "/goal/new",
+      builder: (context, state) => const GoalEditPage.create(),
+    ),
+    GoRoute(
+      path: "/goal/:id/edit",
+      builder: (context, state) => GoalEditPage(
+        goalId: int.tryParse(state.pathParameters["id"]!) ?? 0,
+      ),
+    ),
+    GoRoute(
+      path: "/subscriptions",
+      builder: (context, state) => const SubscriptionsPage(),
+    ),
+    GoRoute(
+      path: "/subscription/new",
+      builder: (context, state) => const SubscriptionEditPage.create(),
+    ),
+    GoRoute(
+      path: "/subscription/:id/edit",
+      builder: (context, state) => SubscriptionEditPage(
+        subscriptionId: int.tryParse(state.pathParameters["id"]!) ?? 0,
+      ),
+    ),
+    GoRoute(
+      path: "/taxReport",
+      builder: (context, state) => const TaxReportPage(),
+    ),
+    GoRoute(
+      path: "/receipt-scan",
+      builder: (context, state) => const ReceiptScanPage(),
+    ),
+    GoRoute(
       path: "/accounts",
       builder: (context, state) => const AccountsPage(),
     ),
@@ -261,6 +339,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: "transactionButtonOrder",
           builder: (context, state) => const ButtonOrderPreferencesPage(),
+        ),
+        GoRoute(
+          path: "homeDashboard",
+          builder: (context, state) => const HomeDashboardCustomizePage(),
         ),
         GoRoute(
           path: "transactionGeo",
@@ -508,6 +590,52 @@ final GoRouter router = GoRouter(
 
         return ErrorPage(error: "Provide path as route extra");
       },
+    ),
+    GoRoute(
+      path: "/send-money",
+      redirect: AuthRouteHelper.redirectSendMoneyIfUnsigned,
+      builder: (context, state) => const SendMoneyHomePage(),
+      routes: [
+        GoRoute(
+          path: "find",
+          builder: (context, state) => const FindRecipientPage(),
+        ),
+        GoRoute(
+          path: "pay",
+          builder: (context, state) {
+            if (state.extra is FirebaseUserProfile) {
+              return SendMoneyPage(
+                recipient: state.extra! as FirebaseUserProfile,
+              );
+            }
+            return ErrorPage(error: "Missing recipient");
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: "/friends",
+      redirect: (context, state) => "/send-money",
+    ),
+    GoRoute(
+      path: "/friends/find",
+      redirect: (context, state) => "/send-money/find",
+    ),
+    GoRoute(
+      path: "/auth/welcome",
+      builder: (context, state) => const AuthWelcomePage(),
+    ),
+    GoRoute(
+      path: "/auth/sign-up",
+      builder: (context, state) => AuthSignUpPage(
+        returnTo: state.uri.queryParameters["returnTo"],
+      ),
+    ),
+    GoRoute(
+      path: "/auth/sign-in",
+      builder: (context, state) => AuthSignInPage(
+        returnTo: state.uri.queryParameters["returnTo"],
+      ),
     ),
   ],
 );

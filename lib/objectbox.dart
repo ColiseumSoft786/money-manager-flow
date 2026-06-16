@@ -28,7 +28,7 @@ final Logger _log = Logger("ObjectBox-Flow");
 class ObjectBox {
   static ObjectBox? _instance;
 
-  static late String appDataDirectory;
+  static String appDataDirectory = "";
 
   static const String imagesDirectoryName = "images";
   static const String filesDirectoryName = "files";
@@ -45,12 +45,12 @@ class ObjectBox {
   /// differentiate between debug data and production data.
   ///
   /// In debug mode, this is set to "__debug" if unspecified
-  static late final String? subdirectory;
+  static String? subdirectory;
 
   /// A custom directory to store app data.
   ///
   /// By default, it uses [getApplicationSupportDirectory] (from path_provider)
-  static late final String? customDirectory;
+  static String? customDirectory;
 
   /// The Store of this app.
   late final Store store;
@@ -68,6 +68,38 @@ class ObjectBox {
 
   ObjectBox._internal(this.store);
 
+  /// Path for a given [subdirectory] without opening a store.
+  static Future<String> resolveDataDirectoryPath(
+    String? subdirectory, {
+    String? customDirectory,
+    Directory? appSupportDirectory,
+  }) async {
+    final String? effectiveSub =
+        subdirectory ?? (flowDebugMode ? kDebugDefaultSubdirectory : null);
+
+    return _appDataDirectory(
+      supportDir: appSupportDirectory,
+      subdirectory: effectiveSub,
+      customDirectory: customDirectory,
+    );
+  }
+
+  /// Closes the open store and opens another [subdirectory] (per Firebase user).
+  static Future<ObjectBox> switchToSubdirectory(String? subdirectory) async {
+    if (_instance != null) {
+      final String closingPath = appDataDirectory;
+      if (Store.isOpen(closingPath)) {
+        _instance!.store.close();
+      }
+      _instance = null;
+      _log.fine("Closed ObjectBox at $closingPath");
+      // Let native observers finish teardown before opening the next store.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+
+    return initialize(subdirectory: subdirectory);
+  }
+
   static Future<ObjectBox> initialize({
     String? customDirectory,
     String? subdirectory,
@@ -82,6 +114,8 @@ class ObjectBox {
 
     ObjectBox.appDataDirectory = await _appDataDirectory(
       supportDir: appSupportDirectory,
+      subdirectory: subdirectory,
+      customDirectory: customDirectory,
     );
 
     final dir = Directory(ObjectBox.appDataDirectory);
@@ -106,12 +140,22 @@ class ObjectBox {
     return _instance = ObjectBox._internal(store);
   }
 
-  static Future<String> _appDataDirectory({Directory? supportDir}) async {
+  static Future<String> _appDataDirectory({
+    Directory? supportDir,
+    String? subdirectory,
+    String? customDirectory,
+  }) async {
     if (customDirectory != null) {
-      return path.join(customDirectory!, subdirectory);
+      return subdirectory == null || subdirectory.isEmpty
+          ? customDirectory
+          : path.join(customDirectory, subdirectory);
     }
 
     final appDataDir = supportDir ?? await getApplicationSupportDirectory();
+
+    if (subdirectory == null || subdirectory.isEmpty) {
+      return appDataDir.path;
+    }
 
     return path.join(appDataDir.path, subdirectory);
   }

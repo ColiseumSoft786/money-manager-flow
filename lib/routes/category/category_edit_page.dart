@@ -21,6 +21,7 @@ import "package:flow/widgets/account/account_delete_styled_button.dart";
 import "package:flow/widgets/general/form_close_button.dart";
 import "package:flow/widgets/general/flow_icon.dart";
 import "package:flow/widgets/sheets/select_color_scheme_sheet.dart";
+import "package:flow/widgets/sheets/select_flow_icon_sheet.dart";
 import "package:flow/widgets/sheets/select_flow_icon_sheet/select_char_flow_icon_sheet.dart";
 import "package:flow/widgets/sheets/select_flow_icon_sheet/select_icon_flow_icon_sheet.dart";
 import "package:flow/widgets/sheets/select_flow_icon_sheet/select_image_flow_icon_sheet.dart";
@@ -98,15 +99,17 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
     const EdgeInsets contentPadding = EdgeInsets.symmetric(horizontal: 16.0);
     final FlowColorScheme? activeScheme = getThemeStrict(_colorSchemeName);
 
-    // Pure-white canvas + light ink tokens — matches [TransactionTagPage].
-    const Color screenBackground = Colors.white;
-    const Color titleInk = kFlowHomeTransactionHeadingInk;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final Color screenBackground = light ? Colors.white : scheme.surface;
+    final Color titleInk =
+        light ? kFlowHomeTransactionHeadingInk : scheme.onSurface;
 
     return Scaffold(
       backgroundColor: screenBackground,
       appBar: AppBar(
         backgroundColor: screenBackground,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: light ? Colors.transparent : null,
         elevation: 0,
         scrolledUnderElevation: 0,
         leadingWidth: 40.0,
@@ -139,11 +142,17 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
               children: [
                 const SizedBox(height: 16.0),
                 Center(
-                  child: FlowIcon(
-                    _iconData ?? FlowIconData.icon(Symbols.category_rounded),
-                    size: 80.0,
-                    plated: true,
-                    colorScheme: activeScheme,
+                  child: IntrinsicWidth(
+                    child: IntrinsicHeight(
+                      child: FlowIcon(
+                        _iconData ??
+                            FlowIconData.icon(Symbols.category_rounded),
+                        size: 80.0,
+                        plated: true,
+                        colorScheme: activeScheme,
+                        onTap: _selectIcon,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16.0),
@@ -163,12 +172,12 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
                 const SizedBox(height: 24.0),
                 Padding(
                   padding: contentPadding,
-                  child: _buildIconSourceSection(context, activeScheme, true),
+                  child: _buildIconSourceSection(context, activeScheme, light),
                 ),
                 const SizedBox(height: 24.0),
                 Padding(
                   padding: contentPadding,
-                  child: _buildThemeColorSection(context, activeScheme, true),
+                  child: _buildThemeColorSection(context, activeScheme, light),
                 ),
                 if (_currentlyEditing != null) ...[
                   const SizedBox(height: 36.0),
@@ -190,12 +199,17 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
   }
 
   Widget _buildSectionLabel(BuildContext context, String text) {
+    final bool light = Theme.of(context).brightness == Brightness.light;
+    final Color labelColor = light
+        ? kFlowPopularCurrenciesSectionHeading
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: Text(
         text,
         style: context.textTheme.titleSmall?.copyWith(
-          color: kFlowPopularCurrenciesSectionHeading,
+          color: labelColor,
           fontWeight: FontWeight.w500,
           height: 1.3,
         ),
@@ -236,14 +250,21 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
         ? const Color(0xFFF0F0EE)
         : context.colorScheme.outlineVariant.withValues(alpha: 0.35);
 
+    final Color neutralPlateBg = light
+        ? _kCategoryAccentPlateBgNeutral
+        : context.colorScheme.surfaceContainerHigh;
+    final Color neutralPlateFg = light
+        ? _kCategoryAccentPlateFgNeutral
+        : context.colorScheme.onSurfaceVariant;
+
     final Color symbolPlateBg = activeScheme != null
         ? Color.alphaBlend(
             activeScheme.primary.withValues(alpha: light ? 0.14 : 0.22),
             light ? Colors.white : context.colorScheme.surface,
           )
-        : _kCategoryAccentPlateBgNeutral;
+        : neutralPlateBg;
     final Color symbolPlateFg =
-        activeScheme?.primary ?? _kCategoryAccentPlateFgNeutral;
+        activeScheme?.primary ?? neutralPlateFg;
 
     final Color altPlateBg =
         light ? const Color(0xFFF5F4F2) : context.colorScheme.surfaceContainerHigh;
@@ -355,7 +376,9 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
                     Text(
                       subtitle,
                       style: context.textTheme.bodySmall?.copyWith(
-                        color: kFlowPopularCurrenciesSectionHeading,
+                        color: light
+                            ? kFlowPopularCurrenciesSectionHeading
+                            : context.colorScheme.onSurfaceVariant,
                         height: 1.35,
                       ),
                       maxLines: 2,
@@ -367,9 +390,10 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
               Icon(
                 Symbols.chevron_right_rounded,
                 size: 20.0,
-                color: kFlowPopularCurrenciesSectionHeading.withValues(
-                  alpha: 0.55,
-                ),
+                color: (light
+                        ? kFlowPopularCurrenciesSectionHeading
+                        : context.colorScheme.onSurfaceVariant)
+                    .withValues(alpha: 0.55),
               ),
             ],
           ),
@@ -401,14 +425,21 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
     final Color titleColor =
         light ? kFlowAccountEditTitleColor : context.colorScheme.onSurface;
 
+    final Color neutralPlateBg = light
+        ? _kCategoryAccentPlateBgNeutral
+        : context.colorScheme.surfaceContainerHigh;
+    final Color neutralPlateFg = light
+        ? _kCategoryAccentPlateFgNeutral
+        : context.colorScheme.onSurfaceVariant;
+
     final Color plateBg = activeScheme != null
         ? Color.alphaBlend(
             activeScheme.primary.withValues(alpha: light ? 0.14 : 0.22),
             light ? Colors.white : context.colorScheme.surface,
           )
-        : _kCategoryAccentPlateBgNeutral;
+        : neutralPlateBg;
     final Color plateFg =
-        activeScheme?.primary ?? _kCategoryAccentPlateFgNeutral;
+        activeScheme?.primary ?? neutralPlateFg;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -459,9 +490,10 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
                     Icon(
                       Symbols.chevron_right_rounded,
                       size: 20.0,
-                      color: kFlowPopularCurrenciesSectionHeading.withValues(
-                        alpha: 0.55,
-                      ),
+                      color: (light
+                              ? kFlowPopularCurrenciesSectionHeading
+                              : context.colorScheme.onSurfaceVariant)
+                          .withValues(alpha: 0.55),
                     ),
                   ],
                 ),
@@ -516,15 +548,12 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
 
     final FlowThemeGroup group = getGroupByTheme(theme.name);
 
-    final Optional<FlowColorScheme>? result =
-        await showModalBottomSheet<Optional<FlowColorScheme>>(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) => SelectColorSchemeSheet(
-            group: group,
-            initialScheme: _colorSchemeName,
-          ),
-        );
+    final Optional<FlowColorScheme>? result = await _showCompactBottomSheet(
+      SelectColorSchemeSheet(
+        group: group,
+        initialScheme: _colorSchemeName,
+      ),
+    );
 
     if (result == null) return;
 
@@ -616,12 +645,35 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
     setState(() {});
   }
 
-  Future<void> _pickMaterialIcon() async {
-    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
+  Future<T?> _showCompactBottomSheet<T>(Widget child) {
+    return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      builder: (context) =>
-          SelectIconFlowIconSheet(initialValue: _iconData),
+      useSafeArea: true,
+      builder: (context) => child,
+    );
+  }
+
+  Future<void> _selectIcon() async {
+    final FlowIconPickerKind? kind = await _showCompactBottomSheet(
+      SelectFlowIconSheet(current: _iconData),
+    );
+
+    if (!mounted || kind == null) return;
+
+    switch (kind) {
+      case FlowIconPickerKind.symbol:
+        await _pickMaterialIcon();
+      case FlowIconPickerKind.character:
+        await _pickEmojiIcon();
+      case FlowIconPickerKind.image:
+        await _pickImageIcon();
+    }
+  }
+
+  Future<void> _pickMaterialIcon() async {
+    final FlowIconData? result = await _showCompactBottomSheet(
+      SelectIconFlowIconSheet(initialValue: _iconData),
     );
 
     if (result != null) {
@@ -633,10 +685,8 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
 
   Future<void> _pickEmojiIcon() async {
     const double pickerIconSize = 88.0;
-    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SelectCharFlowIconSheet(
+    final FlowIconData? result = await _showCompactBottomSheet(
+      SelectCharFlowIconSheet(
         iconSize: pickerIconSize,
         initialValue: _iconData,
       ),
@@ -651,10 +701,8 @@ class _CategoryEditPageState extends State<CategoryEditPage> {
 
   Future<void> _pickImageIcon() async {
     const double pickerIconSize = 88.0;
-    final FlowIconData? result = await showModalBottomSheet<FlowIconData>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SelectImageFlowIconSheet(
+    final FlowIconData? result = await _showCompactBottomSheet(
+      SelectImageFlowIconSheet(
         iconSize: pickerIconSize,
         initialValue: _iconData,
       ),

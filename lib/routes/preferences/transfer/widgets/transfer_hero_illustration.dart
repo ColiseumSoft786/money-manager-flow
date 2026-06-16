@@ -17,8 +17,8 @@ class TransferHeroIllustration extends StatelessWidget {
             Container(
               width: 200.0,
               height: 200.0,
-              decoration: const BoxDecoration(
-                color: TransferPreferencesTheme.heroCircleFill,
+              decoration: BoxDecoration(
+                color: TransferPreferencesTheme.heroCircleFill(context),
                 shape: BoxShape.circle,
               ),
             ),
@@ -63,9 +63,9 @@ class _HeroWalletCard extends StatelessWidget {
       width: 56.0,
       height: 56.0,
       decoration: BoxDecoration(
-        color: TransferPreferencesTheme.heroCardFill,
+        color: TransferPreferencesTheme.heroCardFill(context),
         borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(color: TransferPreferencesTheme.cardBorder),
+        border: Border.all(color: TransferPreferencesTheme.cardBorder(context)),
         boxShadow: const [
           BoxShadow(
             color: Color.fromRGBO(15, 23, 42, 0.06),

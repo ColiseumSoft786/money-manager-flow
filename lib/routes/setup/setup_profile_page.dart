@@ -115,7 +115,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
                           const SizedBox(height: 20.0),
                           CheckboxListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: const Text("Enable demo mode"),
+                            title: Text("setup.demoMode".t(context)),
                             value: testMode,
                             onChanged: (value) {
                               setState(() {

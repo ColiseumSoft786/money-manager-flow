@@ -37,7 +37,7 @@ class TransactionEntryAmountCard extends StatelessWidget {
           if (titleField != null) ...[
             Text(
               "transaction.field.title".t(context),
-              style: TransactionEntryTheme.sectionLabelStyle(theme),
+              style: TransactionEntryTheme.sectionLabelStyle(context, theme),
             ),
             const SizedBox(height: 6.0),
             titleField!,
@@ -45,7 +45,7 @@ class TransactionEntryAmountCard extends StatelessWidget {
           ],
           Text(
             "transaction.field.amount".t(context),
-            style: TransactionEntryTheme.sectionLabelStyle(theme),
+            style: TransactionEntryTheme.sectionLabelStyle(context, theme),
           ),
           const SizedBox(height: 8.0),
           Material(
@@ -76,8 +76,8 @@ class TransactionEntryAmountCard extends StatelessWidget {
                         style: theme.textTheme.displayMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: isZero
-                              ? TransactionEntryTheme.placeholderInk
-                              : TransactionEntryTheme.valueInk,
+                              ? TransactionEntryTheme.placeholderInk(context)
+                              : TransactionEntryTheme.valueInk(context),
                           fontSize: 44.0,
                           height: 1.05,
                           letterSpacing: -0.5,

@@ -59,6 +59,8 @@ class TransactionFilter implements Jasonable {
 
   final bool? isPending;
 
+  final bool? isDeductible;
+
   final double? minAmount;
   final double? maxAmount;
 
@@ -78,6 +80,7 @@ class TransactionFilter implements Jasonable {
     this.range,
     this.types,
     this.isPending,
+    this.isDeductible,
     this.minAmount,
     this.maxAmount,
     this.currencies,
@@ -213,6 +216,18 @@ class TransactionFilter implements Jasonable {
           Transaction_.isPending
               .notEquals(true)
               .or(Transaction_.isPending.isNull()),
+        );
+      }
+    }
+
+    if (isDeductible != null) {
+      if (isDeductible!) {
+        conditions.add(Transaction_.isDeductible.equals(true));
+      } else {
+        conditions.add(
+          Transaction_.isDeductible
+              .notEquals(true)
+              .or(Transaction_.isDeductible.isNull()),
         );
       }
     }
@@ -376,6 +391,7 @@ class TransactionFilter implements Jasonable {
     TransactionSortField? sortBy,
     Optional<TransactionGroupRange>? groupBy,
     Optional<bool>? isPending,
+    Optional<bool>? isDeductible,
     Optional<double>? minAmount,
     Optional<double>? maxAmount,
     Optional<List<String>>? currencies,
@@ -394,6 +410,9 @@ class TransactionFilter implements Jasonable {
       groupBy: groupBy?.value ?? this.groupBy,
       sortDescending: sortDescending?.value ?? this.sortDescending,
       isPending: isPending != null ? isPending.value : this.isPending,
+      isDeductible: isDeductible != null
+          ? isDeductible.value
+          : this.isDeductible,
       minAmount: minAmount != null ? minAmount.value : this.minAmount,
       maxAmount: maxAmount != null ? maxAmount.value : this.maxAmount,
       currencies: currencies != null ? currencies.value : this.currencies,
@@ -413,6 +432,7 @@ class TransactionFilter implements Jasonable {
     range,
     types,
     isPending,
+    isDeductible,
     minAmount,
     maxAmount,
     currencies,
@@ -438,6 +458,7 @@ class TransactionFilter implements Jasonable {
         other.groupBy == groupBy &&
         other.searchData == searchData &&
         other.isPending == isPending &&
+        other.isDeductible == isDeductible &&
         other.minAmount == minAmount &&
         other.maxAmount == maxAmount &&
         other.includeDeleted == includeDeleted &&

@@ -6,7 +6,6 @@ import "package:flow/l10n/extensions.dart";
 import "package:flow/routes/import/import_page_theme.dart";
 import "package:flow/sync/import.dart";
 import "package:flow/sync/import/base.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions/importer.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/general/spinner.dart";
@@ -39,9 +38,9 @@ class _ImportPageState extends State<ImportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ImportPageTheme.canvas,
+      backgroundColor: ImportPageTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: ImportPageTheme.canvas,
+        backgroundColor: ImportPageTheme.canvas(context),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -50,15 +49,15 @@ class _ImportPageState extends State<ImportPage> {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 17.0,
-            color: ImportPageTheme.titleInk,
+            color: ImportPageTheme.titleInk(context),
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
+            color: ImportPageTheme.cardBorder(context),
           ),
         ),
       ),

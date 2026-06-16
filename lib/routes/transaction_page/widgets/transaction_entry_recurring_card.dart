@@ -44,7 +44,10 @@ class TransactionEntryRecurringCard extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
         title: Text(
           "transaction.recurring.setup".t(context),
-          style: TransactionEntryTheme.rowTitleStyle(Theme.of(context)),
+          style: TransactionEntryTheme.rowTitleStyle(
+            context,
+            Theme.of(context),
+          ),
         ),
         secondary:  Icon(
           Symbols.repeat_rounded,
@@ -60,7 +63,7 @@ class TransactionEntryRecurringCard extends StatelessWidget {
           }
         },
         activeTrackColor: TransactionEntryTheme.primary(context),
-        inactiveTrackColor: const Color(0xFFE5E7EB),
+        inactiveTrackColor: TransactionEntryTheme.segmentTrack(context),
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
     );

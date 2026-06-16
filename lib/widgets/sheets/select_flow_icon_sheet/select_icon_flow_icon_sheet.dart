@@ -1,8 +1,6 @@
 import "package:flow/data/flow_icon.dart";
 import "package:flow/data/icons.dart";
 import "package:flow/l10n/extensions.dart";
-import "package:flow/widgets/general/modal_overflow_bar.dart";
-import "package:flow/widgets/general/modal_sheet.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -47,78 +45,108 @@ class _SelectIconFlowIconSheetState extends State<SelectIconFlowIconSheet>
   Widget build(BuildContext context) {
     final List<IconData> simpleIconsResult = querySimpleIcons(_query);
     final List<IconData> materialSymbolsResult = queryMaterialSymbols(_query);
+    final double gridHeight = MediaQuery.sizeOf(context).height * 0.32;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
 
-    return ModalSheet.scrollable(
-      title: Text("flowIcon.type.icon".t(context)),
-      leadingSpacing: 0.0,
-      leading: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              onChanged: _updateQuery,
-              onSubmitted: _updateQuery,
-              decoration: InputDecoration(
-                hintText: "flowIcon.type.icon.search".t(context),
-                prefixIcon: const Icon(Symbols.search_rounded),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Material(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 6.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Symbols.close_rounded),
+                    ),
+                    Expanded(
+                      child: Text(
+                        "flowIcon.type.icon".t(context),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.pop(value),
+                      child: Text("general.done".t(context)),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          TabBar(
-            tabs: [
-              Tab(text: "flowIcon.type.icon.brands".t(context)),
-              Tab(text: "flowIcon.type.icon.symbols".t(context)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 4.0),
+                child: TextField(
+                  onChanged: _updateQuery,
+                  onSubmitted: _updateQuery,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: "flowIcon.type.icon.search".t(context),
+                    prefixIcon: const Icon(Symbols.search_rounded, size: 20.0),
+                  ),
+                ),
+              ),
+              TabBar(
+                controller: _controller,
+                tabs: [
+                  Tab(text: "flowIcon.type.icon.brands".t(context)),
+                  Tab(text: "flowIcon.type.icon.symbols".t(context)),
+                ],
+              ),
+              SizedBox(
+                height: gridHeight,
+                child: TabBarView(
+                  controller: _controller,
+                  children: [
+                    GridView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      itemBuilder: (context, index) => IconButton(
+                        onPressed: () => updateIcon(simpleIconsResult[index]),
+                        icon: Icon(simpleIconsResult[index]),
+                        iconSize: 40.0,
+                      ),
+                      itemCount: simpleIconsResult.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 64.0,
+                      ),
+                    ),
+                    GridView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      itemBuilder: (context, index) => IconButton(
+                        onPressed: () => updateIcon(materialSymbolsResult[index]),
+                        icon: Icon(materialSymbolsResult[index]),
+                        iconSize: 40.0,
+                      ),
+                      itemCount: materialSymbolsResult.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 64.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4.0),
             ],
-            controller: _controller,
           ),
-        ],
-      ),
-      trailing: ModalOverflowBar(
-        alignment: .end,
-        children: [
-          TextButton.icon(
-            onPressed: () => context.pop(value),
-            icon: const Icon(Symbols.check_rounded),
-            label: Text("general.done".t(context)),
-          ),
-        ],
-      ),
-      child: TabBarView(
-        controller: _controller,
-        children: [
-          GridView.builder(
-            itemBuilder: (context, index) => IconButton(
-              onPressed: () => updateIcon(simpleIconsResult[index]),
-              icon: Icon(simpleIconsResult[index]),
-              iconSize: 48.0,
-            ),
-            itemCount: simpleIconsResult.length,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 72.0,
-            ),
-          ),
-          GridView.builder(
-            itemBuilder: (context, index) => IconButton(
-              onPressed: () => updateIcon(materialSymbolsResult[index]),
-              icon: Icon(materialSymbolsResult[index]),
-              iconSize: 48.0,
-            ),
-            itemCount: materialSymbolsResult.length,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 72.0,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   void _updateQuery(String value) {
     _query = value;
-    // if (_scrollController.hasClients) {
-    //   _scrollController.jumpTo(0);
-    // }
     setState(() {});
   }
 

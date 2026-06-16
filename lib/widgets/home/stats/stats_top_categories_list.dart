@@ -102,9 +102,9 @@ class _StatsTopCategoriesListState extends State<StatsTopCategoriesList> {
       blur: busy,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: StatsTheme.cardFill,
+          color: StatsTheme.cardFill(context),
           borderRadius: BorderRadius.circular(StatsTheme.cardRadius),
-          border: Border.all(color: StatsTheme.cardBorder),
+          border: Border.all(color: StatsTheme.cardBorder(context)),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
@@ -119,14 +119,14 @@ class _StatsTopCategoriesListState extends State<StatsTopCategoriesList> {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 16.0,
-                        color: StatsTheme.titleInk,
+                        color: StatsTheme.titleInk(context),
                       ),
                     ),
                   ),
                   Text(
                     "tabs.stats.expensesOnly".t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: StatsTheme.sectionLabel,
+                      color: StatsTheme.sectionLabel(context),
                       fontSize: 12.0,
                     ),
                   ),
@@ -140,7 +140,7 @@ class _StatsTopCategoriesListState extends State<StatsTopCategoriesList> {
                     "tabs.stats.chart.noData".t(context),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: StatsTheme.subtitleInk,
+                      color: StatsTheme.subtitleInk(context),
                     ),
                   ),
                 )
@@ -226,7 +226,7 @@ class _CategoryRow extends StatelessWidget {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 15.0,
-                            color: StatsTheme.titleInk,
+                            color: StatsTheme.titleInk(context),
                           ),
                         ),
                         const SizedBox(height: 8.0),
@@ -235,7 +235,7 @@ class _CategoryRow extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: fraction.clamp(0.0, 1.0),
                             minHeight: 4.0,
-                            backgroundColor: StatsTheme.chartBarMuted,
+                            backgroundColor: StatsTheme.chartBarMuted(context),
                             color: accent,
                           ),
                         ),
@@ -248,19 +248,19 @@ class _CategoryRow extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 14.0,
-                      color: StatsTheme.titleInk,
+                      color: StatsTheme.titleInk(context),
                     ),
                     tapToToggleAbbreviation: true,
                   ),
                 ],
               ),
               if (showDivider)
-                const Padding(
-                  padding: EdgeInsets.only(top: 10.0),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
                   child: Divider(
                     height: 1.0,
                     thickness: 1.0,
-                    color: StatsTheme.divider,
+                    color: StatsTheme.divider(context),
                   ),
                 ),
             ],

@@ -21,11 +21,13 @@ class EntryFlowSettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransactionEntryFlowPreferencesTheme.cardFill,
+        color: TransactionEntryFlowPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           TransactionEntryFlowPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: TransactionEntryFlowPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Column(
         children: [
@@ -37,12 +39,12 @@ class EntryFlowSettingsCard extends StatelessWidget {
             value: skipSelectedFields,
             onChanged: onSkipSelectedFieldsChanged,
           ),
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 16.0,
             endIndent: 16.0,
-            color: TransactionEntryFlowPreferencesTheme.cardBorder,
+            color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
           ),
           _SettingsToggleRow(
             icon: Symbols.stop_circle_rounded,
@@ -99,7 +101,7 @@ class _SettingsToggleRow extends StatelessWidget {
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: 14.5,
-                color: TransactionEntryFlowPreferencesTheme.titleInk,
+                color: TransactionEntryFlowPreferencesTheme.titleInk(context),
               ),
             ),
           ),
@@ -107,8 +109,11 @@ class _SettingsToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeTrackColor: TransactionEntryFlowPreferencesTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
-            thumbColor: WidgetStateProperty.all(Colors.white),
+            inactiveTrackColor:
+                TransactionEntryFlowPreferencesTheme.cardBorder(context),
+            thumbColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.surface,
+            ),
           ),
         ],
       ),

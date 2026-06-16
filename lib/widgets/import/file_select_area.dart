@@ -45,11 +45,13 @@ class _FileSelectAreaState extends State<FileSelectArea> {
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: _dragging
-                    ? ImportPageTheme.uploadFill.withValues(alpha: 0.85)
-                    : ImportPageTheme.uploadFill,
+                    ? ImportPageTheme.uploadFillResolved(context).withValues(
+                        alpha: 0.85,
+                      )
+                    : ImportPageTheme.uploadFillResolved(context),
                 borderRadius: _borderRadius,
                 border: DashedBorder(
-                  color: ImportPageTheme.uploadDash,
+                  color: ImportPageTheme.uploadDashResolved(context),
                   width: 1.5,
                   borderRadius: _borderRadius,
                   dashLength: 6.0,
@@ -101,7 +103,7 @@ class _FileSelectAreaState extends State<FileSelectArea> {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 17.0,
-                        color: ImportPageTheme.titleInk,
+                        color: ImportPageTheme.titleInk(context),
                       ),
                     ),
                     const SizedBox(height: 6.0),
@@ -109,7 +111,7 @@ class _FileSelectAreaState extends State<FileSelectArea> {
                       "sync.import.pickFile.formatsHint".t(context),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: ImportPageTheme.subtitleInk,
+                        color: ImportPageTheme.subtitleInk(context),
                         fontSize: 13.0,
                         height: 1.4,
                       ),

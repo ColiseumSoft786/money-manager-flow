@@ -16,7 +16,7 @@ class TransactionEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: TransactionEntryTheme.cardDecoration(hero: hero),
+      decoration: TransactionEntryTheme.cardDecoration(context, hero: hero),
       child: Padding(
         padding: padding ?? EdgeInsets.zero,
         child: child,
@@ -37,7 +37,10 @@ class TransactionEntrySectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4.0, bottom: 10.0),
       child: Text(
         text.toUpperCase(),
-        style: TransactionEntryTheme.sectionLabelStyle(Theme.of(context)),
+        style: TransactionEntryTheme.sectionLabelStyle(
+          context,
+          Theme.of(context),
+        ),
       ),
     );
   }

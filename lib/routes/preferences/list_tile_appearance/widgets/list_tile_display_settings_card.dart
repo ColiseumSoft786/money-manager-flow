@@ -29,9 +29,9 @@ class ListTileDisplaySettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ListTileAppearanceTheme.cardFill,
+        color: ListTileAppearanceTheme.cardFill(context),
         borderRadius: BorderRadius.circular(ListTileAppearanceTheme.cardRadius),
-        border: Border.all(color: ListTileAppearanceTheme.cardBorder),
+        border: Border.all(color: ListTileAppearanceTheme.cardBorder(context)),
       ),
       child: Column(
         children: [
@@ -86,12 +86,12 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1.0,
       thickness: 1.0,
       indent: 16.0,
       endIndent: 16.0,
-      color: ListTileAppearanceTheme.divider,
+      color: ListTileAppearanceTheme.divider(context),
     );
   }
 }
@@ -127,14 +127,14 @@ class _DisplayToggleRow extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15.0,
-                    color: ListTileAppearanceTheme.titleInk,
+                    color: ListTileAppearanceTheme.titleInk(context),
                   ),
                 ),
                 const SizedBox(height: 3.0),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: ListTileAppearanceTheme.subtitleInk,
+                    color: ListTileAppearanceTheme.subtitleInk(context),
                     fontSize: 12.5,
                     height: 1.35,
                   ),
@@ -147,8 +147,10 @@ class _DisplayToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeTrackColor: ListTileAppearanceTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
-            thumbColor: WidgetStateProperty.all(Colors.white),
+            inactiveTrackColor: ListTileAppearanceTheme.cardBorder(context),
+            thumbColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.surface,
+            ),
           ),
         ],
       ),

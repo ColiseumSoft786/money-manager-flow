@@ -159,6 +159,7 @@ class _InputAmountSheetState extends State<InputAmountSheet>
                                   currentOperation: _currentOperation,
                                 )
                               : NumpadButton(
+                                  style: NumpadKeyStyle.utility,
                                   onTap: () => removeDigit(),
                                   onLongPress: () => _reset(),
                                   mainAxisCellCount: widget.lockSign ? 2 : 1,
@@ -167,6 +168,7 @@ class _InputAmountSheetState extends State<InputAmountSheet>
                           ..._getNumberRow(1),
                           if (!widget.lockSign && !_calculatorMode)
                             NumpadButton(
+                              style: NumpadKeyStyle.utility,
                               child: widget.allowNegative
                                   ? const Icon(Symbols.remove_rounded)
                                   : const Icon(Symbols.add_rounded),
@@ -187,6 +189,7 @@ class _InputAmountSheetState extends State<InputAmountSheet>
                                         currentOperation: _currentOperation,
                                       )
                                     : NumpadButton(
+                                        style: NumpadKeyStyle.utility,
                                         onTap: () => calculatorMode(),
                                         child: const Icon(
                                           Symbols.calculate_rounded,
@@ -225,15 +228,18 @@ class _InputAmountSheetState extends State<InputAmountSheet>
   Iterable<Widget> getCalculatorRow() {
     return [
       NumpadButton(
+        style: NumpadKeyStyle.utility,
         child: _currentOperation == null ? const Text("AC") : const Text("C"),
         onTap: () => _reset(),
       ),
       NumpadButton(
+        style: NumpadKeyStyle.utility,
         child: const Icon(Symbols.backspace_rounded),
         onTap: () => removeDigit(),
         onLongPress: () => _reset(),
       ),
       NumpadButton(
+        style: NumpadKeyStyle.utility,
         child: const Icon(Symbols.percent_rounded),
         onTap: () => _evaluatePercent(),
       ),
@@ -274,6 +280,7 @@ class _InputAmountSheetState extends State<InputAmountSheet>
     final bool popOnClick = !_calculatorMode || _currentOperation == null;
 
     return NumpadButton(
+      style: NumpadKeyStyle.accent,
       backgroundColor: popOnClick ? context.flowColors.income : null,
       crossAxisCellCount: widget.hasCalculator ? 1 : 2,
       onTap: () {
@@ -298,7 +305,17 @@ class _InputAmountSheetState extends State<InputAmountSheet>
 
   void insertDigit(int n) {
     if (_resetOnNextInput) {
-      _reset();
+    applyDigitAfterReset(n);
+    return;
+    }
+
+    if(!_inputtingDecimal && value.wholePart==0 && value.decimalPart==0 && n==0){
+      _inputtingDecimal=true;
+      setState(() {
+        
+      });
+      return;
+      
     }
 
     if (_inputtingDecimal) {
@@ -320,6 +337,20 @@ class _InputAmountSheetState extends State<InputAmountSheet>
     }
 
     setState(() {});
+  }
+
+
+  void applyDigitAfterReset(int n){
+    _resetOnNextInput=false;
+    _inputtingDecimal=false;
+
+    value=InputValue.zero.negated(value.isNegative);
+    if(n==0){
+
+      _inputtingDecimal=true;
+    }else{
+      value=value.appendWhole(n);
+    }
   }
 
   void removeDigit() {

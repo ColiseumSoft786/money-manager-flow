@@ -21,9 +21,9 @@ class SyncCloudCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SyncPreferencesTheme.cardFill,
+        color: SyncPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(SyncPreferencesTheme.cardRadius),
-        border: Border.all(color: SyncPreferencesTheme.cardBorder),
+        border: Border.all(color: SyncPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
@@ -54,7 +54,7 @@ class SyncCloudCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15.0,
-                      color: SyncPreferencesTheme.titleInk,
+                      color: SyncPreferencesTheme.titleInk(context),
                     ),
                   ),
                   const SizedBox(height: 2.0),
@@ -62,7 +62,7 @@ class SyncCloudCard extends StatelessWidget {
                     lastSyncedLabel ??
                         "preferences.sync.iCloud.subtitle".t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: SyncPreferencesTheme.subtitleInk,
+                      color: SyncPreferencesTheme.subtitleInk(context),
                       fontSize: 12.5,
                       height: 1.35,
                     ),
@@ -74,9 +74,10 @@ class SyncCloudCard extends StatelessWidget {
               value: enabled,
               onChanged: onChanged,
               activeTrackColor: SyncPreferencesTheme.primary(context),
-              inactiveTrackColor: const Color(0xFFE5E7EB),
+              inactiveTrackColor:
+                  SyncPreferencesTheme.cardBorder(context),
               thumbColor: WidgetStateProperty.resolveWith((states) {
-                return Colors.white;
+                return Theme.of(context).colorScheme.surface;
               }),
             ),
           ],

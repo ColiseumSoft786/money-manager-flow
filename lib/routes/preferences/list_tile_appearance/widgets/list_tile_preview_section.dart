@@ -52,9 +52,9 @@ class _ListTilePreviewSectionState extends State<ListTilePreviewSection> {
     if (transactions.isEmpty) {
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: ListTileAppearanceTheme.cardFill,
+          color: ListTileAppearanceTheme.cardFill(context),
           borderRadius: BorderRadius.circular(ListTileAppearanceTheme.cardRadius),
-          border: Border.all(color: ListTileAppearanceTheme.cardBorder),
+          border: Border.all(color: ListTileAppearanceTheme.cardBorder(context)),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
@@ -62,7 +62,7 @@ class _ListTilePreviewSectionState extends State<ListTilePreviewSection> {
             "tabs.home.noTransactions".t(context),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: ListTileAppearanceTheme.subtitleInk,
+              color: ListTileAppearanceTheme.subtitleInk(context),
               fontSize: 13.0,
               height: 1.4,
             ),

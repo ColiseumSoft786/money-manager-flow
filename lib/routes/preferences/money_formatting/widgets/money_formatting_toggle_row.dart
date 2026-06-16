@@ -52,14 +52,14 @@ class MoneyFormattingToggleRow extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15.0,
-                    color: MoneyFormattingPreferencesTheme.titleInk,
+                    color: MoneyFormattingPreferencesTheme.titleInk(context),
                   ),
                 ),
                 const SizedBox(height: 2.0),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: MoneyFormattingPreferencesTheme.subtitleInk,
+                    color: MoneyFormattingPreferencesTheme.subtitleInk(context),
                     fontSize: 12.5,
                     height: 1.35,
                   ),
@@ -71,8 +71,11 @@ class MoneyFormattingToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeTrackColor: PreferencesUiTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
-            thumbColor: WidgetStateProperty.all(Colors.white),
+            inactiveTrackColor:
+                MoneyFormattingPreferencesTheme.cardBorder(context),
+            thumbColor: WidgetStateProperty.all(
+              Theme.of(context).colorScheme.surface,
+            ),
           ),
         ],
       ),

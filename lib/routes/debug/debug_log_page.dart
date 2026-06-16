@@ -1,6 +1,7 @@
 import "dart:convert";
 import "dart:io";
 
+import "package:flow/widgets/general/spinner.dart";
 import "package:flutter/material.dart";
 import "package:path/path.dart" as path;
 
@@ -49,7 +50,7 @@ class _DebugLogPageState extends State<DebugLogPage> {
                 padding: EdgeInsets.all(16.0),
               ),
             )
-          : const Center(child: CircularProgressIndicator()),
+          : const Spinner.center(),
     );
   }
 

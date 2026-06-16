@@ -46,7 +46,7 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Material(
-            color: LanguageSelectionTheme.canvas,
+            color: LanguageSelectionTheme.canvas(context),
             clipBehavior: Clip.antiAlias,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -61,10 +61,10 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                     title: "preferences.language".t(context),
                     onBack: () => context.pop(),
                   ),
-                  const Divider(
+                  Divider(
                     height: 1.0,
                     thickness: 1.0,
-                    color: LanguageSelectionTheme.divider,
+                    color: LanguageSelectionTheme.divider(context),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 12.0),
@@ -75,16 +75,16 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                       decoration: InputDecoration(
                         isDense: true,
                         filled: true,
-                        fillColor: LanguageSelectionTheme.searchFill,
+                        fillColor: LanguageSelectionTheme.searchFill(context),
                         hintText: "preferences.language.search".t(context),
                         hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: LanguageSelectionTheme.subtitleInk,
+                          color: LanguageSelectionTheme.subtitleInk(context),
                           fontSize: 15.0,
                         ),
                         prefixIcon: Icon(
                           Symbols.search_rounded,
                           size: 22.0,
-                          color: LanguageSelectionTheme.subtitleInk,
+                          color: LanguageSelectionTheme.subtitleInk(context),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 12.0,
@@ -92,8 +92,8 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: LanguageSelectionTheme.border,
+                          borderSide: BorderSide(
+                            color: LanguageSelectionTheme.border(context),
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -111,12 +111,12 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                       padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: LanguageSelectionTheme.sheetFill,
+                          color: LanguageSelectionTheme.sheetFill(context),
                           borderRadius: BorderRadius.circular(
                             LanguageSelectionTheme.cardRadius,
                           ),
                           border: Border.all(
-                            color: LanguageSelectionTheme.border,
+                            color: LanguageSelectionTheme.border(context),
                           ),
                         ),
                         child: ClipRRect(
@@ -132,7 +132,9 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                                     ),
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: LanguageSelectionTheme.subtitleInk,
+                                      color: LanguageSelectionTheme.subtitleInk(
+                                        context,
+                                      ),
                                     ),
                                   ),
                                 )
@@ -140,12 +142,12 @@ class _LanguageSelectionSheetState extends State<LanguageSelectionSheet> {
                                   shrinkWrap: true,
                                   padding: EdgeInsets.zero,
                                   itemCount: locales.length,
-                                  separatorBuilder: (_, __) => const Divider(
+                                  separatorBuilder: (_, __) => Divider(
                                     height: 1.0,
                                     thickness: 1.0,
                                     indent: 16.0,
                                     endIndent: 16.0,
-                                    color: LanguageSelectionTheme.divider,
+                                    color: LanguageSelectionTheme.divider(context),
                                   ),
                                   itemBuilder: (context, index) {
                                     final Locale locale = locales[index];
@@ -193,7 +195,7 @@ class _SheetHeader extends StatelessWidget {
               onPressed: onBack,
               icon: Icon(
                 Symbols.arrow_back_rounded,
-                color: LanguageSelectionTheme.titleInk,
+                color: LanguageSelectionTheme.titleInk(context),
               ),
             ),
           ),
@@ -202,7 +204,7 @@ class _SheetHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 17.0,
-              color: LanguageSelectionTheme.titleInk,
+              color: LanguageSelectionTheme.titleInk(context),
             ),
           ),
         ],
@@ -245,14 +247,14 @@ class _LanguageRow extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.0,
-                        color: LanguageSelectionTheme.titleInk,
+                        color: LanguageSelectionTheme.titleInk(context),
                       ),
                     ),
                     const SizedBox(height: 3.0),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: LanguageSelectionTheme.subtitleInk,
+                        color: LanguageSelectionTheme.subtitleInk(context),
                         fontSize: 13.0,
                       ),
                     ),

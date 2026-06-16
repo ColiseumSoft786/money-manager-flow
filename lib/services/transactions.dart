@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flow/data/flow_notification_payload.dart";
 import "package:flow/data/transaction_filter.dart";
 import "package:flow/entity/transaction.dart";
@@ -43,13 +45,30 @@ class TransactionsService {
     _onChange();
   }
 
+  StreamSubscription<Query<Transaction>>? _boxWatchSubscription;
+
   factory TransactionsService() =>
       _instance ??= TransactionsService._internal();
 
   TransactionsService._internal() {
-    ObjectBox().box<Transaction>().query().watch().listen((event) {
-      _onChange();
-    });
+    _startBoxWatch();
+  }
+
+  void _startBoxWatch() {
+    _boxWatchSubscription?.cancel();
+    _boxWatchSubscription = ObjectBox().box<Transaction>().query().watch().listen(
+      (_) => _onChange(),
+    );
+  }
+
+  /// Cancel ObjectBox query watchers before the store is closed.
+  static Future<void> disposeWatchers() async {
+    await _instance?._boxWatchSubscription?.cancel();
+    _instance?._boxWatchSubscription = null;
+  }
+
+  static void reattachWatchers() {
+    _instance?._startBoxWatch();
   }
 
   final Condition<Transaction> nonDeletedCondition =

@@ -13,7 +13,7 @@ class DeletedTransactionsDayHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: DeletedTransactionsTheme.sectionLabel,
+          color: DeletedTransactionsTheme.sectionLabel(context),
           fontWeight: FontWeight.w700,
           fontSize: 12.0,
           letterSpacing: 1.1,

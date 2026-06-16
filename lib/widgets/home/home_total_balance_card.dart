@@ -6,16 +6,16 @@ import "package:flow/objectbox.dart";
 import "package:flow/objectbox/actions.dart";
 import "package:flow/objectbox/objectbox.g.dart";
 import "package:flow/prefs/local_preferences.dart";
-import "package:flow/prefs/transitive.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/transactions.dart";
+import "package:flow/theme/flow_accent_colors.dart";
 import "package:flow/theme/helpers.dart";
 import "package:flow/widgets/general/money_text.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
 import "package:flutter/material.dart";
 import "package:material_symbols_icons/symbols.dart";
+import "package:moment_dart/moment_dart.dart";
 
-/// Home hero card: lifetime income minus expenses across accounts (excluding
-/// transfers, pending, deleted, future), not the sum of stored account balances.
 class HomeTotalBalanceCard extends StatefulWidget {
   const HomeTotalBalanceCard({super.key});
 
@@ -23,9 +23,14 @@ class HomeTotalBalanceCard extends StatefulWidget {
   State<HomeTotalBalanceCard> createState() => _HomeTotalBalanceCardState();
 }
 
-class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard> {
-  late Future<Money?> _netFlowsFuture;
+typedef _LifetimeFlowsSnapshot = ({Money? current, Money? previousAtMonthStart});
+
+class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard>
+    with SingleTickerProviderStateMixin {
+  late Future<_LifetimeFlowsSnapshot> _netFlowsFuture;
   late bool _initiallyAbbreviated;
+  late AnimationController _floatController;
+  late Animation<double> _floatAnimation;
 
   QueryBuilder<Account> _mainAccountQuery() => ObjectBox()
       .box<Account>()
@@ -38,8 +43,20 @@ class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard> {
     ExchangeRatesService().exchangeRatesCache.addListener(_refresh);
     TransactionsService().addListener(_refresh);
 
-    _netFlowsFuture = ObjectBox().getLifetimeFlowsNetGrandTotal();
+    _netFlowsFuture = _loadLifetimeFlows();
     _initiallyAbbreviated = !LocalPreferences().preferFullAmounts.get();
+
+    _floatController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: -4.0, end: 4.0).animate(
+      CurvedAnimation(
+        parent: _floatController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
   }
 
   @override
@@ -47,6 +64,7 @@ class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard> {
     LocalPreferences().primaryCurrency.removeListener(_refresh);
     ExchangeRatesService().exchangeRatesCache.removeListener(_refresh);
     TransactionsService().removeListener(_refresh);
+    _floatController.dispose();
     super.dispose();
   }
 
@@ -62,112 +80,168 @@ class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard> {
         final String subtitleName =
             accountSnap.data?.name ?? "setup.accounts.preset.main".tr();
 
-        return FutureBuilder<Money?>(
+        return FutureBuilder<_LifetimeFlowsSnapshot>(
           future: _netFlowsFuture,
           builder: (context, snapshot) {
-            final Money total = snapshot.data ?? fallback;
+            final DateTime monthStart = Moment.startOfToday().startOfMonth();
+            final Money total = snapshot.data?.current ??
+                fallback;
+            final Money previousAtMonthStart =
+                snapshot.data?.previousAtMonthStart ??
+                ObjectBox().getLifetimeFlowsNetPrimaryCurrencyOnly(
+                  until: monthStart,
+                );
+            final double? percentageChange = _monthToDateChangePercent(
+              current: total,
+              previousAtMonthStart: previousAtMonthStart,
+            );
+            final bool isPositive = (percentageChange ?? 0) >= 0;
+            
+            final FlowAccentColors accent = context.flowAccent;
+            final ColorScheme scheme = Theme.of(context).colorScheme;
+            final TextTheme textTheme = Theme.of(context).textTheme;
+            final bool light = scheme.brightness == Brightness.light;
+            final Color primary = accent.primary;
 
-            return Container(
-              decoration: BoxDecoration(
-                color: context.flowAccent.primary,
-                borderRadius: BorderRadius.circular(20.0),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromRGBO(37, 140, 244, 0.35),
-                    blurRadius: 16.0,
-                    offset: Offset(0.0, 8.0),
-                  ),
-                  BoxShadow(
-                    color: Color.fromRGBO(0, 0, 0, 0.06),
-                    blurRadius: 4.0,
-                    offset: Offset(0.0, 2.0),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                20.0,
-                18.0,
-                12.0,
-                18.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "tabs.home.flowsNetTotal".t(context),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w500,
+            final Color titleInk = GlassPanel.mutedInk(context);
+            final Color amountInk = scheme.onSurface;
+            final Color accentInk = light ? primary : GlassPanel.accentInk(context);
+
+            return AnimatedBuilder(
+              animation: _floatAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, _floatAnimation.value),
+                  child: GlassPanel(
+                    borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+                    blurBehind: true,
+                    tint: light ? primary : null,
+                    borderColor: GlassPanel.resolveProminentBorder(context),
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "tabs.home.flowsNetTotal".t(context).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                            color: titleInk,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Amount row with percentage chip
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            // Main amount
+                            MoneyText(
+                              total,
+                              initiallyAbbreviated: _initiallyAbbreviated,
+                              tapToToggleAbbreviation: true,
+                              autoSize: true,
+                              maxLines: 1,
+                              style: textTheme.headlineMedium?.copyWith(
+                                color: amountInk,
+                                fontWeight: FontWeight.w800,
+                                height: 1.0,
+                                letterSpacing: -0.5,
+                                fontSize: 36,
+                              ),
+                            ),
+                            if (percentageChange != null) ...[
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isPositive
+                                      ? context.flowColors.income.withValues(alpha: 0.12)
+                                      : context.flowColors.expense.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isPositive
+                                          ? Icons.arrow_upward_rounded
+                                          : Icons.arrow_downward_rounded,
+                                      size: 12,
+                                      color: isPositive
+                                          ? context.flowColors.income
+                                          : context.flowColors.expense,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "${isPositive ? "+" : ""}${percentageChange.toStringAsFixed(1)}%",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: isPositive
+                                            ? context.flowColors.income
+                                            : context.flowColors.expense,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Account chip - "Main account" style
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.onSurface.withValues(
+                              alpha: light ? 0.05 : 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: scheme.onSurface.withValues(
+                                alpha: light ? 0.08 : 0.12,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Symbols.account_balance_wallet_rounded,
+                                size: 14,
+                                color: accentInk,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                subtitleName,
+                                style: textTheme.labelMedium?.copyWith(
+                                  color: titleInk,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6.0),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: MoneyText(
-                          total,
-                          initiallyAbbreviated: _initiallyAbbreviated,
-                          tapToToggleAbbreviation: true,
-                          autoSize: true,
-                          maxLines: 1,
-                          style:
-                              Theme.of(context).textTheme.headlineMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                        ),
-                      ),
-                      ValueListenableBuilder(
-                        valueListenable: TransitiveLocalPreferences()
-                            .sessionPrivacyMode
-                            .valueNotifier,
-                        builder: (context, snapshot, _) {
-                          final bool hidden = snapshot == true;
-                          return IconButton(
-                            onPressed: () => TransitiveLocalPreferences()
-                                .sessionPrivacyMode
-                                .set(!hidden),
-                            style: IconButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              iconSize: 26.0,
-                            ),
-                            icon: Icon(
-                              hidden
-                                  ? Symbols.visibility_rounded
-                                  : Symbols.visibility_off_rounded,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14.0),
-                  Row(
-                    children: [
-                      Icon(
-                        Symbols.account_balance_wallet_rounded,
-                        size: 18.0,
-                        color: Colors.white.withValues(alpha: 0.95),
-                      ),
-                      const SizedBox(width: 8.0),
-                      Expanded(
-                        child: Text(
-                          subtitleName,
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.95),
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                );
+              },
             );
           },
         );
@@ -175,9 +249,32 @@ class _HomeTotalBalanceCardState extends State<HomeTotalBalanceCard> {
     );
   }
 
+  Future<_LifetimeFlowsSnapshot> _loadLifetimeFlows() async {
+    final DateTime monthStart = Moment.startOfToday().startOfMonth();
+    final List<Money?> results = await Future.wait<Money?>([
+      ObjectBox().getLifetimeFlowsNetGrandTotal(),
+      ObjectBox().getLifetimeFlowsNetGrandTotal(until: monthStart),
+    ]);
+
+    return (
+      current: results[0],
+      previousAtMonthStart: results[1],
+    );
+  }
+
+  double? _monthToDateChangePercent({
+    required Money current,
+    required Money previousAtMonthStart,
+  }) {
+    final double base = previousAtMonthStart.amount.abs();
+    if (base == 0) return null;
+
+    return ((current.amount - previousAtMonthStart.amount) / base) * 100;
+  }
+
   void _refresh() {
     setState(() {
-      _netFlowsFuture = ObjectBox().getLifetimeFlowsNetGrandTotal();
+      _netFlowsFuture = _loadLifetimeFlows();
     });
   }
 }

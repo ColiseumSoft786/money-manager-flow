@@ -7,7 +7,6 @@ import "package:flow/routes/preferences/money_formatting/widgets/money_formattin
 import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_preview_card.dart";
 import "package:flow/routes/preferences/money_formatting/widgets/money_formatting_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/optional.dart";
 import "package:flow/widgets/sheets/select_currency_icu_pattern.dart";
 import "package:flutter/material.dart";
@@ -28,29 +27,9 @@ class _MoneyFormattingPreferencesPageState
     final bool useCurrencySymbol = LocalPreferences().useCurrencySymbol.get();
 
     return Scaffold(
-      backgroundColor: MoneyFormattingPreferencesTheme.canvas,
+      backgroundColor: MoneyFormattingPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: MoneyFormattingPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.moneyFormatting".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: MoneyFormattingPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.moneyFormatting".t(context)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

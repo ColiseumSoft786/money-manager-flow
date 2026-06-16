@@ -232,15 +232,15 @@ class AccountCard extends StatelessWidget {
           borderRadius: radius,
           child: Ink(
             decoration: BoxDecoration(
-              color: AccountsTabTheme.cardFill,
+              color: AccountsTabTheme.cardFill(context),
               borderRadius: radius,
               border: Border.all(
                 color: primary
                     ? AccountsTabTheme.primary(context).withValues(alpha: 0.35)
-                    : AccountsTabTheme.cardBorder,
+                    : AccountsTabTheme.cardBorder(context),
                 width: primary ? 1.5 : 1.0,
               ),
-              boxShadow: AccountsTabTheme.cardShadow,
+              boxShadow: AccountsTabTheme.cardShadow(context),
             ),
             child: Padding(
               padding: const EdgeInsets.all(14.0),
@@ -289,7 +289,7 @@ class AccountCard extends StatelessWidget {
                                     style: theme.textTheme.titleSmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 15.0,
-                                      color: AccountsTabTheme.titleInk,
+                                      color: AccountsTabTheme.titleInk(context),
                                     ),
                                   ),
                                 ),
@@ -301,7 +301,7 @@ class AccountCard extends StatelessWidget {
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 20.0,
-                                color: AccountsTabTheme.titleInk,
+                                color: AccountsTabTheme.titleInk(context),
                               ),
                             ),
                           ],
@@ -311,18 +311,18 @@ class AccountCard extends StatelessWidget {
                     ],
                   ),
                   if (!account.archived) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
                       child: Divider(
                         height: 1.0,
                         thickness: 1.0,
-                        color: AccountsTabTheme.divider,
+                        color: AccountsTabTheme.divider(context),
                       ),
                     ),
                     Text(
                       "account.thisMonth".t(context).toUpperCase(),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: AccountsTabTheme.sectionLabel,
+                        color: AccountsTabTheme.sectionLabel(context),
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.4,
                         fontSize: 10.5,
@@ -337,7 +337,7 @@ class AccountCard extends StatelessWidget {
                               context,
                             ),
                             money: flow.getIncomeByCurrency(account.currency),
-                            ink: AccountsTabTheme.incomeInk,
+                            ink: AccountsTabTheme.incomeInk(context),
                           ),
                         ),
                         const SizedBox(width: 10.0),
@@ -347,7 +347,7 @@ class AccountCard extends StatelessWidget {
                               context,
                             ),
                             money: flow.getExpenseByCurrency(account.currency),
-                            ink: AccountsTabTheme.expenseInk,
+                            ink: AccountsTabTheme.expenseInk(context),
                           ),
                         ),
                       ],
@@ -401,7 +401,7 @@ class _MonthMetric extends StatelessWidget {
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 14.0,
-              color: AccountsTabTheme.titleInk,
+              color: AccountsTabTheme.titleInk(context),
             ),
           ),
         ],

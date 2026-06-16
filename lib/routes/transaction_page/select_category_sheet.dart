@@ -65,13 +65,40 @@ class _SelectCategorySheetState extends State<SelectCategorySheet> {
     final bool showSearchBar = widget.showSearchBar ?? categories.length > 6;
     final List<Category> results = simpleSortByQuery(categories, _query);
 
-    const Color sheetBg = Colors.white;
-    const Color titleInk = kFlowHomeTransactionHeadingInk;
-    const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-    const Color chevronInk = kFlowMonthSelectorChevronInkLight;
-    const Color indicatorBorder = kFlowAccountRowIndicatorBorderLight;
-    const Color rowDivider = kFlowAccountRowDividerLight;
-    const Color searchFieldFill = Color(0xFFF1F5F9);
+    final bool light = theme.brightness == Brightness.light;
+    final Color sheetBg = light ? Colors.white : theme.colorScheme.surface;
+    final Color titleInk =
+        light ? kFlowHomeTransactionHeadingInk : theme.colorScheme.onSurface;
+    final Color subtitleInk = light
+        ? kFlowAccountRowBalanceInkLight
+        : theme.colorScheme.onSurfaceVariant;
+    final Color chevronInk = light
+        ? kFlowMonthSelectorChevronInkLight
+        : theme.colorScheme.onSurfaceVariant;
+    final Color indicatorBorder = light
+        ? kFlowAccountRowIndicatorBorderLight
+        : theme.colorScheme.outlineVariant;
+    final Color rowDivider = light
+        ? kFlowAccountRowDividerLight
+        : theme.colorScheme.outlineVariant;
+    final Color rowSelectedFill = light
+        ? kFlowAccountRowSelectedFillLight
+        : theme.colorScheme.primary.withValues(alpha: 0.12);
+    final Color rowSelectedBorder = light
+        ? kFlowAccountRowSelectedBorderLight
+        : theme.colorScheme.primary;
+    final Color searchFieldFill = light
+        ? const Color(0xFFF1F5F9)
+        : theme.colorScheme.surfaceContainerHighest;
+    final Color skipChipFill = light
+        ? const Color(0xFFF1F5F9)
+        : theme.colorScheme.surfaceContainerHigh;
+    final Color skipChipInk = light
+        ? const Color(0xFF475569)
+        : theme.colorScheme.onSurfaceVariant;
+    final Color newChipFill = light
+        ? const Color(0xFFEFF6FF)
+        : theme.colorScheme.primary.withValues(alpha: 0.15);
     final Color primaryAccent = theme.colorScheme.primary;
     final Color onPrimary = theme.colorScheme.onPrimary;
 
@@ -99,7 +126,9 @@ class _SelectCategorySheetState extends State<SelectCategorySheet> {
                       width: 36.0,
                       height: 5.0,
                       decoration: BoxDecoration(
-                        color: titleInk.withValues(alpha: 0.22),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.22,
+                        ),
                         borderRadius: BorderRadius.circular(100.0),
                       ),
                     ),
@@ -144,8 +173,8 @@ class _SelectCategorySheetState extends State<SelectCategorySheet> {
                           child: _QuickActionChip(
                             label: "category.skip".t(context),
                             icon: Symbols.block_rounded,
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            foregroundColor: const Color(0xFF475569),
+                            backgroundColor: skipChipFill,
+                            foregroundColor: skipChipInk,
                             onTap: () =>
                                 context.pop(const Optional<Category>(null)),
                           ),
@@ -155,7 +184,7 @@ class _SelectCategorySheetState extends State<SelectCategorySheet> {
                           child: _QuickActionChip(
                             label: "category.new".t(context),
                             icon: Symbols.add_circle_rounded,
-                            backgroundColor: const Color(0xFFEFF6FF),
+                            backgroundColor: newChipFill,
                             foregroundColor: primaryAccent,
                             onTap: () => context.push("/category/new"),
                           ),
@@ -190,6 +219,8 @@ class _SelectCategorySheetState extends State<SelectCategorySheet> {
                                 category: category,
                                 selected: selected,
                                 titleInk: titleInk,
+                                selectedFill: rowSelectedFill,
+                                selectedBorder: rowSelectedBorder,
                                 indicatorBorder: indicatorBorder,
                                 accent: primaryAccent,
                                 onAccent: onPrimary,
@@ -297,7 +328,10 @@ class _SearchField extends StatelessWidget {
               child: TextField(
                 onChanged: onChanged,
                 textInputAction: TextInputAction.search,
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+                cursorColor: theme.colorScheme.primary,
                 cursorHeight: 18.0,
                 decoration: InputDecoration(
                   isCollapsed: true,
@@ -463,6 +497,8 @@ class _CategoryPickerRow extends StatelessWidget {
   final Category category;
   final bool selected;
   final Color titleInk;
+  final Color selectedFill;
+  final Color selectedBorder;
   final Color indicatorBorder;
   final Color accent;
   final Color onAccent;
@@ -474,6 +510,8 @@ class _CategoryPickerRow extends StatelessWidget {
     required this.category,
     required this.selected,
     required this.titleInk,
+    required this.selectedFill,
+    required this.selectedBorder,
     required this.indicatorBorder,
     required this.accent,
     required this.onAccent,
@@ -487,11 +525,11 @@ class _CategoryPickerRow extends StatelessWidget {
     final BorderRadius radius = BorderRadius.circular(14.0);
 
     return Material(
-      color: selected ? kFlowAccountRowSelectedFillLight : Colors.transparent,
+      color: selected ? selectedFill : Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: radius,
         side: selected
-            ? const BorderSide(color: kFlowAccountRowSelectedBorderLight)
+            ? BorderSide(color: selectedBorder)
             : BorderSide.none,
       ),
       child: InkWell(

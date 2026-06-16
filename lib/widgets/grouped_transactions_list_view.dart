@@ -6,6 +6,7 @@ import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/utils/utils.dart";
 import "package:flow/widgets/transaction_list_tile.dart";
+import "package:flow/widgets/transaction_list_tile/staggered_list_entry.dart";
 import "package:flutter/material.dart";
 import "package:flutter_slidable/flutter_slidable.dart";
 import "package:moment_dart/moment_dart.dart";
@@ -174,23 +175,29 @@ class _GroupedTransactionsListViewState
           (Transaction transaction) => ReorderableDelayedDragStartListener(
             index: index,
             key: ValueKey(transaction.uuid),
-            child: TransactionListTile(
-              combineTransfers: combineTransfers,
-              transaction: transaction,
-              dismissibleKey: ValueKey(transaction.id),
-              moveToTrashFn: () => transaction.moveToTrashBin(context),
-              recoverFromTrashFn: () => transaction.recoverFromTrashBin(),
-              confirmFn: ([bool confirm = true]) {
-                final bool updateTransactionDate = LocalPreferences()
-                    .pendingTransactions
-                    .updateDateUponConfirmation
-                    .get();
+            child: StaggeredListEntry(
+              listIndex: index,
+              enabled:
+                  widget.listType == GroupedTransactionsListViewType.sliver ||
+                  widget.listType == GroupedTransactionsListViewType.list,
+              child: TransactionListTile(
+                combineTransfers: combineTransfers,
+                transaction: transaction,
+                dismissibleKey: ValueKey(transaction.id),
+                moveToTrashFn: () => transaction.moveToTrashBin(context),
+                recoverFromTrashFn: () => transaction.recoverFromTrashBin(),
+                confirmFn: ([bool confirm = true]) {
+                  final bool updateTransactionDate = LocalPreferences()
+                      .pendingTransactions
+                      .updateDateUponConfirmation
+                      .get();
 
-                transaction.confirm(confirm, updateTransactionDate);
-              },
-              duplicateFn: () => transaction.duplicate(),
-              overrideObscure: widget.overrideObscure,
-              groupRange: widget.groupBy,
+                  transaction.confirm(confirm, updateTransactionDate);
+                },
+                duplicateFn: () => transaction.duplicate(),
+                overrideObscure: widget.overrideObscure,
+                groupRange: widget.groupBy,
+              ),
             ),
           ),
           (_) => Container(),

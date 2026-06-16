@@ -7,7 +7,6 @@ import "package:flow/prefs/local_preferences.dart";
 import "package:flow/services/notifications.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/widgets/pending_transactions/pending_transactions_theme.dart";
 import "package:flow/widgets/schdeuled_notification_permission_builder.dart";
 import "package:flow/widgets/schdeuled_notification_permission_missing_reminder.dart";
@@ -51,29 +50,9 @@ class _PendingTransactionPreferencesPageState
     return SchdeuledNotificationPermissionBuilder(
       builder: (context, permissions, _) {
         return Scaffold(
-          backgroundColor: PendingTransactionsTheme.canvas,
+          backgroundColor: PendingTransactionsTheme.canvas(context),
           appBar: AppBar(
-            backgroundColor: PendingTransactionsTheme.cardFill,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            title: Text(
-              "preferences.transactions.pending".t(context),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 17.0,
-                color: PendingTransactionsTheme.titleInk,
-              ),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1.0),
-              child: Divider(
-                height: 1.0,
-                thickness: 1.0,
-                color: kFlowAccountRowDividerLight,
-              ),
-            ),
+            title: Text("preferences.transactions.pending".t(context)),
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -227,7 +206,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: PendingTransactionsTheme.sectionLabel,
+          color: PendingTransactionsTheme.sectionLabel(context),
           fontWeight: FontWeight.w700,
           fontSize: 11.0,
           letterSpacing: 1.1,
@@ -246,9 +225,11 @@ class _InfoBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: PendingTransactionsTheme.infoBannerFill(context),
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: const Color(0xFFDBEAFE)),
+        border: Border.all(
+          color: PendingTransactionsTheme.infoBannerBorder(context),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -266,7 +247,7 @@ class _InfoBanner extends StatelessWidget {
               child: Text(
                 text,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: PendingTransactionsTheme.infoText,
+                  color: PendingTransactionsTheme.infoText(context),
                   fontSize: 13.0,
                   height: 1.45,
                 ),
@@ -302,9 +283,9 @@ class _ToggleCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: PendingTransactionsTheme.cardFill,
+          color: PendingTransactionsTheme.cardFill(context),
           borderRadius: BorderRadius.circular(PendingTransactionsTheme.cardRadius),
-          border: Border.all(color: PendingTransactionsTheme.cardBorder),
+          border: Border.all(color: PendingTransactionsTheme.cardBorder(context)),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
@@ -319,7 +300,7 @@ class _ToggleCard extends StatelessWidget {
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.0,
-                        color: PendingTransactionsTheme.titleInk,
+                        color: PendingTransactionsTheme.titleInk(context),
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -327,7 +308,7 @@ class _ToggleCard extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: PendingTransactionsTheme.subtitleInk,
+                          color: PendingTransactionsTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.35,
                         ),
@@ -340,8 +321,11 @@ class _ToggleCard extends StatelessWidget {
                 value: value,
                 onChanged: enabled ? onChanged : null,
                 activeTrackColor: PendingTransactionsTheme.primary(context),
-                inactiveTrackColor: const Color(0xFFE5E7EB),
-                thumbColor: WidgetStateProperty.all(Colors.white),
+                inactiveTrackColor:
+                    PendingTransactionsTheme.switchInactiveTrack(context),
+                thumbColor: WidgetStateProperty.all(
+                  Theme.of(context).colorScheme.surface,
+                ),
               ),
             ],
           ),
@@ -460,9 +444,9 @@ class _ChipCardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: PendingTransactionsTheme.cardFill,
+        color: PendingTransactionsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(PendingTransactionsTheme.cardRadius),
-        border: Border.all(color: PendingTransactionsTheme.cardBorder),
+        border: Border.all(color: PendingTransactionsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -488,7 +472,7 @@ class _Chip extends StatelessWidget {
     return Material(
       color: selected
           ? PendingTransactionsTheme.chipSelectedFill
-          : PendingTransactionsTheme.chipIdleFill,
+          : PendingTransactionsTheme.chipIdleFill(context),
       borderRadius: BorderRadius.circular(12.0),
       child: InkWell(
         onTap: onTap,
@@ -503,7 +487,7 @@ class _Chip extends StatelessWidget {
               fontSize: 12.0,
               color: selected
                   ? PendingTransactionsTheme.chipSelectedInk
-                  : PendingTransactionsTheme.chipIdleInk,
+                  : PendingTransactionsTheme.chipIdleInk(context),
             ),
           ),
         ),

@@ -12,9 +12,9 @@ class DeletedTransactionsInfoBanner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: DeletedTransactionsTheme.infoFill,
+          color: DeletedTransactionsTheme.infoFill(context),
           borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: DeletedTransactionsTheme.infoBorder),
+          border: Border.all(color: DeletedTransactionsTheme.infoBorder(context)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14.0),
@@ -41,7 +41,7 @@ class DeletedTransactionsInfoBanner extends StatelessWidget {
                 child: Text(
                   "transactions.deleted.infoBanner".t(context),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: DeletedTransactionsTheme.infoText,
+                    color: DeletedTransactionsTheme.infoText(context),
                     fontSize: 13.0,
                     height: 1.45,
                   ),

@@ -20,6 +20,7 @@ TransactionFilter _$TransactionFilterFromJson(
       ?.map((e) => $enumDecode(_$TransactionTypeEnumMap, e))
       .toList(),
   isPending: json['isPending'] as bool?,
+  isDeductible: json['isDeductible'] as bool?,
   minAmount: (json['minAmount'] as num?)?.toDouble(),
   maxAmount: (json['maxAmount'] as num?)?.toDouble(),
   currencies: (json['currencies'] as List<dynamic>?)
@@ -59,6 +60,7 @@ Map<String, dynamic> _$TransactionFilterToJson(
   'sortBy': _$TransactionSortFieldEnumMap[instance.sortBy]!,
   'groupBy': _$TransactionGroupRangeEnumMap[instance.groupBy]!,
   'isPending': instance.isPending,
+  'isDeductible': instance.isDeductible,
   'minAmount': instance.minAmount,
   'maxAmount': instance.maxAmount,
   'currencies': instance.currencies,

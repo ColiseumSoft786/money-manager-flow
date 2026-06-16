@@ -48,9 +48,9 @@ class DeletedTransactionCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: DeletedTransactionsTheme.cardFill,
+          color: DeletedTransactionsTheme.cardFill(context),
           borderRadius: BorderRadius.circular(DeletedTransactionsTheme.cardRadius),
-          border: Border.all(color: DeletedTransactionsTheme.cardBorder),
+          border: Border.all(color: DeletedTransactionsTheme.cardBorder(context)),
           boxShadow: const [
             BoxShadow(
               color: Color.fromRGBO(15, 23, 42, 0.04),
@@ -85,7 +85,7 @@ class DeletedTransactionCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 16.0,
-                        color: DeletedTransactionsTheme.titleInk,
+                        color: DeletedTransactionsTheme.titleInk(context),
                         height: 1.25,
                       ),
                     ),
@@ -93,7 +93,7 @@ class DeletedTransactionCard extends StatelessWidget {
                     Text(
                       _subtitle(when),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: DeletedTransactionsTheme.subtitleInk,
+                        color: DeletedTransactionsTheme.subtitleInk(context),
                         fontSize: 13.0,
                       ),
                     ),
@@ -114,7 +114,7 @@ class DeletedTransactionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10.0),
                   Material(
-                    color: DeletedTransactionsTheme.restoreFill,
+                    color: DeletedTransactionsTheme.restoreFill(context),
                     borderRadius: BorderRadius.circular(20.0),
                     child: InkWell(
                       onTap: onRestore,

@@ -22,6 +22,9 @@ import '../entity/file_attachment.dart';
 import '../entity/goal.dart';
 import '../entity/profile.dart';
 import '../entity/recurring_transaction.dart';
+import '../entity/split_bill.dart';
+import '../entity/split_participant.dart';
+import '../entity/subscription.dart';
 import '../entity/transaction.dart';
 import '../entity/transaction_filter_preset.dart';
 import '../entity/transaction_tag.dart';
@@ -258,7 +261,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(7, 5357777579468740615),
     name: 'Transaction',
-    lastPropertyId: const obx_int.IdUid(25, 1116277179564620916),
+    lastPropertyId: const obx_int.IdUid(26, 5938174629051837462),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -394,6 +397,12 @@ final _entities = <obx_int.ModelEntity>[
         id: const obx_int.IdUid(25, 1116277179564620916),
         name: 'attachmentsUuids',
         type: 30,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(26, 5938174629051837462),
+        name: 'isDeductible',
+        type: 1,
         flags: 0,
       ),
     ],
@@ -634,7 +643,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(11, 4948078457888921031),
     name: 'Budget',
-    lastPropertyId: const obx_int.IdUid(11, 3812796204565944657),
+    lastPropertyId: const obx_int.IdUid(14, 8458147319457760888),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -691,6 +700,24 @@ final _entities = <obx_int.ModelEntity>[
         id: const obx_int.IdUid(11, 3812796204565944657),
         name: 'categoriesUuids',
         type: 30,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(12, 8903130804812869232),
+        name: 'alertThreshold',
+        type: 8,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(13, 7151037618007684199),
+        name: 'stopAtLimit',
+        type: 1,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(14, 8458147319457760888),
+        name: 'notificationsEnabled',
+        type: 1,
         flags: 0,
       ),
     ],
@@ -841,7 +868,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(14, 7904423998243143112),
     name: 'Goal',
-    lastPropertyId: const obx_int.IdUid(10, 3196587516305976411),
+    lastPropertyId: const obx_int.IdUid(11, 5072643142397798070),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -909,6 +936,12 @@ final _entities = <obx_int.ModelEntity>[
         type: 9,
         flags: 0,
       ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(11, 5072643142397798070),
+        name: 'baseLineBalance',
+        type: 8,
+        flags: 0,
+      ),
     ],
     relations: <obx_int.ModelRelation>[],
     backlinks: <obx_int.ModelBacklink>[],
@@ -947,6 +980,226 @@ final _entities = <obx_int.ModelEntity>[
       obx_int.ModelProperty(
         id: const obx_int.IdUid(6, 5739129158582967162),
         name: 'filePath',
+        type: 9,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(16, 6284719035829103847),
+    name: 'Subscription',
+    lastPropertyId: const obx_int.IdUid(15, 7381818953627180907),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 2847391056382719456),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 5734819263057429184),
+        name: 'uuid',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(28, 1847293058472910384),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 8923456789012345678),
+        name: 'createdDate',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 7283946512038472910),
+        name: 'name',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 6193847562039481726),
+        name: 'recurringTransactionUuid',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 5102938471620394837),
+        name: 'manualAmount',
+        type: 8,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 4011827360511305948),
+        name: 'manualCurrency',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(8, 3928475610293847561),
+        name: 'kindStorage',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(9, 2837364509182736452),
+        name: 'statusStorage',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(10, 1746253398071625343),
+        name: 'cancelUrl',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(11, 655142286960514234),
+        name: 'cancelByDate',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(12, 5564031175849403125),
+        name: 'lastUsedOverride',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(13, 3472920064738292016),
+        name: 'unusedAfterDays',
+        type: 6,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(14, 4021847561938472610),
+        name: 'notes',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(15, 7381818953627180907),
+        name: 'sortOrder',
+        type: 6,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(17, 2716702821149332018),
+    name: 'SplitBill',
+    lastPropertyId: const obx_int.IdUid(5, 8324221298154974570),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 1284968732024243228),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 6351678830057823635),
+        name: 'uuid',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(29, 558403776525131083),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 7079460354606490765),
+        name: 'createdDate',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 1579033225094269921),
+        name: 'transactionUuid',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(30, 591038233357637342),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 8324221298154974570),
+        name: 'mode',
+        type: 9,
+        flags: 0,
+      ),
+    ],
+    relations: <obx_int.ModelRelation>[],
+    backlinks: <obx_int.ModelBacklink>[],
+  ),
+  obx_int.ModelEntity(
+    id: const obx_int.IdUid(18, 5556081389674122426),
+    name: 'SplitParticipant',
+    lastPropertyId: const obx_int.IdUid(11, 3894633441237304954),
+    flags: 0,
+    properties: <obx_int.ModelProperty>[
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(1, 1746965764390233996),
+        name: 'id',
+        type: 6,
+        flags: 1,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(2, 5059611686146846353),
+        name: 'uuid',
+        type: 9,
+        flags: 2080,
+        indexId: const obx_int.IdUid(31, 4872818906586441702),
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(3, 7656572700682557194),
+        name: 'createdDate',
+        type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(4, 2891543656200631119),
+        name: 'splitBillUuid',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(5, 8930816065626683971),
+        name: 'displayName',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(6, 4882393428728069080),
+        name: 'contactId',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(7, 4057073539588710612),
+        name: 'shareAmount',
+        type: 8,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(8, 7674141194409284147),
+        name: 'settledAmount',
+        type: 8,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(9, 4358477427463640002),
+        name: 'currency',
+        type: 9,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(10, 6057639802597519925),
+        name: 'isPayer',
+        type: 1,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(11, 3894633441237304954),
+        name: 'settlementTransactionUuid',
         type: 9,
         flags: 0,
       ),
@@ -999,8 +1252,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
     // Typically, this is done with `dart run build_runner build`.
     generatorVersion: obx_int.GeneratorVersion.v2025_12_16,
     entities: _entities,
-    lastEntityId: const obx_int.IdUid(15, 3741443681678089583),
-    lastIndexId: const obx_int.IdUid(27, 5707692371585154920),
+    lastEntityId: const obx_int.IdUid(18, 5556081389674122426),
+    lastIndexId: const obx_int.IdUid(31, 4872818906586441702),
     lastRelationId: const obx_int.IdUid(4, 5665142201815113360),
     lastSequenceId: const obx_int.IdUid(0, 0),
     retiredEntityUids: const [
@@ -1413,7 +1666,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                     .map(fbb.writeString)
                     .toList(growable: false),
               );
-        fbb.startTable(26);
+        fbb.startTable(27);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, uuidOffset);
         fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
@@ -1435,6 +1688,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         fbb.addOffset(21, locationOffset);
         fbb.addOffset(23, tagsUuidsOffset);
         fbb.addOffset(24, attachmentsUuidsOffset);
+        fbb.addBool(25, object.isDeductible);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -1465,6 +1719,11 @@ obx_int.ModelDefinition getObjectBoxModel() {
           buffer,
           rootOffset,
           36,
+        );
+        final isDeductibleParam = const fb.BoolReader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          54,
         );
         final locationParam = const fb.ListReader<double>(
           fb.Float32Reader(),
@@ -1499,6 +1758,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                 description: descriptionParam,
                 subtype: subtypeParam,
                 isPending: isPendingParam,
+                isDeductible: isDeductibleParam,
                 location: locationParam,
                 amount: amountParam,
                 currency: currencyParam,
@@ -1849,7 +2109,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                     .map(fbb.writeString)
                     .toList(growable: false),
               );
-        fbb.startTable(12);
+        fbb.startTable(15);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, uuidOffset);
         fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
@@ -1859,6 +2119,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
         fbb.addOffset(8, rangeOffset);
         fbb.addBool(9, object.renewAutomatically);
         fbb.addOffset(10, categoriesUuidsOffset);
+        fbb.addFloat64(11, object.alertThreshold);
+        fbb.addBool(12, object.stopAtLimit);
+        fbb.addBool(13, object.notificationsEnabled);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -1892,6 +2155,24 @@ obx_int.ModelDefinition getObjectBoxModel() {
           22,
           false,
         );
+        final alertThresholdParam = const fb.Float64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          26,
+          0,
+        );
+        final stopAtLimitParam = const fb.BoolReader().vTableGet(
+          buffer,
+          rootOffset,
+          28,
+          false,
+        );
+        final notificationsEnabledParam = const fb.BoolReader().vTableGet(
+          buffer,
+          rootOffset,
+          30,
+          false,
+        );
         final createdDateParam = DateTime.fromMillisecondsSinceEpoch(
           const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0),
         );
@@ -1903,6 +2184,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
                 currency: currencyParam,
                 range: rangeParam,
                 renewAutomatically: renewAutomaticallyParam,
+                alertThreshold: alertThresholdParam,
+                stopAtLimit: stopAtLimitParam,
+                notificationsEnabled: notificationsEnabledParam,
                 createdDate: createdDateParam,
               )
               ..uuid = const fb.StringReader(
@@ -2130,7 +2414,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final accountUuidOffset = object.accountUuid == null
             ? null
             : fbb.writeString(object.accountUuid!);
-        fbb.startTable(11);
+        fbb.startTable(12);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, uuidOffset);
         fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
@@ -2141,6 +2425,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         fbb.addOffset(7, iconCodeOffset);
         fbb.addInt64(8, object.account.targetId);
         fbb.addOffset(9, accountUuidOffset);
+        fbb.addFloat64(10, object.baseLineBalance);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -2171,6 +2456,11 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final iconCodeParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGetNullable(buffer, rootOffset, 18);
+        final baseLineBalanceParam = const fb.Float64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          24,
+        );
         final createdDateParam = DateTime.fromMillisecondsSinceEpoch(
           const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0),
         );
@@ -2182,6 +2472,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
                 currency: currencyParam,
                 range: rangeParam,
                 iconCode: iconCodeParam,
+                baseLineBalance: baseLineBalanceParam,
                 createdDate: createdDateParam,
               )
               ..uuid = const fb.StringReader(
@@ -2251,6 +2542,297 @@ obx_int.ModelDefinition getObjectBoxModel() {
               ..uuid = const fb.StringReader(
                 asciiOptimization: true,
               ).vTableGet(buffer, rootOffset, 6, '');
+
+        return object;
+      },
+    ),
+    Subscription: obx_int.EntityDefinition<Subscription>(
+      model: _entities[12],
+      toOneRelations: (Subscription object) => [],
+      toManyRelations: (Subscription object) => {},
+      getId: (Subscription object) => object.id,
+      setId: (Subscription object, int id) {
+        object.id = id;
+      },
+      objectToFB: (Subscription object, fb.Builder fbb) {
+        final uuidOffset = fbb.writeString(object.uuid);
+        final nameOffset = fbb.writeString(object.name);
+        final recurringTransactionUuidOffset =
+            object.recurringTransactionUuid == null
+            ? null
+            : fbb.writeString(object.recurringTransactionUuid!);
+        final manualCurrencyOffset = object.manualCurrency == null
+            ? null
+            : fbb.writeString(object.manualCurrency!);
+        final kindStorageOffset = object.kindStorage == null
+            ? null
+            : fbb.writeString(object.kindStorage!);
+        final statusStorageOffset = object.statusStorage == null
+            ? null
+            : fbb.writeString(object.statusStorage!);
+        final cancelUrlOffset = object.cancelUrl == null
+            ? null
+            : fbb.writeString(object.cancelUrl!);
+        final notesOffset = object.notes == null
+            ? null
+            : fbb.writeString(object.notes!);
+        fbb.startTable(16);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, uuidOffset);
+        fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
+        fbb.addOffset(3, nameOffset);
+        fbb.addOffset(4, recurringTransactionUuidOffset);
+        fbb.addFloat64(5, object.manualAmount);
+        fbb.addOffset(6, manualCurrencyOffset);
+        fbb.addOffset(7, kindStorageOffset);
+        fbb.addOffset(8, statusStorageOffset);
+        fbb.addOffset(9, cancelUrlOffset);
+        fbb.addInt64(10, object.cancelByDate?.millisecondsSinceEpoch);
+        fbb.addInt64(11, object.lastUsedOverride?.millisecondsSinceEpoch);
+        fbb.addInt64(12, object.unusedAfterDays);
+        fbb.addOffset(13, notesOffset);
+        fbb.addInt64(14, object.sortOrder);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final cancelByDateValue = const fb.Int64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          24,
+        );
+        final lastUsedOverrideValue = const fb.Int64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          26,
+        );
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final nameParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 10, '');
+        final recurringTransactionUuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 12);
+        final manualAmountParam = const fb.Float64Reader().vTableGetNullable(
+          buffer,
+          rootOffset,
+          14,
+        );
+        final manualCurrencyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 16);
+        final cancelUrlParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 22);
+        final cancelByDateParam = cancelByDateValue == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(cancelByDateValue);
+        final lastUsedOverrideParam = lastUsedOverrideValue == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(lastUsedOverrideValue);
+        final unusedAfterDaysParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          28,
+          0,
+        );
+        final notesParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 30);
+        final sortOrderParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          32,
+          0,
+        );
+        final uuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final createdDateParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0),
+        );
+        final object =
+            Subscription(
+                id: idParam,
+                name: nameParam,
+                recurringTransactionUuid: recurringTransactionUuidParam,
+                manualAmount: manualAmountParam,
+                manualCurrency: manualCurrencyParam,
+                cancelUrl: cancelUrlParam,
+                cancelByDate: cancelByDateParam,
+                lastUsedOverride: lastUsedOverrideParam,
+                unusedAfterDays: unusedAfterDaysParam,
+                notes: notesParam,
+                sortOrder: sortOrderParam,
+                uuid: uuidParam,
+                createdDate: createdDateParam,
+              )
+              ..kindStorage = const fb.StringReader(
+                asciiOptimization: true,
+              ).vTableGetNullable(buffer, rootOffset, 18)
+              ..statusStorage = const fb.StringReader(
+                asciiOptimization: true,
+              ).vTableGetNullable(buffer, rootOffset, 20);
+
+        return object;
+      },
+    ),
+    SplitBill: obx_int.EntityDefinition<SplitBill>(
+      model: _entities[13],
+      toOneRelations: (SplitBill object) => [],
+      toManyRelations: (SplitBill object) => {},
+      getId: (SplitBill object) => object.id,
+      setId: (SplitBill object, int id) {
+        object.id = id;
+      },
+      objectToFB: (SplitBill object, fb.Builder fbb) {
+        final uuidOffset = fbb.writeString(object.uuid);
+        final transactionUuidOffset = fbb.writeString(object.transactionUuid);
+        final modeOffset = fbb.writeString(object.mode);
+        fbb.startTable(6);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, uuidOffset);
+        fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
+        fbb.addOffset(3, transactionUuidOffset);
+        fbb.addOffset(4, modeOffset);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final uuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final createdDateParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0),
+        );
+        final transactionUuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 10, '');
+        final modeParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
+        final object = SplitBill(
+          id: idParam,
+          uuid: uuidParam,
+          createdDate: createdDateParam,
+          transactionUuid: transactionUuidParam,
+          mode: modeParam,
+        );
+
+        return object;
+      },
+    ),
+    SplitParticipant: obx_int.EntityDefinition<SplitParticipant>(
+      model: _entities[14],
+      toOneRelations: (SplitParticipant object) => [],
+      toManyRelations: (SplitParticipant object) => {},
+      getId: (SplitParticipant object) => object.id,
+      setId: (SplitParticipant object, int id) {
+        object.id = id;
+      },
+      objectToFB: (SplitParticipant object, fb.Builder fbb) {
+        final uuidOffset = fbb.writeString(object.uuid);
+        final splitBillUuidOffset = fbb.writeString(object.splitBillUuid);
+        final displayNameOffset = fbb.writeString(object.displayName);
+        final contactIdOffset = object.contactId == null
+            ? null
+            : fbb.writeString(object.contactId!);
+        final currencyOffset = fbb.writeString(object.currency);
+        final settlementTransactionUuidOffset =
+            object.settlementTransactionUuid == null
+            ? null
+            : fbb.writeString(object.settlementTransactionUuid!);
+        fbb.startTable(12);
+        fbb.addInt64(0, object.id);
+        fbb.addOffset(1, uuidOffset);
+        fbb.addInt64(2, object.createdDate.millisecondsSinceEpoch);
+        fbb.addOffset(3, splitBillUuidOffset);
+        fbb.addOffset(4, displayNameOffset);
+        fbb.addOffset(5, contactIdOffset);
+        fbb.addFloat64(6, object.shareAmount);
+        fbb.addFloat64(7, object.settledAmount);
+        fbb.addOffset(8, currencyOffset);
+        fbb.addBool(9, object.isPayer);
+        fbb.addOffset(10, settlementTransactionUuidOffset);
+        fbb.finish(fbb.endTable());
+        return object.id;
+      },
+      objectFromFB: (obx.Store store, ByteData fbData) {
+        final buffer = fb.BufferContext(fbData);
+        final rootOffset = buffer.derefObject(0);
+        final idParam = const fb.Int64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          4,
+          0,
+        );
+        final uuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 6, '');
+        final createdDateParam = DateTime.fromMillisecondsSinceEpoch(
+          const fb.Int64Reader().vTableGet(buffer, rootOffset, 8, 0),
+        );
+        final splitBillUuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 10, '');
+        final displayNameParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 12, '');
+        final contactIdParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 14);
+        final shareAmountParam = const fb.Float64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          16,
+          0,
+        );
+        final settledAmountParam = const fb.Float64Reader().vTableGet(
+          buffer,
+          rootOffset,
+          18,
+          0,
+        );
+        final currencyParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 20, '');
+        final isPayerParam = const fb.BoolReader().vTableGet(
+          buffer,
+          rootOffset,
+          22,
+          false,
+        );
+        final settlementTransactionUuidParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGetNullable(buffer, rootOffset, 24);
+        final object = SplitParticipant(
+          id: idParam,
+          uuid: uuidParam,
+          createdDate: createdDateParam,
+          splitBillUuid: splitBillUuidParam,
+          displayName: displayNameParam,
+          contactId: contactIdParam,
+          shareAmount: shareAmountParam,
+          settledAmount: settledAmountParam,
+          currency: currencyParam,
+          isPayer: isPayerParam,
+          settlementTransactionUuid: settlementTransactionUuidParam,
+        );
 
         return object;
       },
@@ -2529,6 +3111,11 @@ class Transaction_ {
     _entities[4].properties[20],
   );
 
+  /// See [Transaction.isDeductible].
+  static final isDeductible = obx.QueryBooleanProperty<Transaction>(
+    _entities[4].properties[21],
+  );
+
   /// see [Transaction.tags]
   static final tags = obx.QueryRelationToMany<Transaction, TransactionTag>(
     _entities[4].relations[0],
@@ -2743,6 +3330,21 @@ class Budget_ {
     _entities[7].properties[8],
   );
 
+  /// See [Budget.alertThreshold].
+  static final alertThreshold = obx.QueryDoubleProperty<Budget>(
+    _entities[7].properties[9],
+  );
+
+  /// See [Budget.stopAtLimit].
+  static final stopAtLimit = obx.QueryBooleanProperty<Budget>(
+    _entities[7].properties[10],
+  );
+
+  /// See [Budget.notificationsEnabled].
+  static final notificationsEnabled = obx.QueryBooleanProperty<Budget>(
+    _entities[7].properties[11],
+  );
+
   /// see [Budget.categories]
   static final categories = obx.QueryRelationToMany<Budget, Category>(
     _entities[7].relations[0],
@@ -2896,6 +3498,11 @@ class Goal_ {
   static final accountUuid = obx.QueryStringProperty<Goal>(
     _entities[10].properties[9],
   );
+
+  /// See [Goal.baseLineBalance].
+  static final baseLineBalance = obx.QueryDoubleProperty<Goal>(
+    _entities[10].properties[10],
+  );
 }
 
 /// [FileAttachment] entity fields to define ObjectBox queries.
@@ -2924,4 +3531,167 @@ class FileAttachment_ {
   static final filePath = obx.QueryStringProperty<FileAttachment>(
     _entities[11].properties[4],
   );
+}
+
+/// [Subscription] entity fields to define ObjectBox queries.
+class Subscription_ {
+  /// See [Subscription.id].
+  static final id = obx.QueryIntegerProperty<Subscription>(
+    _entities[12].properties[0],
+  );
+
+  /// See [Subscription.uuid].
+  static final uuid = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[1],
+  );
+
+  /// See [Subscription.createdDate].
+  static final createdDate = obx.QueryDateProperty<Subscription>(
+    _entities[12].properties[2],
+  );
+
+  /// See [Subscription.name].
+  static final name = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[3],
+  );
+
+  /// See [Subscription.recurringTransactionUuid].
+  static final recurringTransactionUuid = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[4],
+  );
+
+  /// See [Subscription.manualAmount].
+  static final manualAmount = obx.QueryDoubleProperty<Subscription>(
+    _entities[12].properties[5],
+  );
+
+  /// See [Subscription.manualCurrency].
+  static final manualCurrency = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[6],
+  );
+
+  /// See [Subscription.kindStorage].
+  static final kindStorage = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[7],
+  );
+
+  /// See [Subscription.statusStorage].
+  static final statusStorage = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[8],
+  );
+
+  /// See [Subscription.cancelUrl].
+  static final cancelUrl = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[9],
+  );
+
+  /// See [Subscription.cancelByDate].
+  static final cancelByDate = obx.QueryDateProperty<Subscription>(
+    _entities[12].properties[10],
+  );
+
+  /// See [Subscription.lastUsedOverride].
+  static final lastUsedOverride = obx.QueryDateProperty<Subscription>(
+    _entities[12].properties[11],
+  );
+
+  /// See [Subscription.unusedAfterDays].
+  static final unusedAfterDays = obx.QueryIntegerProperty<Subscription>(
+    _entities[12].properties[12],
+  );
+
+  /// See [Subscription.notes].
+  static final notes = obx.QueryStringProperty<Subscription>(
+    _entities[12].properties[13],
+  );
+
+  /// See [Subscription.sortOrder].
+  static final sortOrder = obx.QueryIntegerProperty<Subscription>(
+    _entities[12].properties[14],
+  );
+}
+
+/// [SplitBill] entity fields to define ObjectBox queries.
+class SplitBill_ {
+  /// See [SplitBill.id].
+  static final id = obx.QueryIntegerProperty<SplitBill>(
+    _entities[13].properties[0],
+  );
+
+  /// See [SplitBill.uuid].
+  static final uuid = obx.QueryStringProperty<SplitBill>(
+    _entities[13].properties[1],
+  );
+
+  /// See [SplitBill.createdDate].
+  static final createdDate = obx.QueryDateProperty<SplitBill>(
+    _entities[13].properties[2],
+  );
+
+  /// See [SplitBill.transactionUuid].
+  static final transactionUuid = obx.QueryStringProperty<SplitBill>(
+    _entities[13].properties[3],
+  );
+
+  /// See [SplitBill.mode].
+  static final mode = obx.QueryStringProperty<SplitBill>(
+    _entities[13].properties[4],
+  );
+}
+
+/// [SplitParticipant] entity fields to define ObjectBox queries.
+class SplitParticipant_ {
+  /// See [SplitParticipant.id].
+  static final id = obx.QueryIntegerProperty<SplitParticipant>(
+    _entities[14].properties[0],
+  );
+
+  /// See [SplitParticipant.uuid].
+  static final uuid = obx.QueryStringProperty<SplitParticipant>(
+    _entities[14].properties[1],
+  );
+
+  /// See [SplitParticipant.createdDate].
+  static final createdDate = obx.QueryDateProperty<SplitParticipant>(
+    _entities[14].properties[2],
+  );
+
+  /// See [SplitParticipant.splitBillUuid].
+  static final splitBillUuid = obx.QueryStringProperty<SplitParticipant>(
+    _entities[14].properties[3],
+  );
+
+  /// See [SplitParticipant.displayName].
+  static final displayName = obx.QueryStringProperty<SplitParticipant>(
+    _entities[14].properties[4],
+  );
+
+  /// See [SplitParticipant.contactId].
+  static final contactId = obx.QueryStringProperty<SplitParticipant>(
+    _entities[14].properties[5],
+  );
+
+  /// See [SplitParticipant.shareAmount].
+  static final shareAmount = obx.QueryDoubleProperty<SplitParticipant>(
+    _entities[14].properties[6],
+  );
+
+  /// See [SplitParticipant.settledAmount].
+  static final settledAmount = obx.QueryDoubleProperty<SplitParticipant>(
+    _entities[14].properties[7],
+  );
+
+  /// See [SplitParticipant.currency].
+  static final currency = obx.QueryStringProperty<SplitParticipant>(
+    _entities[14].properties[8],
+  );
+
+  /// See [SplitParticipant.isPayer].
+  static final isPayer = obx.QueryBooleanProperty<SplitParticipant>(
+    _entities[14].properties[9],
+  );
+
+  /// See [SplitParticipant.settlementTransactionUuid].
+  static final settlementTransactionUuid =
+      obx.QueryStringProperty<SplitParticipant>(_entities[14].properties[10]);
 }

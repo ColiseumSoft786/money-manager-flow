@@ -9,7 +9,6 @@ import "package:flow/routes/preferences/trash_bin/widgets/trash_retention_period
 import "package:flow/routes/preferences/trash_bin/widgets/trash_view_deleted_card.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
@@ -46,29 +45,9 @@ class _TrashBinPreferencesPageState extends State<TrashBinPreferencesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: TrashBinPreferencesTheme.canvas,
+      backgroundColor: TrashBinPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: TrashBinPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.trashBin.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: TrashBinPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.trashBin.settingsTitle".t(context)),
       ),
       body: ValueListenableBuilder(
         valueListenable: UserPreferencesService().valueNotifier,

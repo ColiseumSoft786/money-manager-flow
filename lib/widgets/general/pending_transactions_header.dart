@@ -2,6 +2,7 @@ import "package:flow/entity/transaction.dart";
 import "package:flow/l10n/extensions.dart";
 import "package:flow/theme/theme.dart";
 import "package:flow/widgets/general/rtl_flipper.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
 import "package:flow/widgets/transactions_date_header.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
@@ -43,6 +44,9 @@ class PendingTransactionsHeader extends StatelessWidget {
       ),
       action: TextButton.icon(
         onPressed: () => context.push("/transactions/pending"),
+        style: TextButton.styleFrom(
+          foregroundColor: GlassPanel.accentInk(context),
+        ),
         label: Text("tabs.home.pendingTransactions.seeAll".t(context)),
         icon: RTLFlipper(child: Icon(Symbols.arrow_right_alt_rounded)),
         iconAlignment: IconAlignment.end,

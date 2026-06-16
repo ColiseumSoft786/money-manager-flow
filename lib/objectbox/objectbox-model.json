@@ -191,7 +191,7 @@
     },
     {
       "id": "7:5357777579468740615",
-      "lastPropertyId": "25:1116277179564620916",
+      "lastPropertyId": "26:5938174629051837462",
       "name": "Transaction",
       "properties": [
         {
@@ -309,6 +309,11 @@
           "id": "25:1116277179564620916",
           "name": "attachmentsUuids",
           "type": 30
+        },
+        {
+          "id": "26:5938174629051837462",
+          "name": "isDeductible",
+          "type": 1
         }
       ],
       "relations": [
@@ -513,7 +518,7 @@
     },
     {
       "id": "11:4948078457888921031",
-      "lastPropertyId": "11:3812796204565944657",
+      "lastPropertyId": "14:8458147319457760888",
       "name": "Budget",
       "properties": [
         {
@@ -565,6 +570,21 @@
           "id": "11:3812796204565944657",
           "name": "categoriesUuids",
           "type": 30
+        },
+        {
+          "id": "12:8903130804812869232",
+          "name": "alertThreshold",
+          "type": 8
+        },
+        {
+          "id": "13:7151037618007684199",
+          "name": "stopAtLimit",
+          "type": 1
+        },
+        {
+          "id": "14:8458147319457760888",
+          "name": "notificationsEnabled",
+          "type": 1
         }
       ],
       "relations": [
@@ -692,7 +712,7 @@
     },
     {
       "id": "14:7904423998243143112",
-      "lastPropertyId": "10:3196587516305976411",
+      "lastPropertyId": "11:5072643142397798070",
       "name": "Goal",
       "properties": [
         {
@@ -752,6 +772,11 @@
           "id": "10:3196587516305976411",
           "name": "accountUuid",
           "type": 9
+        },
+        {
+          "id": "11:5072643142397798070",
+          "name": "baseLineBalance",
+          "type": 8
         }
       ],
       "relations": []
@@ -791,10 +816,200 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "16:6284719035829103847",
+      "lastPropertyId": "15:7381818953627180907",
+      "name": "Subscription",
+      "properties": [
+        {
+          "id": "1:2847391056382719456",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5734819263057429184",
+          "name": "uuid",
+          "indexId": "28:1847293058472910384",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:8923456789012345678",
+          "name": "createdDate",
+          "type": 10
+        },
+        {
+          "id": "4:7283946512038472910",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "5:6193847562039481726",
+          "name": "recurringTransactionUuid",
+          "type": 9
+        },
+        {
+          "id": "6:5102938471620394837",
+          "name": "manualAmount",
+          "type": 8
+        },
+        {
+          "id": "7:4011827360511305948",
+          "name": "manualCurrency",
+          "type": 9
+        },
+        {
+          "id": "8:3928475610293847561",
+          "name": "kindStorage",
+          "type": 9
+        },
+        {
+          "id": "9:2837364509182736452",
+          "name": "statusStorage",
+          "type": 9
+        },
+        {
+          "id": "10:1746253398071625343",
+          "name": "cancelUrl",
+          "type": 9
+        },
+        {
+          "id": "11:655142286960514234",
+          "name": "cancelByDate",
+          "type": 10
+        },
+        {
+          "id": "12:5564031175849403125",
+          "name": "lastUsedOverride",
+          "type": 10
+        },
+        {
+          "id": "13:3472920064738292016",
+          "name": "unusedAfterDays",
+          "type": 6
+        },
+        {
+          "id": "14:4021847561938472610",
+          "name": "notes",
+          "type": 9
+        },
+        {
+          "id": "15:7381818953627180907",
+          "name": "sortOrder",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "17:2716702821149332018",
+      "lastPropertyId": "5:8324221298154974570",
+      "name": "SplitBill",
+      "properties": [
+        {
+          "id": "1:1284968732024243228",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6351678830057823635",
+          "name": "uuid",
+          "indexId": "29:558403776525131083",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:7079460354606490765",
+          "name": "createdDate",
+          "type": 10
+        },
+        {
+          "id": "4:1579033225094269921",
+          "name": "transactionUuid",
+          "indexId": "30:591038233357637342",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "5:8324221298154974570",
+          "name": "mode",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "18:5556081389674122426",
+      "lastPropertyId": "11:3894633441237304954",
+      "name": "SplitParticipant",
+      "properties": [
+        {
+          "id": "1:1746965764390233996",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5059611686146846353",
+          "name": "uuid",
+          "indexId": "31:4872818906586441702",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:7656572700682557194",
+          "name": "createdDate",
+          "type": 10
+        },
+        {
+          "id": "4:2891543656200631119",
+          "name": "splitBillUuid",
+          "type": 9
+        },
+        {
+          "id": "5:8930816065626683971",
+          "name": "displayName",
+          "type": 9
+        },
+        {
+          "id": "6:4882393428728069080",
+          "name": "contactId",
+          "type": 9
+        },
+        {
+          "id": "7:4057073539588710612",
+          "name": "shareAmount",
+          "type": 8
+        },
+        {
+          "id": "8:7674141194409284147",
+          "name": "settledAmount",
+          "type": 8
+        },
+        {
+          "id": "9:4358477427463640002",
+          "name": "currency",
+          "type": 9
+        },
+        {
+          "id": "10:6057639802597519925",
+          "name": "isPayer",
+          "type": 1
+        },
+        {
+          "id": "11:3894633441237304954",
+          "name": "settlementTransactionUuid",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "15:3741443681678089583",
-  "lastIndexId": "27:5707692371585154920",
+  "lastEntityId": "18:5556081389674122426",
+  "lastIndexId": "31:4872818906586441702",
   "lastRelationId": "4:5665142201815113360",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

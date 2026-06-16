@@ -47,9 +47,9 @@ class ExportRangeCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ExportOptionsTheme.cardFill,
+        color: ExportOptionsTheme.cardFill(context),
         borderRadius: BorderRadius.circular(ExportOptionsTheme.cardRadius),
-        border: Border.all(color: ExportOptionsTheme.cardBorder),
+        border: Border.all(color: ExportOptionsTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14.0, 14.0, 14.0, 16.0),
@@ -61,7 +61,7 @@ class ExportRangeCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
               decoration: BoxDecoration(
-                color: ExportOptionsTheme.rangeSummaryFill,
+                color: ExportOptionsTheme.rangeSummaryFill(context),
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: Row(
@@ -80,7 +80,7 @@ class ExportRangeCard extends StatelessWidget {
                         Text(
                           "sync.export.range.selected".t(context),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: ExportOptionsTheme.sectionLabel,
+                            color: ExportOptionsTheme.sectionLabel(context),
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.8,
                             fontSize: 10.0,
@@ -92,7 +92,7 @@ class ExportRangeCard extends StatelessWidget {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.0,
-                            color: ExportOptionsTheme.titleInk,
+                            color: ExportOptionsTheme.titleInk(context),
                           ),
                         ),
                       ],
@@ -167,8 +167,8 @@ class _RangeTabChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected
-          ? ExportOptionsTheme.tabSelectedFill
-          : ExportOptionsTheme.tabIdleFill,
+          ? ExportOptionsTheme.tabSelectedFill(context)
+          : ExportOptionsTheme.tabIdleFill(context),
       borderRadius: BorderRadius.circular(999.0),
       child: InkWell(
         onTap: onTap,
@@ -182,8 +182,8 @@ class _RangeTabChip extends StatelessWidget {
               fontWeight: FontWeight.w700,
               fontSize: 12.0,
               color: selected
-                  ? ExportOptionsTheme.tabSelectedInk
-                  : ExportOptionsTheme.tabIdleInk,
+                  ? ExportOptionsTheme.tabSelectedInk(context)
+                  : ExportOptionsTheme.tabIdleInk(context),
             ),
           ),
         ),
@@ -217,7 +217,7 @@ class _MonthNavigator extends StatelessWidget {
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 15.0,
-              color: ExportOptionsTheme.titleInk,
+              color: ExportOptionsTheme.titleInk(context),
             ),
           ),
         ),
@@ -236,7 +236,7 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: ExportOptionsTheme.tabIdleFill,
+      color: ExportOptionsTheme.tabIdleFill(context),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -244,7 +244,11 @@ class _NavButton extends StatelessWidget {
         child: SizedBox(
           width: 36.0,
           height: 36.0,
-          child: Icon(icon, size: 22.0, color: ExportOptionsTheme.titleInk),
+          child: Icon(
+            icon,
+            size: 22.0,
+            color: ExportOptionsTheme.titleInk(context),
+          ),
         ),
       ),
     );
@@ -288,8 +292,8 @@ class _ExportMonthCalendar extends StatelessWidget {
                     _weekdays[i],
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: i == 0
-                          ? ExportOptionsTheme.calendarSundayInk
-                          : ExportOptionsTheme.calendarWeekdayInk,
+                          ? ExportOptionsTheme.calendarSundayInk(context)
+                          : ExportOptionsTheme.calendarWeekdayInk(context),
                       fontWeight: FontWeight.w700,
                       fontSize: 11.0,
                     ),
@@ -393,7 +397,7 @@ class _DayCell extends StatelessWidget {
               bottom: 6,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: ExportOptionsTheme.calendarPillFill,
+                  color: ExportOptionsTheme.calendarPillFill(context),
                   borderRadius: BorderRadius.horizontal(
                     left: column == 0 ? const Radius.circular(20.0) : Radius.zero,
                   ),
@@ -409,7 +413,7 @@ class _DayCell extends StatelessWidget {
               bottom: 6,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: ExportOptionsTheme.calendarPillFill,
+                  color: ExportOptionsTheme.calendarPillFill(context),
                   borderRadius: BorderRadius.horizontal(
                     right: column == 6 ? const Radius.circular(20.0) : Radius.zero,
                   ),
@@ -434,7 +438,7 @@ class _DayCell extends StatelessWidget {
                 fontSize: 13.0,
                 color: (isStart || isEnd)
                     ? Colors.white
-                    : ExportOptionsTheme.titleInk,
+                    : ExportOptionsTheme.titleInk(context),
               ),
             ),
           ),

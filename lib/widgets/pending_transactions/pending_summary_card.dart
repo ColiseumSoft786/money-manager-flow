@@ -14,6 +14,9 @@ class PendingSummaryCard extends StatelessWidget {
 
   const PendingSummaryCard({super.key, required this.transactions});
 
+  bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -38,12 +41,12 @@ class PendingSummaryCard extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(PendingTransactionsTheme.cardRadius),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              PendingTransactionsTheme.summaryGradientStart,
-              PendingTransactionsTheme.summaryGradientEnd,
+              PendingTransactionsTheme.summaryGradientStart(context),
+              PendingTransactionsTheme.summaryGradientEnd(context),
             ],
           ),
           boxShadow: const [
@@ -78,7 +81,7 @@ class PendingSummaryCard extends StatelessWidget {
                   Text(
                     "transactions.pending.summary.total".t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: PendingTransactionsTheme.summarySubtitle,
+                      color: PendingTransactionsTheme.summarySubtitle(context),
                       fontSize: 13.0,
                     ),
                   ),
@@ -88,7 +91,9 @@ class PendingSummaryCard extends StatelessWidget {
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 32.0,
-                      color: Colors.white,
+                      color: _isDark(context)
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Colors.white,
                       height: 1.1,
                     ),
                   ),
@@ -96,7 +101,7 @@ class PendingSummaryCard extends StatelessWidget {
                   Text(
                     "transactions.pending.summary.remaining".t(context, count),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: PendingTransactionsTheme.summarySubtitle,
+                      color: PendingTransactionsTheme.summarySubtitle(context),
                       fontSize: 12.5,
                     ),
                   ),

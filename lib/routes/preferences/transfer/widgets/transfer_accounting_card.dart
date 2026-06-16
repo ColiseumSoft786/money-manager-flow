@@ -19,9 +19,9 @@ class TransferAccountingCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransferPreferencesTheme.cardFill,
+        color: TransferPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(TransferPreferencesTheme.cardRadius),
-        border: Border.all(color: TransferPreferencesTheme.cardBorder),
+        border: Border.all(color: TransferPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
@@ -52,7 +52,7 @@ class TransferAccountingCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15.0,
-                      color: TransferPreferencesTheme.titleInk,
+                      color: TransferPreferencesTheme.titleInk(context),
                     ),
                   ),
                   const SizedBox(height: 2.0),
@@ -60,7 +60,7 @@ class TransferAccountingCard extends StatelessWidget {
                     "preferences.transfer.excludeTransferFromFlow.description"
                         .t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: TransferPreferencesTheme.subtitleInk,
+                      color: TransferPreferencesTheme.subtitleInk(context),
                       fontSize: 12.5,
                       height: 1.35,
                     ),
@@ -72,8 +72,10 @@ class TransferAccountingCard extends StatelessWidget {
               value: excludeFromTotals,
               onChanged: onChanged,
               activeTrackColor: TransferPreferencesTheme.primary(context),
-              inactiveTrackColor: const Color(0xFFE5E7EB),
-              thumbColor: WidgetStateProperty.all(Colors.white),
+              inactiveTrackColor: TransferPreferencesTheme.cardBorder(context),
+              thumbColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.surface,
+              ),
             ),
           ],
         ),

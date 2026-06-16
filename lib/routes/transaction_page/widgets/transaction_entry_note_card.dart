@@ -65,7 +65,7 @@ class TransactionEntryNoteCard extends StatelessWidget {
                           Text(
                             "transaction.description".t(context),
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: TransactionEntryTheme.labelInk,
+                              color: TransactionEntryTheme.labelInk(context),
                               fontSize: 12.0,
                               fontWeight: FontWeight.w500,
                             ),
@@ -75,7 +75,7 @@ class TransactionEntryNoteCard extends StatelessWidget {
                             SimpleIcons.markdown,
                             size: 13.0,
                             fill: 0,
-                            color: TransactionEntryTheme.labelInk,
+                            color: TransactionEntryTheme.labelInk(context),
                           ),
                         ],
                       ),
@@ -84,6 +84,7 @@ class TransactionEntryNoteCard extends StatelessWidget {
                         Text(
                           "transaction.description.placeholder".t(context),
                           style: TransactionEntryTheme.rowPlaceholderStyle(
+                            context,
                             theme,
                           ).copyWith(height: 1.4),
                         )
@@ -97,10 +98,10 @@ class TransactionEntryNoteCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Symbols.chevron_right_rounded,
                   size: 22.0,
-                  color: TransactionEntryTheme.chevronInk,
+                  color: TransactionEntryTheme.chevronInk(context),
                   fill: 0.0,
                 ),
               ],

@@ -4,10 +4,13 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  cloud_firestore
   connectivity_plus
   desktop_drop
   file_saver
   file_selector_windows
+  firebase_auth
+  firebase_core
   flutter_timezone
   geolocator_windows
   local_auth_windows

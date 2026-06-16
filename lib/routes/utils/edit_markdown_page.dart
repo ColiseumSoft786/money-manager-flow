@@ -1,5 +1,6 @@
+import "package:flow/l10n/extensions.dart";
 import "package:flow/l10n/flow_localizations.dart";
-import "package:flow/theme/flow_color_scheme.dart";
+import "package:flow/routes/transaction_page/transaction_entry_theme.dart";
 import "package:flow/theme/helpers.dart";
 import "package:flow/utils/extensions/quill_theme.dart";
 import "package:flow/utils/flutter_quill/divider_embed_builder.dart";
@@ -25,15 +26,6 @@ class EditMarkdownPageProps {
     this.maxLength,
     this.transactionEntryLayout = false,
   });
-}
-
-abstract final class _TransactionNotesTheme {
-  static const Color canvas = Color(0xFFF7F8FA);
-  static const Color surface = Colors.white;
-  static const Color labelInk = Color(0xFF94A3B8);
-  static const Color toolbarIconInk = Color(0xFF475569);
-  static const Color divider = Color(0xFFE2E8F0);
-  static const Color saveFill = kFlowSetupAccountsContinueButtonFill;
 }
 
 class EditMarkdownPage extends StatefulWidget {
@@ -126,37 +118,39 @@ class _EditMarkdownPageState extends State<EditMarkdownPage> {
 
   Widget _buildTransactionEntryScaffold(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final Color divider = TransactionEntryTheme.cardBorder(context);
+    final Color toolbarInk = TransactionEntryTheme.valueInk(context);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        backgroundColor: _TransactionNotesTheme.canvas,
+        backgroundColor: TransactionEntryTheme.canvas(context),
         appBar: AppBar(
           leadingWidth: 40.0,
           leading: FormCloseButton(canPop: () => !hasChanged()),
           title: Text("transaction.notes.title".t(context)),
           centerTitle: true,
-          backgroundColor: _TransactionNotesTheme.surface,
+          backgroundColor: TransactionEntryTheme.appBarFill(context),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1.0),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1.0),
             child: Divider(
               height: 1.0,
               thickness: 1.0,
-              color: _TransactionNotesTheme.divider,
+              color: divider,
             ),
           ),
           titleTextStyle: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: kFlowHomeTransactionHeadingInk,
+            color: TransactionEntryTheme.valueInk(context),
           ),
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: Material(
-                color: _TransactionNotesTheme.saveFill,
+                color: TransactionEntryTheme.saveActionFill(context),
                 shape: const CircleBorder(),
                 child: InkWell(
                   onTap: save,
@@ -187,11 +181,9 @@ class _EditMarkdownPageState extends State<EditMarkdownPage> {
                   children: [
                     Text(
                       "transaction.notes.detailsLabel".t(context),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: _TransactionNotesTheme.labelInk,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.15,
-                        fontSize: 11.0,
+                      style: TransactionEntryTheme.sectionLabelStyle(
+                        context,
+                        theme,
                       ),
                     ),
                     const SizedBox(height: 10.0),
@@ -216,14 +208,14 @@ class _EditMarkdownPageState extends State<EditMarkdownPage> {
               ),
             ),
             Material(
-              color: _TransactionNotesTheme.surface,
+              color: TransactionEntryTheme.appBarFill(context),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Divider(
+                  Divider(
                     height: 1.0,
                     thickness: 1.0,
-                    color: _TransactionNotesTheme.divider,
+                    color: divider,
                   ),
                   SafeArea(
                     top: false,
@@ -232,42 +224,44 @@ class _EditMarkdownPageState extends State<EditMarkdownPage> {
                       child: Row(
                         children: [
                           _ToolbarFormatButton(
-                            tooltip: "Bold",
+                            tooltip: "transaction.notes.format.bold".t(context),
                             child: Text(
                               "B",
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: _TransactionNotesTheme.toolbarIconInk,
+                                color: toolbarInk,
                               ),
                             ),
                             onPressed: () => _toggleFormat(Attribute.bold),
                           ),
                           _ToolbarFormatButton(
-                            tooltip: "Italic",
+                            tooltip: "transaction.notes.format.italic".t(context),
                             child: Text(
                               "I",
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.w700,
-                                color: _TransactionNotesTheme.toolbarIconInk,
+                                color: toolbarInk,
                               ),
                             ),
                             onPressed: () => _toggleFormat(Attribute.italic),
                           ),
                           _ToolbarFormatButton(
-                            tooltip: "Bulleted list",
+                            tooltip:
+                                "transaction.notes.format.bulletedList".t(context),
                             icon: Symbols.format_list_bulleted_rounded,
                             onPressed: () =>
                                 _toggleFormat(Attribute.ul),
                           ),
                           _ToolbarFormatButton(
-                            tooltip: "Numbered list",
+                            tooltip:
+                                "transaction.notes.format.numberedList".t(context),
                             icon: Symbols.format_list_numbered_rounded,
                             onPressed: () =>
                                 _toggleFormat(Attribute.ol),
                           ),
                           _ToolbarFormatButton(
-                            tooltip: "Quote",
+                            tooltip: "transaction.notes.format.quote".t(context),
                             icon: Symbols.format_quote_rounded,
                             onPressed: () =>
                                 _toggleFormat(Attribute.blockQuote),
@@ -280,7 +274,8 @@ class _EditMarkdownPageState extends State<EditMarkdownPage> {
                               vertical: 10.0,
                             ),
                             borderRadius: BorderRadius.circular(12.0),
-                            backgroundColor: _TransactionNotesTheme.saveFill,
+                            backgroundColor:
+                                TransactionEntryTheme.saveActionFill(context),
                             foregroundColor: Colors.white,
                             iconColor: Colors.white,
                             leading: const Icon(
@@ -418,7 +413,7 @@ class _ToolbarFormatButton extends StatelessWidget {
           Icon(
             icon!,
             size: 22.0,
-            color: _TransactionNotesTheme.toolbarIconInk,
+            color: TransactionEntryTheme.valueInk(context),
             fill: 0.0,
           ),
     );

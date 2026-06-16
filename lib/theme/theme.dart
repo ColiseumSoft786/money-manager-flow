@@ -77,6 +77,13 @@ class ThemeFactory {
         scrolledUnderElevation: 0.0,
         centerTitle: false,
         backgroundColor: colorScheme.surface,
+        surfaceTintColor: kTransparent,
+        foregroundColor: colorScheme.onSurface,
+        titleTextStyle: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 17.0,
+          color: colorScheme.onSurface,
+        ),
       ),
       cardTheme: CardThemeData(
         color: colorScheme.secondary,

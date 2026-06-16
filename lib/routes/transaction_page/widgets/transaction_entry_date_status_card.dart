@@ -66,12 +66,18 @@ class TransactionEntryDateStatusCard extends StatelessWidget {
                         children: [
                           Text(
                             "transaction.date".t(context),
-                            style: TransactionEntryTheme.rowCaptionStyle(theme),
+                            style: TransactionEntryTheme.rowCaptionStyle(
+                              context,
+                              theme,
+                            ),
                           ),
                           const SizedBox(height: 3.0),
                           Text(
                             dateLabel,
-                            style: TransactionEntryTheme.rowValueStyle(theme),
+                            style: TransactionEntryTheme.rowValueStyle(
+                              context,
+                              theme,
+                            ),
                           ),
                         ],
                       ),
@@ -79,7 +85,7 @@ class TransactionEntryDateStatusCard extends StatelessWidget {
                     Icon(
                       Symbols.edit_rounded,
                       size: 20.0,
-                      color: TransactionEntryTheme.chevronInk,
+                      color: TransactionEntryTheme.chevronInk(context),
                       fill: 0.0,
                     ),
                   ],
@@ -87,18 +93,18 @@ class TransactionEntryDateStatusCard extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(
+          Divider(
             height: 1.0,
             thickness: 1.0,
             indent: 16.0,
             endIndent: 16.0,
-            color: TransactionEntryTheme.rowDivider,
+            color: TransactionEntryTheme.rowDivider(context),
           ),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
             title: Text(
               "transaction.pending".t(context),
-              style: TransactionEntryTheme.rowTitleStyle(theme),
+              style: TransactionEntryTheme.rowTitleStyle(context, theme),
             ),
             secondary: Icon(
               Symbols.schedule_rounded,
@@ -108,7 +114,7 @@ class TransactionEntryDateStatusCard extends StatelessWidget {
             value: isPending,
             onChanged: pendingEnabled ? onPendingChanged : null,
             activeTrackColor: TransactionEntryTheme.primary(context),
-            inactiveTrackColor: const Color(0xFFE5E7EB),
+            inactiveTrackColor: TransactionEntryTheme.segmentTrack(context),
             trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
           ),
         ],

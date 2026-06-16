@@ -366,10 +366,24 @@ class UserPreferencesService {
 
   static UserPreferencesService? _instance;
 
+  StreamSubscription<Query<UserPreferences>>? _userPreferencesSubscription;
+
   factory UserPreferencesService() =>
       _instance ??= UserPreferencesService._internal();
 
   UserPreferencesService._internal();
+
+  /// Cancel ObjectBox query watchers before the store is closed.
+  static Future<void> disposeWatchers() async {
+    await _instance?._userPreferencesSubscription?.cancel();
+    _instance?._userPreferencesSubscription = null;
+  }
+
+  static Future<void> reinitialize() async {
+    await disposeWatchers();
+    _instance = UserPreferencesService._internal();
+    await _instance!.initialize();
+  }
 
   void _updateButtonsWidgets(List<FlowButtonType> order) async {
     try {
@@ -442,9 +456,11 @@ class UserPreferencesService {
   }
 
   Future<void> initialize() async {
+    await _userPreferencesSubscription?.cancel();
+
     final Completer<void> completer = Completer();
 
-    ObjectBox()
+    _userPreferencesSubscription = ObjectBox()
         .box<UserPreferences>()
         .query()
         .watch(triggerImmediately: true)

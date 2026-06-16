@@ -14,7 +14,6 @@ import "package:flow/theme/helpers.dart";
 import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/spinner.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/widgets/deleted_transactions/deleted_transactions_info_banner.dart";
 import "package:flow/widgets/deleted_transactions/deleted_transactions_list_view.dart";
 import "package:flow/widgets/grouped_transactions_list_view.dart";
@@ -26,6 +25,7 @@ import "package:flow/widgets/rates_missing_error_box.dart";
 import "package:flow/widgets/time_range_selector.dart";
 import "package:flow/widgets/transactions_date_header.dart";
 import "package:flow/widgets/transactions_empty_state.dart";
+import "package:flow/widgets/deleted_transactions/deleted_transactions_theme.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:material_symbols_icons/symbols.dart";
@@ -192,14 +192,16 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final bool isDeletedScope = widget.scope == TransactionsPageScope.deleted;
     final bool isPendingScope = widget.scope == TransactionsPageScope.pending;
     final Color screenBackground = isPendingScope
-        ? PendingTransactionsTheme.canvas
-        : Colors.white;
+        ? PendingTransactionsTheme.canvas(context)
+        : isDeletedScope
+            ? DeletedTransactionsTheme.canvas(context)
+            : Theme.of(context).colorScheme.surface;
 
     return Scaffold(
       backgroundColor: screenBackground,
       appBar: AppBar(
         backgroundColor: isPendingScope
-            ? PendingTransactionsTheme.cardFill
+            ? PendingTransactionsTheme.cardFill(context)
             : screenBackground,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -213,17 +215,21 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     ? Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 17.0,
-                        color: kFlowHomeTransactionHeadingInk,
+                        color: isPendingScope
+                            ? PendingTransactionsTheme.titleInk(context)
+                            : DeletedTransactionsTheme.titleInk(context),
                       )
                     : null,
               ),
         bottom: (isDeletedScope || isPendingScope)
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(1.0),
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(1.0),
                 child: Divider(
                   height: 1.0,
                   thickness: 1.0,
-                  color: kFlowAccountRowDividerLight,
+                  color: isPendingScope
+                      ? PendingTransactionsTheme.cardBorder(context)
+                      : DeletedTransactionsTheme.cardBorder(context),
                 ),
               )
             : null,

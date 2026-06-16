@@ -19,13 +19,17 @@ import "package:flow/utils/utils.dart";
 import "package:flow/widgets/default_transaction_filter_head.dart";
 import "package:flow/widgets/general/frame.dart";
 import "package:flow/widgets/general/pending_transactions_header.dart";
+import "package:flow/widgets/general/spinner.dart";
 import "package:flow/widgets/general/wavy_divider.dart";
 import "package:flow/widgets/grouped_transactions_list_view.dart";
+import "package:flow/widgets/home/dashboard/home_dashboard_backdrop.dart";
+import "package:flow/widgets/home/dashboard/glass_panel.dart";
+import "package:flow/widgets/home/dashboard/home_dashboard_section.dart";
+import "package:flow/widgets/home/navbar.dart";
 import "package:flow/widgets/home/greetings_bar.dart";
-import "package:flow/widgets/home/home_income_expense_summary.dart";
-import "package:flow/widgets/home/home_total_balance_card.dart";
 import "package:flow/widgets/home/home_transaction_cards_scope.dart";
 import "package:flow/widgets/home/home/no_transactions.dart";
+import "package:flow/widgets/home/quick_add_bar.dart";
 import "package:flow/widgets/internal_notifications/internal_notification_section.dart";
 import "package:flow/widgets/rates_missing_error_box.dart";
 import "package:flow/widgets/transaction_list_tile_theme.dart";
@@ -188,15 +192,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         rates,
                       );
 
-                final bool lightTheme =
-                    Theme.of(context).brightness == Brightness.light;
-                final Color pinnedStrip = lightTheme
-                    ? Colors.white
-                    : context.colorScheme.surface;
-                final Color listCanvas = lightTheme
-                    ? Colors.white
-                    : context.colorScheme.surface;
-
                 final Widget header = DefaultTransactionsFilterHead(
                   defaultFilter: defaultFilter,
                   current: currentFilter,
@@ -207,40 +202,41 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   },
                 );
 
-                return ColoredBox(
-                  color: listCanvas,
+                return HomeDashboardBackdrop(
                   child: ScrollConfiguration(
                     behavior: const _HomeScrollBehavior(),
                     child: CustomScrollView(
                       primary: true,
                       slivers: [
                       SliverToBoxAdapter(
-                        child: Container(
-                          color: pinnedStrip,
-                          child: SafeArea(
-                            bottom: false,
-                            child: Column(
-                              children: [
-                                Frame.standalone(
-                                  withSurface: false,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      const GreetingsBar(),
-                                      const SizedBox(height: 12.0),
-                                      const HomeTotalBalanceCard(),
-                                      const SizedBox(height: 12.0),
-                                      HomeIncomeExpenseSummary(
-                                        income: homeFlowTotals.totalIncome,
-                                        expense: homeFlowTotals.totalExpense,
-                                      ),
-                                    ],
-                                  ),
+                        child: SafeArea(
+                          bottom: false,
+                          child: Column(
+                            children: [
+                              Frame.standalone(
+                                withSurface: false,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    const GreetingsBar(),
+                                    const SizedBox(height: 14.0),
+                                    const QuickAddBar(),
+                                    const SizedBox(height: 16.0),
+                                    HomeDashboardSection(
+                                      income: homeFlowTotals.totalIncome,
+                                      expense: homeFlowTotals.totalExpense,
+                                      timeRange: currentFilter.range?.range,
+                                      primaryCurrency: primaryCurrency,
+                                      rates: rates,
+                                      now: now,
+                                    ),
+                                    const SizedBox(height: 12.0),
+                                  ],
                                 ),
-                                header,
-                              ],
-                            ),
+                              ),
+                              header,
+                            ],
                           ),
                         ),
                       ),
@@ -259,12 +255,13 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                           transactions,
                         ),
                         (_, false) => const SliverFillRemaining(
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Spinner.center(),
                         ),
                       },
                       SliverToBoxAdapter(
                         child: SizedBox(
-                          height: 28.0 + MediaQuery.paddingOf(context).bottom,
+                          height: kNavbarBodyBottomInset +
+                              MediaQuery.paddingOf(context).bottom,
                         ),
                       ),
                     ],
@@ -349,19 +346,19 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               const TransactionListTileThemeData(
                 showCategory: true,
                 padding: EdgeInsetsDirectional.fromSTEB(
-                  18.0,
                   14.0,
-                  18.0,
+                  10.0,
                   14.0,
+                  10.0,
                 ),
-                spacing: 14.0,
-                titleSpacing: 8.0,
+                spacing: 10.0,
+                titleSpacing: 4.0,
               ),
             ),
             child: GroupedTransactionsListView(
-              groupHeaderPadding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 8.0),
+              groupHeaderPadding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 4.0),
               trailingBottomPadding: 8.0,
-              listType: GroupedTransactionsListViewType.sliverReorderable,
+              listType: GroupedTransactionsListViewType.sliver,
               mainHeader: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -387,21 +384,39 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   //   Text("transactions.count".t(context, transactions.length)),
                   //   const SizedBox(height: 4.0),
                   // ],
-                  SizedBox(height: 8.0),
-                  Align(
-                    alignment: AlignmentDirectional.topStart,
-                    child: Text(
-                      [
-                        combinedFlow.totalFlow.formatMoney(compact: true),
-                        "transactions.count".t(
-                          context,
-                          transactions.renderableCount,
+                  const SizedBox(height: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: GlassPanel(
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(20.0),
+                      ),
+                      blurBehind: true,
+                      blurSigma: GlassPanel.resolveListTileBlur(context),
+                      borderColor: GlassPanel.resolveListTileBorder(context),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          [
+                            combinedFlow.totalFlow.formatMoney(compact: true),
+                            "transactions.count".t(
+                              context,
+                              transactions.renderableCount,
+                            ),
+                          ].join(" • "),
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: GlassPanel.mutedInk(context),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ].join(" • "),
-                      style: context.textTheme.bodyMedium?.semi(context),
+                      ),
                     ),
                   ),
-                  SizedBox(height: 4.0),
+                  const SizedBox(height: 8.0),
                 ],
               ),
               controller: widget.scrollController,

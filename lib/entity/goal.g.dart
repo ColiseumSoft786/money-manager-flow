@@ -13,6 +13,7 @@ Goal _$GoalFromJson(Map<String, dynamic> json) =>
         currency: json['currency'] as String,
         range: json['range'] as String?,
         iconCode: json['iconCode'] as String?,
+        baseLineBalance: (json['baseLineBalance'] as num?)?.toDouble(),
         createdDate: _$JsonConverterFromJson<String, DateTime>(
           json['createdDate'],
           const UTCDateTimeConverter().fromJson,
@@ -37,6 +38,7 @@ Map<String, dynamic> _$GoalToJson(Goal instance) => <String, dynamic>{
   'targetBalance': instance.targetBalance,
   'currency': instance.currency,
   'iconCode': instance.iconCode,
+  'baseLineBalance': instance.baseLineBalance,
   'accountUuid': instance.accountUuid,
 };
 

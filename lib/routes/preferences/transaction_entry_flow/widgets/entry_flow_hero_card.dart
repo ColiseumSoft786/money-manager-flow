@@ -15,7 +15,9 @@ class EntryFlowHeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           TransactionEntryFlowPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: TransactionEntryFlowPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: TransactionEntryFlowPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),

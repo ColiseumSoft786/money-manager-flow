@@ -36,7 +36,7 @@ class StatsRangeModeSegment extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: StatsTheme.segmentIdleFill,
+        color: StatsTheme.segmentIdleFill(context),
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Padding(
@@ -47,7 +47,7 @@ class StatsRangeModeSegment extends StatelessWidget {
             return Expanded(
               child: Material(
                 color: isSelected
-                    ? StatsTheme.segmentSelectedFill
+                    ? StatsTheme.segmentSelectedFill(context)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10.0),
                 clipBehavior: Clip.antiAlias,
@@ -64,7 +64,7 @@ class StatsRangeModeSegment extends StatelessWidget {
                         fontSize: 13.0,
                         color: isSelected
                             ? StatsTheme.primary(context)
-                            : StatsTheme.subtitleInk,
+                            : StatsTheme.subtitleInk(context),
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import "package:flow/entity/account.dart";
 import "package:flow/entity/category.dart";
 import "package:flow/entity/file_attachment.dart";
 import "package:flow/entity/recurring_transaction.dart";
+import "package:flow/entity/split_participant.dart";
 import "package:flow/entity/transaction.dart";
 import "package:flow/entity/transaction/extensions/base.dart";
 import "package:flow/entity/transaction/extensions/default/geo.dart";
@@ -34,6 +35,7 @@ import "package:flow/routes/transaction_page/widgets/transaction_entry_note_card
 import "package:flow/routes/transaction_page/widgets/transaction_entry_picker_row.dart";
 import "package:flow/routes/transaction_page/widgets/transaction_entry_date_status_card.dart";
 import "package:flow/routes/transaction_page/widgets/transaction_entry_recurring_card.dart";
+import "package:flow/routes/transaction_page/widgets/transaction_entry_split_bill_card.dart";
 import "package:flow/routes/transaction_page/widgets/transaction_entry_tags_card.dart";
 import "package:flow/routes/transaction_page/widgets/transaction_entry_type_segment.dart";
 import "package:flow/routes/transaction_page/select_account_sheet.dart";
@@ -45,6 +47,7 @@ import "package:flow/services/accounts.dart";
 import "package:flow/services/exchange_rates.dart";
 import "package:flow/services/file_attachment.dart";
 import "package:flow/services/recurring_transactions.dart";
+import "package:flow/services/splitBill_service.dart";
 import "package:flow/services/transactions.dart";
 import "package:flow/services/user_preferences.dart";
 import "package:flow/theme/theme.dart";
@@ -112,7 +115,7 @@ class _TransactionPageState extends State<TransactionPage> {
   bool locationFailed = false;
 
   dynamic error;
-
+  bool inputAmountSheetOpen = false;
   Account? _selectedAccount;
   Category? _selectedCategory;
 
@@ -149,6 +152,12 @@ class _TransactionPageState extends State<TransactionPage> {
       _selectedAccount!.currency != _selectedAccountTransferTo!.currency;
 
   bool _isPending = false;
+  bool _isDeductible = false;
+
+  bool _splitBillEnabled = false;
+  List<String> _splitParticipantNames = [];
+  String _splitPayerName = "";
+  List<SplitParticipant>? _splitExistingParticipants;
 
   @override
   void initState() {
@@ -222,6 +231,7 @@ class _TransactionPageState extends State<TransactionPage> {
         );
         _geo = _currentlyEditing.extensions.geo;
         _isPending = _currentlyEditing.isPending ?? _isPending;
+        _isDeductible = _currentlyEditing.isDeductible ?? false;
         if (_currentlyEditing.isTransfer == true) {
           _conversionRate =
               _currentlyEditing.extensions.transfer?.conversionRate ?? 1.0;
@@ -233,6 +243,8 @@ class _TransactionPageState extends State<TransactionPage> {
           );
           _recurrence = _recurringTransaction?.recurrence;
         }
+
+        _loadSplitBillState();
       }
     }
 
@@ -274,6 +286,81 @@ class _TransactionPageState extends State<TransactionPage> {
   bool get _canEditTransactionType =>
       _currentlyEditing == null || _currentlyEditing.isTransfer == false;
 
+  bool get _isSendMoneyExpense =>
+      _currentlyEditing?.isOutgoingPeerTransfer == true;
+
+  bool get _showSplitBill =>
+      !isTransfer &&
+      !_isSendMoneyExpense &&
+      _transactionType == TransactionType.expense;
+
+  void _loadSplitBillState() {
+    final Transaction? transaction = _currentlyEditing;
+    if (transaction == null || !transaction.isSplitBill) return;
+
+    final bill = SplitBillService().getByTransactionUuid(transaction.uuid);
+    if (bill == null) return;
+
+    final List<SplitParticipant> participants =
+        SplitBillService().getParticipants(bill.uuid);
+
+    _splitBillEnabled = true;
+    _splitParticipantNames = participants.map((p) => p.displayName).toList();
+    _splitPayerName = participants
+            .where((p) => p.isPayer)
+            .map((p) => p.displayName)
+            .firstOrNull ??
+        _splitParticipantNames.firstOrNull ??
+        "";
+    _splitExistingParticipants = participants;
+  }
+
+  void _persistSplitBill(Transaction transaction) {
+    if (!_splitBillEnabled || _splitParticipantNames.length < 2) {
+      if (transaction.isSplitBill) {
+        SplitBillService().deleteForTransaction(transaction.uuid);
+        transaction.extraTags = transaction.extraTags
+            .where((tag) => tag != Transaction.splitBilTag)
+            .toList();
+        TransactionsService().updateOneSync(transaction);
+      }
+      return;
+    }
+
+    final String payer = _splitPayerName.isNotEmpty
+        ? _splitPayerName
+        : _splitParticipantNames.first;
+
+    SplitBillService().syncEqualSplit(
+      transaction: transaction,
+      participantNames: _splitParticipantNames,
+      payerName: payer,
+    );
+
+    if (!transaction.isSplitBill) {
+      transaction.extraTags = [
+        ...transaction.extraTags,
+        Transaction.splitBilTag,
+      ];
+      TransactionsService().updateOneSync(transaction);
+    }
+
+    _splitExistingParticipants =
+        SplitBillService().getParticipants(
+          SplitBillService().getByTransactionUuid(transaction.uuid)!.uuid,
+        );
+  }
+
+  void _settleParticipant(SplitParticipant participant) {
+    SplitBillService().recordSettlement(
+      participant: participant,
+      amount: participant.openBalance,
+    );
+    _loadSplitBillState();
+    setState(() {});
+    context.showToast(text: "splitBill.settled".t(context));
+  }
+
   @override
   Widget build(BuildContext context) {
     final String primaryCurrency = UserPreferencesService().primaryCurrency;
@@ -299,49 +386,50 @@ class _TransactionPageState extends State<TransactionPage> {
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor: TransactionEntryTheme.canvas,
+            backgroundColor: TransactionEntryTheme.canvas(context),
             appBar: AppBar(
               leadingWidth: 40.0,
               leading: FormCloseButton(canPop: () => !hasChanged()),
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: Material(
-                    color: TransactionEntryTheme.saveActionFill(context),
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      onTap: () => save(),
-                      customBorder: const CircleBorder(),
-                      child: const Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Icon(
-                          Symbols.check_rounded,
-                          color: Colors.white,
-                          size: 22.0,
-                          fill: 0.0,
+                if (!_isSendMoneyExpense)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: Material(
+                      color: TransactionEntryTheme.saveActionFill(context),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        onTap: () => save(),
+                        customBorder: const CircleBorder(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Symbols.check_rounded,
+                            color: Colors.white,
+                            size: 22.0,
+                            fill: 0.0,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
               actionsPadding: EdgeInsets.zero,
               title: Text(_pageTitle(context)),
               titleTextStyle: context.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: TransactionEntryTheme.valueInk,
+                color: TransactionEntryTheme.valueInk(context),
               ),
               centerTitle: true,
-              backgroundColor: TransactionEntryTheme.appBarFill,
+              backgroundColor: TransactionEntryTheme.appBarFill(context),
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,
-              bottom: const PreferredSize(
-                preferredSize: Size.fromHeight(1.0),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1.0),
                 child: Divider(
                   height: 1.0,
                   thickness: 1.0,
-                  color: TransactionEntryTheme.cardBorder,
+                  color: TransactionEntryTheme.cardBorder(context),
                 ),
               ),
             ),
@@ -354,9 +442,20 @@ class _TransactionPageState extends State<TransactionPage> {
                   child: Column(
                     spacing: 12.0,
                     children: [
+                      if (_isSendMoneyExpense)
+                        TransactionEntryCard(
+                          child: Text(
+                            "sendMoney.peerTransferNote".t(context),
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              color: TransactionEntryTheme.valueInk(context),
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
                       TransactionEntryTypeSegment(
                         current: _transactionType,
-                        canEdit: _canEditTransactionType,
+                        canEdit:
+                            _canEditTransactionType && !_isSendMoneyExpense,
                         onChange: updateTransactionType,
                       ),
                       RepaintBoundary(
@@ -364,7 +463,7 @@ class _TransactionPageState extends State<TransactionPage> {
                           amount: _amount,
                           currency:
                               _selectedAccount?.currency ?? primaryCurrency,
-                          onTap: inputAmount,
+                          onTap: _isSendMoneyExpense ? () {} : inputAmount,
                           titleField: TitleInput(
                             embedded: true,
                             focusNode: _titleFocusNode,
@@ -394,7 +493,8 @@ class _TransactionPageState extends State<TransactionPage> {
                                 value: _selectedAccount?.name,
                                 placeholder: "transaction.edit.selectAccount"
                                     .t(context),
-                                onTap: selectAccount,
+                                onTap:
+                                    _isSendMoneyExpense ? () {} : selectAccount,
                                 leading: _selectedAccount == null
                                     ? null
                                     : FlowIcon(
@@ -412,7 +512,9 @@ class _TransactionPageState extends State<TransactionPage> {
                                   placeholder:
                                       "transaction.edit.selectCategory"
                                           .t(context),
-                                  onTap: selectCategory,
+                                  onTap: _isSendMoneyExpense
+                                      ? () {}
+                                      : selectCategory,
                                   leading: _selectedCategory == null
                                       ? null
                                       : FlowIcon(
@@ -496,6 +598,60 @@ class _TransactionPageState extends State<TransactionPage> {
                         onSetupRecurring: _setupRecurring,
                         startBounds: startBounds,
                       ),
+                      if (_showSplitBill)
+                        TransactionEntrySplitBillCard(
+                          enabled: _splitBillEnabled,
+                          participantNames: _splitParticipantNames,
+                          payerName: _splitPayerName,
+                          existingParticipants: _splitExistingParticipants,
+                          onEnabledChanged: (enabled) => setState(() {
+                            _splitBillEnabled = enabled;
+                          }),
+                          onParticipantsChanged: (names, payer) => setState(() {
+                            _splitParticipantNames = names;
+                            _splitPayerName = payer;
+                          }),
+                          onSettle: widget.isNewTransaction
+                              ? null
+                              : _settleParticipant,
+                        ),
+                      if (LocalPreferences().enableTaxMode.get() && !isTransfer)
+                        TransactionEntryCard(
+                          child: SwitchListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            title: Text(
+                              "Tax Deductible",
+                              style: TransactionEntryTheme.rowTitleStyle(
+                                context,
+                                Theme.of(context),
+                              ),
+                            ),
+                            subtitle: Text(
+                              "Business expense",
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                color: TransactionEntryTheme.chevronInk(context),
+                              ),
+                            ),
+                            secondary: Icon(
+                              Symbols.receipt_long_rounded,
+                              color: TransactionEntryTheme.iconPlateInk(
+                                context,
+                              ),
+                              fill: 0.0,
+                            ),
+                            value: _isDeductible,
+                            onChanged: (value) =>
+                                setState(() => _isDeductible = value),
+                            activeTrackColor:
+                                TransactionEntryTheme.primary(context),
+                            inactiveTrackColor: const Color(0xFFE5E7EB),
+                            trackOutlineColor:
+                                const WidgetStatePropertyAll(Colors.transparent),
+                          ),
+                        ),
                       if (enableGeo)
                         RepaintBoundary(
                           child: TransactionEntryCard(
@@ -533,7 +689,7 @@ class _TransactionPageState extends State<TransactionPage> {
                                         style: context.textTheme.titleMedium
                                             ?.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          color: TransactionEntryTheme.valueInk,
+                                          color: TransactionEntryTheme.valueInk(context),
                                         ),
                                       ),
                                     ),
@@ -732,6 +888,10 @@ class _TransactionPageState extends State<TransactionPage> {
   }
 
   Future<void> inputAmount([bool fromAutomatedFlow = false]) async {
+  if (inputAmountSheetOpen) return;
+  inputAmountSheetOpen = true;
+
+  try {
     if (_amount == 0.0) {
       await TransitiveLocalPreferences().updateTransitiveProperties();
     }
@@ -742,8 +902,10 @@ class _TransactionPageState extends State<TransactionPage> {
         .usesMultipleCurrencies
         .get();
 
+    
     final double? result = await showModalBottomSheet<double>(
       context: context,
+      isScrollControlled: true,
       builder: (context) => InputAmountSheet(
         initialAmount: _amount.abs(),
         currency: _selectedAccount?.currency,
@@ -751,8 +913,9 @@ class _TransactionPageState extends State<TransactionPage> {
         title: _transactionType.localizedNameContext(context),
         lockSign: true,
       ),
-      isScrollControlled: true,
     );
+
+    if (!mounted) return;
 
     final double? resultAmount = result == null
         ? null
@@ -762,16 +925,18 @@ class _TransactionPageState extends State<TransactionPage> {
             TransactionType.transfer => result.abs(),
           };
 
-    _amount = resultAmount ?? _amount;
+    if (resultAmount != null) {
+      _amount = resultAmount;
+      setState(() {});
 
-    if (!mounted) return;
-
-    setState(() {});
-
-    if (_conversionRate == 1.0) {
-      await inputPostConversionAmount();
+      if (_conversionRate == 1.0) {
+        await inputPostConversionAmount();
+      }
     }
+  } finally {
+    inputAmountSheetOpen = false;
   }
+}
 
   Future<void> inputPostConversionAmount() async {
     if (!crossCurrencyTransfer) return;
@@ -1101,7 +1266,7 @@ class _TransactionPageState extends State<TransactionPage> {
     required String? formattedTitle,
     required String? formattedDescription,
   }) async {
-    if (_currentlyEditing == null) return;
+    if (_currentlyEditing == null || _isSendMoneyExpense) return;
 
     RecurringUpdateMode? mode;
 
@@ -1166,6 +1331,7 @@ class _TransactionPageState extends State<TransactionPage> {
       _currentlyEditing.amount = _amount;
       _currentlyEditing.transactionDate = transactionDate;
       _currentlyEditing.isPending = _isPending;
+      _currentlyEditing.isDeductible = _isDeductible;
       _currentlyEditing.setTags(_selectedTags ?? []);
       _currentlyEditing.setAttachments(_attachments);
 
@@ -1193,6 +1359,7 @@ class _TransactionPageState extends State<TransactionPage> {
 
       FileAttachmentService().upsertManySync(_attachments ?? []);
       TransactionsService().updateOneSync(_currentlyEditing);
+      _persistSplitBill(_currentlyEditing);
     }
 
     if (_recurringTransaction == null &&
@@ -1278,6 +1445,7 @@ class _TransactionPageState extends State<TransactionPage> {
   }
 
   void save() {
+    if (_isSendMoneyExpense) return;
     if (!_ensureAccountsSelected()) return;
 
     final String trimmedTitle = _titleController.text.trim();
@@ -1316,7 +1484,9 @@ class _TransactionPageState extends State<TransactionPage> {
         longitude: _geo?.longitude,
       );
     } else {
-      _selectedAccount!.createAndSaveTransaction(
+      final bool splitActive =
+          _splitBillEnabled && _splitParticipantNames.length >= 2;
+      final int transactionId = _selectedAccount!.createAndSaveTransaction(
         amount: _amount,
         title: formattedTitle,
         description: formattedDescription,
@@ -1324,12 +1494,22 @@ class _TransactionPageState extends State<TransactionPage> {
         transactionDate: _transactionDate,
         extensions: extensions,
         isPending: _isPending,
+        isDeductible: _isDeductible,
         recurrence: _recurrence,
         tags: _selectedTags,
         attachments: _attachments,
         latitude: _geo?.latitude,
         longitude: _geo?.longitude,
+        extraTags: splitActive ? [Transaction.splitBilTag] : null,
       );
+
+      if (splitActive) {
+        final Transaction? created =
+            TransactionsService().getOneSync(transactionId);
+        if (created != null) {
+          _persistSplitBill(created);
+        }
+      }
     }
 
     pop();
@@ -1356,6 +1536,7 @@ class _TransactionPageState extends State<TransactionPage> {
           (_currentlyEditing.description ?? "") !=
               (_descriptionMarkdown ?? "") ||
           (_currentlyEditing.isPending ?? false) != _isPending ||
+          (_currentlyEditing.isDeductible ?? false) != _isDeductible ||
           _currentlyEditing.type != _transactionType ||
           _currentlyEditing.accountUuid != _selectedAccount?.uuid ||
           _currentlyEditing.categoryUuid != _selectedCategory?.uuid ||
@@ -1563,6 +1744,7 @@ class _TransactionPageState extends State<TransactionPage> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _orchestrateFlow(TransactionEntryFlow flow) async {
     for (final entry in flow.actions) {
       switch (entry) {

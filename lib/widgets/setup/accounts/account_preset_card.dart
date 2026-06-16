@@ -18,7 +18,6 @@ class AccountPresetCard extends StatelessWidget {
 
   final BorderRadius borderRadius;
 
-  /// Pencil — opens edit flow; does not toggle preset selection ([IconButton] absorbs tap).
   final VoidCallback onEditPressed;
 
   const AccountPresetCard({

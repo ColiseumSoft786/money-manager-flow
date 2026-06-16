@@ -24,7 +24,7 @@ class ExportSectionHeader extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: ExportOptionsTheme.sectionLabel,
+              color: ExportOptionsTheme.sectionLabel(context),
               fontWeight: FontWeight.w800,
               fontSize: 11.0,
               letterSpacing: 1.15,

@@ -45,7 +45,9 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
         child: Center(
           child: Text(
             "—",
-            style: TextStyle(color: StatsTheme.subtitleInk.withValues(alpha: 0.5)),
+            style: TextStyle(
+              color: StatsTheme.subtitleInk(context).withValues(alpha: 0.5),
+            ),
           ),
         ),
       );
@@ -76,8 +78,8 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxY > 0 ? maxY / 4 : 1,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: StatsTheme.divider,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: StatsTheme.divider(context),
               strokeWidth: 1.0,
             ),
           ),
@@ -92,7 +94,7 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
             leftTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false),
             ),
-            bottomTitles: AxisTitles(sideTitles: _bottomTitles(buckets)),
+            bottomTitles: AxisTitles(sideTitles: _bottomTitles(context, buckets)),
           ),
           barGroups: List.generate(buckets.length, (int index) {
             final bool highlighted =
@@ -108,7 +110,7 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
                   ),
                   color: highlighted
                       ? StatsTheme.primary(context)
-                      : StatsTheme.chartBarMuted,
+                      : StatsTheme.chartBarMuted(context),
                 ),
               ],
             );
@@ -127,7 +129,7 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
               });
             },
             touchTooltipData: BarTouchTooltipData(
-              getTooltipColor: (_) => StatsTheme.chartTooltipFill,
+              getTooltipColor: (_) => StatsTheme.chartTooltipFill(context),
               tooltipPadding: const EdgeInsets.symmetric(
                 horizontal: 10.0,
                 vertical: 6.0,
@@ -238,7 +240,7 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
     }
   }
 
-  SideTitles _bottomTitles(List<_Bucket> buckets) {
+  SideTitles _bottomTitles(BuildContext context, List<_Bucket> buckets) {
     final int count = buckets.length;
     if (count == 0) return const SideTitles(showTitles: false);
 
@@ -260,8 +262,8 @@ class _StatsDailyExpenseChartState extends State<StatsDailyExpenseChart> {
           padding: const EdgeInsets.only(top: 8.0),
           child: Text(
             buckets[index].label,
-            style: const TextStyle(
-              color: StatsTheme.subtitleInk,
+            style: TextStyle(
+              color: StatsTheme.subtitleInk(context),
               fontSize: 10.0,
               fontWeight: FontWeight.w500,
             ),

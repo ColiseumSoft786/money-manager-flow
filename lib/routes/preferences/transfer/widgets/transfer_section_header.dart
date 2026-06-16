@@ -13,7 +13,7 @@ class TransferSectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: TransferPreferencesTheme.sectionLabel,
+          color: TransferPreferencesTheme.sectionLabel(context),
           fontWeight: FontWeight.w700,
           fontSize: 11.0,
           letterSpacing: 1.1,

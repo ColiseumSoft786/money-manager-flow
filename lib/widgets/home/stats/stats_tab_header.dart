@@ -31,9 +31,9 @@ class StatsTabHeader extends StatelessWidget {
           children: [
             IconButton(
               onPressed: onBack,
-              icon: const Icon(
+              icon: Icon(
                 Symbols.arrow_back_rounded,
-                color: StatsTheme.titleInk,
+                color: StatsTheme.titleInk(context),
                 size: 22.0,
               ),
               style: IconButton.styleFrom(
@@ -75,7 +75,7 @@ class StatsTabHeader extends StatelessWidget {
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                             fontSize: 17.0,
-                            color: StatsTheme.titleInk,
+                            color: StatsTheme.titleInk(context),
                           ),
                         ),
                       ),

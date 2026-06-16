@@ -5,7 +5,6 @@ import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_l
 import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_preview_section.dart";
 import "package:flow/routes/preferences/list_tile_appearance/widgets/list_tile_section_header.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flutter/material.dart";
 
 class TransactionListItemAppearancePreferencesPage extends StatefulWidget {
@@ -36,29 +35,9 @@ class _TransactionListItemAppearancePreferencesPageState
             UserPreferencesService().transactionListTileRelaxedDensity;
 
         return Scaffold(
-          backgroundColor: ListTileAppearanceTheme.canvas,
+          backgroundColor: ListTileAppearanceTheme.canvas(context),
           appBar: AppBar(
-            backgroundColor: ListTileAppearanceTheme.cardFill,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            title: Text(
-              "preferences.transactions.listTile".t(context),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 17.0,
-                color: ListTileAppearanceTheme.titleInk,
-              ),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1.0),
-              child: Divider(
-                height: 1.0,
-                thickness: 1.0,
-                color: kFlowAccountRowDividerLight,
-              ),
-            ),
+            title: Text("preferences.transactions.listTile".t(context)),
           ),
           body: SafeArea(
             child: SingleChildScrollView(

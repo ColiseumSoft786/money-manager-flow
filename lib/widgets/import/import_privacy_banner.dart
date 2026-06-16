@@ -10,9 +10,9 @@ class ImportPrivacyBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ImportPageTheme.privacyFill,
+        color: ImportPageTheme.privacyFill(context),
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: ImportPageTheme.privacyBorder),
+        border: Border.all(color: ImportPageTheme.privacyBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -39,7 +39,7 @@ class ImportPrivacyBanner extends StatelessWidget {
               child: Text(
                 "sync.import.privacyNotice".t(context),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ImportPageTheme.privacyText,
+                  color: ImportPageTheme.privacyText(context),
                   fontSize: 13.0,
                   height: 1.45,
                 ),

@@ -15,28 +15,30 @@ class NoTransactions extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "tabs.home.noTransactions".t(context),
-              textAlign: TextAlign.center,
-              style: context.textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8.0),
-            FlowIcon(
-              FlowIconData.icon(Symbols.family_star_rounded),
-              size: 128.0,
-              color: context.colorScheme.primary,
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              isFilterModified
-                  ? "tabs.home.noTransactions.tryChangingFilters".t(context)
-                  : "tabs.home.noTransactions.addSome".t(context),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "tabs.home.noTransactions".t(context),
+                textAlign: TextAlign.center,
+                style: context.textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8.0),
+              FlowIcon(
+                FlowIconData.icon(Symbols.family_star_rounded),
+                size: 128.0,
+                color: context.colorScheme.primary,
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                isFilterModified
+                    ? "tabs.home.noTransactions.tryChangingFilters".t(context)
+                    : "tabs.home.noTransactions.addSome".t(context),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

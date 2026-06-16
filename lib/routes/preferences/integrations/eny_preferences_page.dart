@@ -9,7 +9,6 @@ import "package:flow/routes/preferences/integrations/eny/widgets/eny_section_hea
 import "package:flow/routes/preferences/integrations/eny/widgets/eny_status_card.dart";
 import "package:flow/services/integrations/eny.dart";
 import "package:flow/services/user_preferences.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions.dart";
 import "package:flow/utils/utils.dart";
 import "package:flutter/material.dart";
@@ -43,29 +42,9 @@ class _EnyPreferencesPageState extends State<EnyPreferencesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EnyPreferencesTheme.canvas,
+      backgroundColor: EnyPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: EnyPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "Eny",
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: EnyPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("integrations.eny".t(context)),
       ),
       body: ValueListenableBuilder(
         valueListenable: EnyService().apiKey,
@@ -87,7 +66,7 @@ class _EnyPreferencesPageState extends State<EnyPreferencesPage> {
                       {"appName": "appName".t(context)},
                     ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: EnyPreferencesTheme.subtitleInk,
+                      color: EnyPreferencesTheme.subtitleInk(context),
                       fontSize: 14.0,
                       height: 1.45,
                     ),

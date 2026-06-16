@@ -27,7 +27,7 @@ class TransactionEntryTypeSegment extends StatelessWidget {
           current.localizedNameContext(context),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: TransactionEntryTheme.valueInk,
+            color: TransactionEntryTheme.valueInk(context),
           ),
         ),
       );
@@ -35,7 +35,7 @@ class TransactionEntryTypeSegment extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: TransactionEntryTheme.segmentTrack,
+        color: TransactionEntryTheme.segmentTrack(context),
         borderRadius: BorderRadius.circular(TransactionEntryTheme.cardRadius),
       ),
       child: Padding(
@@ -80,7 +80,7 @@ class _TypeSegmentOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? TransactionEntryTheme.cardFillLight : Colors.transparent,
+      color: selected ? TransactionEntryTheme.cardFill(context) : Colors.transparent,
       borderRadius: BorderRadius.circular(12.0),
       elevation: selected ? 0.5 : 0.0,
       shadowColor: Colors.black12,
@@ -99,7 +99,7 @@ class _TypeSegmentOption extends StatelessWidget {
                 fontSize: 14.0,
                 color: selected
                     ? selectedColor
-                    : TransactionEntryTheme.placeholderInk,
+                    : TransactionEntryTheme.placeholderInk(context),
               ),
             ),
           ),

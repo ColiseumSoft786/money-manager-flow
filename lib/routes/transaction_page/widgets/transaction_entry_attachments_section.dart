@@ -71,13 +71,13 @@ class TransactionEntryAttachmentsSection extends StatelessWidget {
                     Expanded(
                       child: Text(
                         "fileAttachment.add".t(context),
-                        style: TransactionEntryTheme.rowTitleStyle(theme),
+                        style: TransactionEntryTheme.rowTitleStyle(context, theme),
                       ),
                     ),
                     Text(
                       "transaction.attachments.hint".t(context),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: TransactionEntryTheme.placeholderInk,
+                        color: TransactionEntryTheme.placeholderInk(context),
                         fontSize: 13.0,
                       ),
                     ),
@@ -87,12 +87,12 @@ class TransactionEntryAttachmentsSection extends StatelessWidget {
             ),
           ),
           if (_hasAttachments) ...[
-            const Divider(
+            Divider(
               height: 1.0,
               thickness: 1.0,
               indent: 16.0,
               endIndent: 16.0,
-              color: TransactionEntryTheme.rowDivider,
+              color: TransactionEntryTheme.rowDivider(context),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(14.0, 12.0, 14.0, 16.0),
@@ -168,13 +168,13 @@ class _AttachmentTile extends StatelessWidget {
             height: double.infinity,
             decoration: BoxDecoration(
               color: filled
-                  ? TransactionEntryTheme.attachmentTileFill
-                  : TransactionEntryTheme.canvasLight,
+                  ? TransactionEntryTheme.attachmentTileFill(context)
+                  : TransactionEntryTheme.canvas(context),
               borderRadius: BorderRadius.circular(14.0),
               border: Border.all(
                 color: dashed
-                    ? TransactionEntryTheme.attachmentDashedBorder
-                    : TransactionEntryTheme.cardBorder,
+                    ? TransactionEntryTheme.attachmentDashedBorder(context)
+                    : TransactionEntryTheme.cardBorder(context),
                 width: dashed ? 1.5 : 1.0,
               ),
             ),
@@ -194,7 +194,7 @@ class _AttachmentTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: TransactionEntryTheme.valueInk,
+                    color: TransactionEntryTheme.valueInk(context),
                     fontWeight: FontWeight.w600,
                     fontSize: 11.0,
                   ),
@@ -236,7 +236,7 @@ class _AttachmentPreview extends StatelessWidget {
                       cacheWidth: 168,
                     )
                   : ColoredBox(
-                      color: TransactionEntryTheme.attachmentTileFill,
+                      color: TransactionEntryTheme.attachmentTileFill(context),
                       child: Icon(
                         Symbols.insert_drive_file_rounded,
                         color: TransactionEntryTheme.iconPlateInk(context),
@@ -249,7 +249,7 @@ class _AttachmentPreview extends StatelessWidget {
             top: -5.0,
             right: -5.0,
             child: Material(
-              color: TransactionEntryTheme.canvasLight,
+              color: TransactionEntryTheme.canvas(context),
               shape: const CircleBorder(),
               elevation: 1.0,
               shadowColor: Colors.black26,
@@ -261,12 +261,14 @@ class _AttachmentPreview extends StatelessWidget {
                   height: 24.0,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: TransactionEntryTheme.cardBorder),
+                    border: Border.all(
+                      color: TransactionEntryTheme.cardBorder(context),
+                    ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Symbols.close_rounded,
                     size: 16.0,
-                    color: TransactionEntryTheme.valueInk,
+                    color: TransactionEntryTheme.valueInk(context),
                   ),
                 ),
               ),

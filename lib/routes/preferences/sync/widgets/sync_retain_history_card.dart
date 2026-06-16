@@ -56,9 +56,9 @@ class SyncRetainHistoryCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SyncPreferencesTheme.cardFill,
+        color: SyncPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(SyncPreferencesTheme.cardRadius),
-        border: Border.all(color: SyncPreferencesTheme.cardBorder),
+        border: Border.all(color: SyncPreferencesTheme.cardBorder(context)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 14.0),
@@ -89,7 +89,7 @@ class SyncRetainHistoryCard extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 14.5,
-                      color: SyncPreferencesTheme.titleInk,
+                      color: SyncPreferencesTheme.titleInk(context),
                     ),
                   ),
                 ),
@@ -133,7 +133,7 @@ class SyncRetainHistoryCard extends StatelessWidget {
                   Text(
                     "preferences.sync.retain.minLabel".t(context),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: SyncPreferencesTheme.sectionLabel,
+                      color: SyncPreferencesTheme.sectionLabel(context),
                       fontWeight: FontWeight.w600,
                       fontSize: 10.0,
                       letterSpacing: 0.6,
@@ -145,7 +145,7 @@ class SyncRetainHistoryCard extends StatelessWidget {
                       sliderOptions.last,
                     ),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: SyncPreferencesTheme.sectionLabel,
+                      color: SyncPreferencesTheme.sectionLabel(context),
                       fontWeight: FontWeight.w600,
                       fontSize: 10.0,
                       letterSpacing: 0.6,

@@ -112,11 +112,11 @@ extension MainActions on ObjectBox {
   /// Primary-currency transactions only — lifetime income + expenses (−),
   /// excluding transfers, deleted/pending transactions, and future-dated postings.
   /// Used when FX totals are unavailable.
-  Money getLifetimeFlowsNetPrimaryCurrencyOnly() {
+  Money getLifetimeFlowsNetPrimaryCurrencyOnly({DateTime? until}) {
     final String primaryCurrency = UserPreferencesService().primaryCurrency;
 
     final SingleCurrencyFlow flow = SingleCurrencyFlow(currency: primaryCurrency);
-    final DateTime now = Moment.now().startOfNextMinute();
+    final DateTime cutoff = until ?? Moment.now().startOfNextMinute();
 
     final Query<Transaction> q = box<Transaction>()
         .query(
@@ -129,7 +129,7 @@ extension MainActions on ObjectBox {
     try {
       for (final Transaction t in q.find()) {
         if (t.isTransfer) continue;
-        if (t.transactionDate.isAfter(now)) continue;
+        if (t.transactionDate.isAfter(cutoff)) continue;
         flow.add(t.money, null);
       }
     } finally {
@@ -144,7 +144,7 @@ extension MainActions on ObjectBox {
   ///
   /// Returns `null` if foreign-currency postings exist but exchange rates cannot
   /// be fetched for conversion ([SingleCurrencyFlow.hasMissingData]).
-  Future<Money?> getLifetimeFlowsNetGrandTotal() async {
+  Future<Money?> getLifetimeFlowsNetGrandTotal({DateTime? until}) async {
     final String primaryCurrency = UserPreferencesService().primaryCurrency;
 
     final Query<Transaction> foreignProbe = box<Transaction>()
@@ -176,11 +176,11 @@ extension MainActions on ObjectBox {
         .build();
 
     try {
-      final DateTime now = Moment.now().startOfNextMinute();
+      final DateTime cutoff = until ?? Moment.now().startOfNextMinute();
 
       for (final Transaction t in q.find()) {
         if (t.isTransfer) continue;
-        if (t.transactionDate.isAfter(now)) continue;
+        if (t.transactionDate.isAfter(cutoff)) continue;
         flow.add(t.money, rates);
       }
     } finally {
@@ -1089,6 +1089,7 @@ extension AccountActions on Account {
     List<FileAttachment>? attachments,
     String? uuidOverride,
     bool? isPending,
+    bool? isDeductible,
     TransactionSubtype? subtype,
     Recurrence? recurrence,
     List<String>? extraTags,
@@ -1137,6 +1138,7 @@ extension AccountActions on Account {
             createdDate: createdDate,
             uuid: uuid,
             isPending: isPending ?? false,
+            isDeductible: isDeductible ?? false,
             subtype: subtype?.value,
             extraTags: extraTags ?? [],
             location: (latitude != null && longitude != null)

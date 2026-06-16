@@ -30,7 +30,7 @@ class GeoMapPreviewCard extends StatelessWidget {
               right: 12.0,
               bottom: 12.0,
               child: Material(
-                color: TransactionGeoPreferencesTheme.cardFill,
+                color: TransactionGeoPreferencesTheme.cardFill(context),
                 elevation: 2,
                 shadowColor: Colors.black26,
                 shape: const CircleBorder(),

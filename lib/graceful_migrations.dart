@@ -1,5 +1,6 @@
 import "package:flow/data/transaction_filter.dart";
 import "package:flow/data/transactions_filter/pending_time_range.dart";
+import "package:flow/entity/budget.dart";
 import "package:flow/entity/transaction.dart";
 import "package:flow/entity/transaction/extensions/default/geo.dart";
 import "package:flow/l10n/flow_localizations.dart";
@@ -308,5 +309,38 @@ void migrateHomePendingTransactionsRange() async {
       "Failed to read migration status for migration $migrationUuid",
       e,
     );
+  }
+}
+
+
+void migrateBudgetAlertDefaults()async{
+   const String migrationUuid = "b1a2c3d4-e5f6-7890-abcd-ef1234567890";
+  try{
+    final SharedPreferencesWithCache prefs = await SharedPreferencesWithCache.create(
+      cacheOptions: SharedPreferencesWithCacheOptions(),
+    );
+    if(prefs.getString("flow.migration.$migrationUuid") != null) return;
+    try{
+      final List<Budget> budgets=ObjectBox().box<Budget>().getAll();
+      for(final budget in budgets){
+        if(budget.alertThreshold<=0){
+          budget.alertThreshold=0.8;
+        }
+        budget.notificationsEnabled=true;
+      }
+      if(budgets.isNotEmpty){
+        ObjectBox().box<Budget>().putMany(budgets);
+
+      }
+      await prefs.setString("flow.migration.$migrationUuid", "ok");
+      
+    }catch(e){
+      _log.warning("Failed migrateBudgetAlertDefaults", e);
+
+    }
+
+  }catch(e){
+     _log.warning("Failed read migrateBudgetAlertDefaults", e);
+    
   }
 }

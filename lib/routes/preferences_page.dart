@@ -10,7 +10,9 @@ import "package:flow/routes/preferences/root/widgets/preferences_root_accordion_
 import "package:flow/routes/preferences/root/widgets/preferences_root_nav_row.dart";
 import "package:flow/routes/preferences/sections/haptics.dart";
 import "package:flow/routes/preferences/sections/lock_app.dart";
+import "package:flow/routes/preferences/root/widgets/preferences_root_toggle_row.dart";
 import "package:flow/routes/preferences/sections/privacy.dart";
+import "package:flow/services/Firebase_auth_service.dart";
 import "package:flow/services/file_attachment.dart";
 import "package:flow/services/local_auth.dart";
 import "package:flow/services/notifications.dart";
@@ -89,9 +91,9 @@ class PreferencesPageState extends State<PreferencesPage> {
         : "general.disabled".t(context);
 
     return Scaffold(
-      backgroundColor: PreferencesRootTheme.canvas,
+      backgroundColor: PreferencesRootTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: PreferencesRootTheme.cardFill,
+        backgroundColor: PreferencesRootTheme.cardFill(context),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -101,15 +103,15 @@ class PreferencesPageState extends State<PreferencesPage> {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 17.0,
-            color: PreferencesRootTheme.titleInk,
+            color: PreferencesRootTheme.titleInk(context),
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: PreferencesRootTheme.cardBorder,
+            color: PreferencesRootTheme.cardBorder(context),
           ),
         ),
       ),
@@ -117,62 +119,91 @@ class PreferencesPageState extends State<PreferencesPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
           children: [
-            PreferencesRootAccordionSection(
-              title: "preferences.general".t(context),
-              icon: Symbols.tune_rounded,
-              isInitiallyExpanded: true,
-              itemCount:
-                  6 +
-                  (flowDebugMode || NotificationsService.schedulingSupported
-                      ? 1
-                      : 0),
-              tallRows: true,
-              children: [
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(Symbols.sync_rounded),
-                  title: "preferences.sync".t(context),
-                  onTap: () => _pushAndRefreshAfter("/preferences/sync"),
-                ),
-                if (flowDebugMode || NotificationsService.schedulingSupported)
+            ValueListenableBuilder<int>(
+              valueListenable: FirebaseAuthService().authRevision,
+              builder: (context, _, __) {
+                final List<Widget> generalRows = [
+                  if (FirebaseAuthService().isSignedIn)
+                    PreferencesRootNavRow(
+                      leading: const PreferencesRootSymbolIcon(
+                        Symbols.person_rounded,
+                      ),
+                      title: "auth.account.signOut".t(context),
+                      subtitle: "auth.account.signOutSubtitle".t(context),
+                      onTap: () async {
+                        await FirebaseAuthService().signOut();
+                        if (!context.mounted) return;
+                        context.go("/");
+                      },
+                    ),
                   PreferencesRootNavRow(
                     leading: const PreferencesRootSymbolIcon(
-                      Symbols.notifications_rounded,
+                      Symbols.sync_rounded,
                     ),
-                    title: "preferences.reminders".t(context),
-                    onTap: () => _pushAndRefreshAfter("/preferences/reminders"),
+                    title: "preferences.sync".t(context),
+                    onTap: () => _pushAndRefreshAfter("/preferences/sync"),
                   ),
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(Symbols.language_rounded),
-                  title: "preferences.language".t(context),
-                  subtitle: FlowLocalizations.of(context).locale.endonym,
-                  onTap: _updateLanguage,
-                ),
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(
-                    Symbols.universal_currency_alt_rounded,
+                  if (flowDebugMode ||
+                      NotificationsService.schedulingSupported)
+                    PreferencesRootNavRow(
+                      leading: const PreferencesRootSymbolIcon(
+                        Symbols.notifications_rounded,
+                      ),
+                      title: "preferences.reminders".t(context),
+                      onTap: () =>
+                          _pushAndRefreshAfter("/preferences/reminders"),
+                    ),
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.language_rounded,
+                    ),
+                    title: "preferences.language".t(context),
+                    subtitle: FlowLocalizations.of(context).locale.endonym,
+                    onTap: _updateLanguage,
                   ),
-                  title: "preferences.primaryCurrency".t(context),
-                  subtitle: currentPrimaryCurrency,
-                  onTap: _updatePrimaryCurrency,
-                ),
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(Symbols.sync_alt_rounded),
-                  title: "preferences.transfer".t(context),
-                  subtitle: "preferences.transfer.description".t(context),
-                  onTap: () => _pushAndRefreshAfter("/preferences/transfer"),
-                ),
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(Symbols.delete_rounded),
-                  title: "preferences.trashBin".t(context),
-                  onTap: () => _pushAndRefreshAfter("/preferences/trashBin"),
-                ),
-                PreferencesRootNavRow(
-                  leading: const PreferencesRootSymbolIcon(Symbols.numbers_rounded),
-                  title: "preferences.moneyFormatting".t(context),
-                  onTap: () => _pushAndRefreshAfter("/preferences/moneyFormatting"),
-                  showDivider: false,
-                ),
-              ],
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.universal_currency_alt_rounded,
+                    ),
+                    title: "preferences.primaryCurrency".t(context),
+                    subtitle: currentPrimaryCurrency,
+                    onTap: _updatePrimaryCurrency,
+                  ),
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.sync_alt_rounded,
+                    ),
+                    title: "preferences.transfer".t(context),
+                    subtitle: "preferences.transfer.description".t(context),
+                    onTap: () => _pushAndRefreshAfter("/preferences/transfer"),
+                  ),
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.delete_rounded,
+                    ),
+                    title: "preferences.trashBin".t(context),
+                    onTap: () => _pushAndRefreshAfter("/preferences/trashBin"),
+                  ),
+                  PreferencesRootNavRow(
+                    leading: const PreferencesRootSymbolIcon(
+                      Symbols.numbers_rounded,
+                    ),
+                    title: "preferences.moneyFormatting".t(context),
+                    onTap: () =>
+                        _pushAndRefreshAfter("/preferences/moneyFormatting"),
+                    showDivider: false,
+                  ),
+                ];
+
+                return PreferencesRootAccordionSection(
+                  title: "preferences.general".t(context),
+                  icon: Symbols.tune_rounded,
+                  isInitiallyExpanded: true,
+                  itemCount: generalRows.length,
+                  tallRows: true,
+                  children: generalRows,
+                );
+              },
             ),
             const SizedBox(height: PreferencesRootTheme.accordionSpacing),
             PreferencesRootAccordionSection(
@@ -198,7 +229,7 @@ class PreferencesPageState extends State<PreferencesPage> {
             PreferencesRootAccordionSection(
               title: "preferences.transactions".t(context),
               icon: Symbols.receipt_long_rounded,
-              itemCount: 4,
+              itemCount: 7,
               tallRows: true,
               children: [
                 PreferencesRootNavRow(
@@ -235,7 +266,16 @@ class PreferencesPageState extends State<PreferencesPage> {
                   title: "preferences.transactionEntryFlow".t(context),
                   onTap: () =>
                       _pushAndRefreshAfter("/preferences/transactionEntryFlow"),
-                  showDivider: false,
+                  showDivider: true,
+                ),
+                _TaxModeToggleRow(
+                  onChanged: () => setState(() {}),
+                ),
+                _SubscriptionManagerToggleRow(
+                  onChanged: () => setState(() {}),
+                ),
+                _ReceiptScanToggleRow(
+                  onChanged: () => setState(() {}),
                 ),
               ],
             ),
@@ -278,6 +318,16 @@ class PreferencesPageState extends State<PreferencesPage> {
                       .t(context),
                   onTap: () =>
                       _pushAndRefreshAfter("/preferences/transactionButtonOrder"),
+                ),
+                PreferencesRootNavRow(
+                  leading: const PreferencesRootSymbolIcon(
+                    Symbols.dashboard_customize_rounded,
+                  ),
+                  title: "home.dashboard.customize".t(context),
+                  subtitle: "home.dashboard.customize.preferencesSubtitle"
+                      .t(context),
+                  onTap: () =>
+                      _pushAndRefreshAfter("/preferences/homeDashboard"),
                 ),
                 PreferencesRootNavRow(
                   leading: const PreferencesRootSymbolIcon(Symbols.moving_rounded),
@@ -464,5 +514,119 @@ class PreferencesPageState extends State<PreferencesPage> {
     }
 
     setState(() {});
+  }
+}
+
+class _TaxModeToggleRow extends StatefulWidget {
+  final VoidCallback onChanged;
+
+  const _TaxModeToggleRow({required this.onChanged});
+
+  @override
+  State<_TaxModeToggleRow> createState() => _TaxModeToggleRowState();
+}
+
+class _TaxModeToggleRowState extends State<_TaxModeToggleRow> {
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = LocalPreferences().enableTaxMode.get();
+
+    return PreferencesRootToggleRow(
+      icon: Symbols.receipt_long_rounded,
+      title: "Tax Mode",
+      subtitle: "Track deductible business expenses",
+      value: enabled,
+      onChanged: (value) {
+        LocalPreferences().enableTaxMode.set(value);
+        setState(() {});
+        widget.onChanged();
+      },
+    );
+  }
+}
+
+class _SubscriptionManagerToggleRow extends StatefulWidget {
+  final VoidCallback onChanged;
+
+  const _SubscriptionManagerToggleRow({required this.onChanged});
+
+  @override
+  State<_SubscriptionManagerToggleRow> createState() =>
+      _SubscriptionManagerToggleRowState();
+}
+
+class _SubscriptionManagerToggleRowState
+    extends State<_SubscriptionManagerToggleRow> {
+  static String _label(BuildContext context, String key, String fallback) {
+    final String value = key.t(context);
+    return value.isEmpty || value == key ? fallback : value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled =
+        LocalPreferences().enableSubscriptionManager.get();
+
+    return PreferencesRootToggleRow(
+      icon: Symbols.subscriptions_rounded,
+      title: _label(
+        context,
+        "preferences.subscriptionManager",
+        "Subscription Manager",
+      ),
+      subtitle: _label(
+        context,
+        "preferences.subscriptionManager.description",
+        "Track recurring subscriptions, cancel deadlines, and unused services",
+      ),
+      value: enabled,
+      onChanged: (value) {
+        LocalPreferences().enableSubscriptionManager.set(value);
+        setState(() {});
+        widget.onChanged();
+      },
+    );
+  }
+}
+
+class _ReceiptScanToggleRow extends StatefulWidget {
+  final VoidCallback onChanged;
+
+  const _ReceiptScanToggleRow({required this.onChanged});
+
+  @override
+  State<_ReceiptScanToggleRow> createState() => _ReceiptScanToggleRowState();
+}
+
+class _ReceiptScanToggleRowState extends State<_ReceiptScanToggleRow> {
+  static String _label(BuildContext context, String key, String fallback) {
+    final String value = key.t(context);
+    return value.isEmpty || value == key ? fallback : value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = LocalPreferences().enableReceiptScan.get();
+
+    return PreferencesRootToggleRow(
+      icon: Symbols.document_scanner_rounded,
+      title: _label(
+        context,
+        "preferences.receiptScan",
+        "Smart receipt scan",
+      ),
+      subtitle: _label(
+        context,
+        "preferences.receiptScan.description",
+        "Read receipts on your phone and pre-fill the transaction form",
+      ),
+      value: enabled,
+      onChanged: (value) {
+        LocalPreferences().enableReceiptScan.set(value);
+        setState(() {});
+        widget.onChanged();
+      },
+      showDivider: false,
+    );
   }
 }

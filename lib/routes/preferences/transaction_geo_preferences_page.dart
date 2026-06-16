@@ -7,7 +7,6 @@ import "package:flow/routes/preferences/transaction_geo/widgets/geo_map_preview_
 import "package:flow/routes/preferences/transaction_geo/widgets/geo_privacy_card.dart";
 import "package:flow/routes/preferences/transaction_geo/widgets/geo_section_header.dart";
 import "package:flow/routes/preferences/transaction_geo/widgets/geo_settings_card.dart";
-import "package:flow/theme/flow_color_scheme.dart";
 import "package:flow/utils/extensions/toast.dart";
 import "package:flow/widgets/geo_permission_missing_reminder.dart";
 import "package:flutter/material.dart";
@@ -60,29 +59,9 @@ class _TransactionGeoPreferencesPageState
         .get();
 
     return Scaffold(
-      backgroundColor: TransactionGeoPreferencesTheme.canvas,
+      backgroundColor: TransactionGeoPreferencesTheme.canvas(context),
       appBar: AppBar(
-        backgroundColor: TransactionGeoPreferencesTheme.cardFill,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text(
-          "preferences.transactions.geo.settingsTitle".t(context),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 17.0,
-            color: TransactionGeoPreferencesTheme.titleInk,
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Divider(
-            height: 1.0,
-            thickness: 1.0,
-            color: kFlowAccountRowDividerLight,
-          ),
-        ),
+        title: Text("preferences.transactions.geo.settingsTitle".t(context)),
       ),
       body: FutureBuilder(
         future: _geoPermissionGranted,
@@ -122,7 +101,7 @@ class _TransactionGeoPreferencesPageState
                             context,
                           ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: TransactionGeoPreferencesTheme.subtitleInk,
+                      color: TransactionGeoPreferencesTheme.subtitleInk(context),
                       fontSize: 13.5,
                       height: 1.45,
                     ),

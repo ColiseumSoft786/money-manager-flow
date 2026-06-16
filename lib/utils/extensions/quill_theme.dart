@@ -17,7 +17,28 @@ extension QuillFlowTheme on BuildContext {
     ],
   );
 
-  DefaultStyles get quillDefaultStyles => DefaultStyles(
+  DefaultTextBlockStyle _quillBlock(TextStyle style) => DefaultTextBlockStyle(
+    style,
+    const HorizontalSpacing(0.0, 0.0),
+    const VerticalSpacing(8.0, 0.0),
+    const VerticalSpacing(0.0, 0.0),
+    null,
+  );
+
+  DefaultStyles get quillDefaultStyles {
+    final TextStyle body = textTheme.bodyLarge!.copyWith(
+      color: colorScheme.onSurface,
+    );
+
+    return DefaultStyles(
+      paragraph: _quillBlock(body),
+      placeHolder: DefaultTextBlockStyle(
+        body.copyWith(color: colorScheme.onSurfaceVariant),
+        const HorizontalSpacing(0.0, 0.0),
+        const VerticalSpacing(0.0, 0.0),
+        const VerticalSpacing(0.0, 0.0),
+        null,
+      ),
     quote: DefaultTextBlockStyle(
       textTheme.bodyLarge!.copyWith(
         fontStyle: FontStyle.italic,
@@ -45,5 +66,6 @@ extension QuillFlowTheme on BuildContext {
       style: quillInlineCodeStyle,
       backgroundColor: colorScheme.primary.withAlpha(0x15),
     ),
-  );
+    );
+  }
 }

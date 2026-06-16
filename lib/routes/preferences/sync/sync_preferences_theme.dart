@@ -4,27 +4,49 @@ import "package:flow/theme/helpers.dart";
 import "package:flutter/material.dart";
 
 abstract final class SyncPreferencesTheme {
-  static const Color canvas = Colors.white;
-  static const Color titleInk = kFlowHomeTransactionHeadingInk;
-  static const Color subtitleInk = kFlowAccountRowBalanceInkLight;
-  static const Color sectionLabel = kFlowHomeTransactionCaptionMuted;
+  static bool _isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static ColorScheme _scheme(BuildContext context) =>
+      Theme.of(context).colorScheme;
+
+  static Color canvas(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surface : Colors.white;
+
+  static Color titleInk(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurface
+      : kFlowHomeTransactionHeadingInk;
+
+  static Color subtitleInk(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : kFlowAccountRowBalanceInkLight;
+
+  static Color sectionLabel(BuildContext context) => _isDark(context)
+      ? _scheme(context).onSurfaceVariant
+      : kFlowHomeTransactionCaptionMuted;
 
   static Color primary(BuildContext context) =>
       PreferencesUiTheme.primary(context);
   static Color iconPlateFill(BuildContext context) =>
       PreferencesUiTheme.iconPlateFill(context);
 
-  static const Color cardFill = Colors.white;
-  static const Color cardBorder = Color(0xFFE5E7EB);
+  static Color cardFill(BuildContext context) => _isDark(context)
+      ? _scheme(context).surfaceContainerHigh
+      : Colors.white;
+  static Color cardBorder(BuildContext context) => _isDark(context)
+      ? _scheme(context).outlineVariant
+      : const Color(0xFFE5E7EB);
 
   static Color chipSelectedFill(BuildContext context) =>
       context.flowAccent.chipSelectedFill;
   static Color chipSelectedBorder(BuildContext context) => primary(context);
   static const Color chipSelectedInk = kFlowFilterPillSelectedFgLight;
-  static const Color chipIdleFill = Colors.white;
-  static const Color chipIdleBorder = cardBorder;
-  static const Color chipIdleInk = titleInk;
-  static const Color chipRecommendedInk = subtitleInk;
+  static Color chipIdleFill(BuildContext context) =>
+      _isDark(context) ? _scheme(context).surfaceContainer : Colors.white;
+  static Color chipIdleBorder(BuildContext context) => cardBorder(context);
+  static Color chipIdleInk(BuildContext context) => titleInk(context);
+  static Color chipRecommendedInk(BuildContext context) =>
+      subtitleInk(context);
 
   static const Color infoFill = Color(0xFFECFDF5);
   static const Color infoBorder = Color(0xFFD1FAE5);

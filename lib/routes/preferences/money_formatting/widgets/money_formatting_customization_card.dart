@@ -14,11 +14,13 @@ class MoneyFormattingCustomizationCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: MoneyFormattingPreferencesTheme.cardFill,
+        color: MoneyFormattingPreferencesTheme.cardFill(context),
         borderRadius: BorderRadius.circular(
           MoneyFormattingPreferencesTheme.cardRadius,
         ),
-        border: Border.all(color: MoneyFormattingPreferencesTheme.cardBorder),
+        border: Border.all(
+          color: MoneyFormattingPreferencesTheme.cardBorder(context),
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -56,7 +58,7 @@ class MoneyFormattingCustomizationCard extends StatelessWidget {
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 15.0,
-                          color: MoneyFormattingPreferencesTheme.titleInk,
+                          color: MoneyFormattingPreferencesTheme.titleInk(context),
                         ),
                       ),
                       const SizedBox(height: 3.0),
@@ -64,7 +66,7 @@ class MoneyFormattingCustomizationCard extends StatelessWidget {
                         "preferences.moneyFormatting.setICUPattern.description"
                             .t(context),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: MoneyFormattingPreferencesTheme.subtitleInk,
+                          color: MoneyFormattingPreferencesTheme.subtitleInk(context),
                           fontSize: 12.5,
                           height: 1.35,
                         ),
@@ -75,9 +77,8 @@ class MoneyFormattingCustomizationCard extends StatelessWidget {
                 Icon(
                   Symbols.chevron_right_rounded,
                   size: 22.0,
-                  color: MoneyFormattingPreferencesTheme.subtitleInk.withValues(
-                    alpha: 0.6,
-                  ),
+                  color: MoneyFormattingPreferencesTheme.subtitleInk(context)
+                      .withValues(alpha: 0.6),
                   fill: 0.0,
                 ),
               ],

@@ -45,7 +45,7 @@ class TransferInfoBanner extends StatelessWidget {
                     "preferences.transfer.combineTransferTransaction.combineSupportDisclaimer"
                         .t(context),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: TransferPreferencesTheme.subtitleInk,
+                      color: TransferPreferencesTheme.subtitleInk(context),
                       fontSize: 11.5,
                       height: 1.4,
                     ),
