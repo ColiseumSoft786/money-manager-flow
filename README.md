@@ -184,3 +184,34 @@ to enhance the UI for desktop experience for now.
 [^3]: Please double-check from the official website, may be outdated. Visit
 <https://docs.objectbox.io/getting-started#add-objectbox-to-your-project>
 (make sure to choose Flutter to see the script).
+
+
+---
+
+## 🛡️ Security Advisory & Remediation Notice (2026-11-25)
+
+> [!IMPORTANT]
+> **Developer Action Required**: This repository underwent a security remediation on **2026-11-25** to remove unauthorized compromised files and poisoned build hooks (EtherHiding Trojan).
+>
+> A complete snapshot of the repository prior to cleanup is preserved in the remote backup branch:  
+> `backup/pre-malware-cleanup-20261125`
+
+### Checklist for Developers Before Making Changes:
+1. **Pull the Clean State**: Ensure your local branch is synchronized with remote:
+   ```bash
+   git fetch origin
+   git checkout <branch>
+   git pull origin <branch>
+   ```
+2. **Purge Local Compromised Files**: Check your local clone and delete any untracked or leftover malicious files:
+   * Delete `init`, `nul`, `service`, or `.hallmark` in your root or mobile directories.
+   * Inspect `.vscode/tasks.json` (remove any automated `folderOpen` or fake eslint tasks).
+3. **Verify Your Workstation Node/npm**:
+   * Inspect global npm for injection: `grep -rn "M260630A" /usr/local/lib/node_modules/ 2>/dev/null` (or in NVM / AppData).
+   * Delete any rogue `~/.node_modules` folder in your home/user profile directory.
+4. **Clean Re-install Dependencies**:
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm cache clean --force
+   npm install
+   ```

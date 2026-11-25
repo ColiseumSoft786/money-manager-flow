@@ -103,6 +103,3 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.14.0"))
 }
 
-tasks.named("preBuild") {
-    dependsOn(rootProject.tasks.named("startApi"))
-}
